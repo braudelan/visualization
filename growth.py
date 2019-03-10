@@ -1,15 +1,17 @@
 import pandas
+from pandas import DataFrame
 
-def growth(means):
-    treatment_means= means.xs("t", axis=1, level=1)
-    days = [0,7,14]
+def get_weekly_growth(means: DataFrame):
+    days = [0, 7, 14, 21]
     week = 1
-    weekly_growth = pandas.DataFrame(columns=[1, 2, 3], dtype=int)
+    weekly_growth = pandas.DataFrame(columns=['1st', '2nd', '3rd', '4th'], dtype=int)
 
     for day in days:
-        growth = treatment_means.loc[day+7] - treatment_means.loc[day]
+        growth = means.loc[day+7] - means.loc[day]
 
         weekly_growth[week] = growth
         week += 1
 
-    return weekly_growth.round(0)
+    weekly_growth = weekly_growth.round(0)
+
+    return weekly_growth
