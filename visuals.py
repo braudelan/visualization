@@ -1,10 +1,12 @@
 import argparse
 
+import pandas
 from matplotlib import pyplot
 
 from stats import get_stats
-from graphs import visualize
 from growth import get_weekly_growth
+from daily_ttest import get_daily_ttest
+from graphs import make_graphs
 from tables import make_tables
 
 parser = argparse.ArgumentParser()
@@ -26,7 +28,7 @@ raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
 #get statistics and parameters
 means, stde_means, treatment_effect = get_stats(raw_data, argv)
-daily_ttest = get_daily_ttest(raw_data: DataFrame)
+daily_ttest = get_daily_ttest(raw_data)
 weekly_growth = get_weekly_growth(means)
 
 #visualize
@@ -34,7 +36,7 @@ figures = make_graphs(means, treatment_effect, stde_means, stde_effect, argv)
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
-tables = make_tables(weekly_growth, argv)
+tables = make_tables(weekly_growth, daily_ttest, argv)
 tables.savefig("%s_tables.png" %argv.test, bbox_inches='tight')
 
 
