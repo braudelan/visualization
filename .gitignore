@@ -1,2 +1,8 @@
+#ignore all kind of files
+*.*
+#except python files
+!*.py
+
+#ignore these folders
 __pycach__/
 .idea/
