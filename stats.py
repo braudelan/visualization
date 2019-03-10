@@ -26,3 +26,5 @@ treatment_effect =  diff_of_means.xs("MRE",axis=1,level=1)# slicing out from dif
 control_stde_sqrd = (stde_means**2).xs("control",axis=1,level=1) # control stnd error values squared
 MRE_stde_sqrd = (stde_means**2).xs("MRE", axis=1,level=1) # treatment stnd error values squared
 stde_effect = (control_stde_sqrd + MRE_stde_sqrd)**0.5 # stnd error of treatment effect
+
+bla bla
