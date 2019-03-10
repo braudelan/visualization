@@ -16,10 +16,21 @@ argv = parser.parse_args()
 
 input_file = "all_tests.xlsx"
 
-means, stde_means, treatment_effect, daily_ttest = get_stats(input_file, argv)
+# input data into DataFrame
+raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
+                                 sheet_name=argv.test,
+                                 na_values=["-", " "]).rename_axis("days")
+raw_data.columns.rename(["soil", "treatment", "replicate"],
+                        level=None, inplace=True)
+raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
+
+#get statistics and parameters
+means, stde_means, treatment_effect = get_stats(raw_data, argv)
+daily_ttest = get_daily_ttest(raw_data: DataFrame)
 weekly_growth = get_weekly_growth(means)
 
-figures = visualize(means, treatment_effect, stde_means, stde_effect, argv)
+#visualize
+figures = make_graphs(means, treatment_effect, stde_means, stde_effect, argv)
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 

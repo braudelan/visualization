@@ -5,7 +5,7 @@ from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 
 
-def visualize(means, treatment_effect, stde_means, stde_effect, argv):
+def make_graphs(means, treatment_effect, stde_means, stde_effect, argv):
     stde_treatment_means = stde_means.xs("t", axis=1, level=1)
     
     args = (argv.figure_number, argv.test)
@@ -36,13 +36,14 @@ def visualize(means, treatment_effect, stde_means, stde_effect, argv):
     figure = pyplot.figure(1, figsize=(15,20))
     figure.tight_layout()
     figure.subplots_adjust(hspace=0.2)
+
     # title and axis labels
     figure.text(0, 0.01, title_text, fontsize=19)
     figure.text(0, 0.5, ylabel_text, fontsize=19, rotation=90, va='center')
     figure.text(0.5, 0.06, xlabel_text, fontsize=19, ha='center')
 
+    # means of all expr. units
     means_axes = figure.add_subplot(311)
-    # plot data
     means.plot(ax=means_axes, xlim=(0,30), yerr=stde_means)
     means_axes.text(0.07, 0.85, "a", transform=means_axes.transAxes, fontdict=symbol_fontdic)
     means_axes.xaxis.set_major_locator(majorLocator)
@@ -50,8 +51,8 @@ def visualize(means, treatment_effect, stde_means, stde_effect, argv):
     means_axes.legend((means_axes.get_lines()),(all_means_legend))
     means_axes.set_xlabel('')
 
+
     MRE_means_axes = figure.add_subplot(312)
-    #plot data
     means.xs("t", axis=1, level=1).plot(
                                         kind="bar",
                                         ax=MRE_means_axes,
