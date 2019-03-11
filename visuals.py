@@ -32,7 +32,7 @@ daily_ttest = get_daily_ttest(raw_data)
 weekly_growth = get_weekly_growth(means)
 
 #visualize
-figures = make_graphs(means, treatment_effect, stde_means, stde_effect, argv)
+figures = make_graphs(means, treatment_effect, stde_means, argv)
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 

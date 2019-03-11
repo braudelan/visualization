@@ -6,10 +6,11 @@ from scipy.stats import ttest_ind
 
 
 def get_daily_ttest(raw_data: DataFrame):
-    raw_data =raw_data.T
+
+    raw_data = raw_data.T
     Ttest_dic = {}
 
-    for day in list(raw_data.index):
+    for day in list(raw_data.columns):
 
         COM_MIN_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
                                  raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
@@ -48,7 +49,7 @@ def get_daily_ttest(raw_data: DataFrame):
 
         Ttest_dic[day] = all_pairs
 
-    daily_ttest = pandas.DataFrame.from_dict(Ttest_dic).T
-    daily_ttest = daily_ttest.rename_axis("days", inplace=True)
+        daily_ttest = pandas.DataFrame.from_dict(Ttest_dic).T
+        daily_ttest = daily_ttest.rename_axis("days", inplace=True)
 
-    return daily_ttest
+        return daily_ttest

@@ -16,14 +16,14 @@ def make_tables(weekly_growth, daily_ttest, argv):
     growth.axis('tight')
     growth.set_title(title_text, loc='center', fontsize=16)
     
-    growth_columns = ['1st week', '2nd week', '3rd week']
+    growth_columns = ['1st week', '2nd week', '3rd week','4th week']
     
     growth_table = pyplot.table(cellText=weekly_growth.values,
                  loc='center',
                  colLabels=growth_columns,
                  rowLabels=['COM', 'MIN', 'UNC'],
                  cellLoc='center',
-                 colWidths=[0.07,0.1, 0.1, 0.1],
+                 colWidths=[0.07, 0.1, 0.1, 0.1],
                  )
     
     for cell in growth_table._cells:

@@ -5,7 +5,7 @@ from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 
 
-def make_graphs(means, treatment_effect, stde_means, stde_effect, argv):
+def make_graphs(means, treatment_effect, stde_means, argv):
     stde_treatment_means = stde_means.xs("t", axis=1, level=1)
     
     args = (argv.figure_number, argv.test)
@@ -58,7 +58,6 @@ def make_graphs(means, treatment_effect, stde_means, stde_effect, argv):
     effect_axes = figure.add_subplot(313)
     treatment_effect.plot(ax=effect_axes,
                           xticks=list(means.index[1:]),
-                          yerr=stde_effect
                           )
     effect_axes.text(0.07, 0.85, "b", transform=effect_axes.transAxes, fontdict=font_properties)
     effect_axes.set_xlabel('')
