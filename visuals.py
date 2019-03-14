@@ -26,17 +26,20 @@ raw_data.columns.rename(["soil", "treatment", "replicate"],
                         level=None, inplace=True)
 raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
-#get statistics and parameters
+#get statistics and visuals
 means, means_stde, treatment_effect = get_stats(raw_data, argv)
-daily_ttest = get_daily_ttest(raw_data)
-weekly_growth = get_weekly_growth(means)
 
-#visualize
+daily_ttest = get_daily_ttest(raw_data)
+
+if len(means.index) > 4:
+    weekly_growth = get_weekly_growth(means)
+    tables = make_growth_table(weekly_growth, argv)
+    tables.savefig("%s_tables.png" % argv.test, bbox_inches='tight')
+
 figures = make_graphs(means, treatment_effect, means_stde, argv)
+
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
-tables = make_growth_table(weekly_growth, argv)
-tables.savefig("%s_tables.png" %argv.test, bbox_inches='tight')
 
 
