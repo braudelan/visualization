@@ -15,12 +15,12 @@ def get_daily_ttest(raw_data: DataFrame):
                                  raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
                                  equal_var=False, nan_policy='omit')
                                 )
-        COM_UND_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
-                                 raw_data.xs(["UND", 't'], level=[0,1]).loc[:, day],
+        COM_UNC_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
+                                 raw_data.xs(["UNC", 't'], level=[0,1]).loc[:, day],
                                  equal_var=False, nan_policy='omit')
                                 )
-        MIN_UND_t = list(ttest_ind(raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
-                                 raw_data.xs(["UND", 't'], level=[0,1]).loc[:, day],
+        MIN_UNC_t = list(ttest_ind(raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
+                                 raw_data.xs(["UNC", 't'], level=[0,1]).loc[:, day],
                                  equal_var=False, nan_policy='omit')
                                 )
 
@@ -28,27 +28,28 @@ def get_daily_ttest(raw_data: DataFrame):
                                  raw_data.xs(["MIN", 'c'], level=[0, 1]).loc[:, day],
                                  equal_var = False, nan_policy = 'omit')
                                 )
-        COM_UND_c = list(ttest_ind(raw_data.xs(["COM", 'c'], level=[0, 1]).loc[:, day],
-                                 raw_data.xs(["UND", 'c'], level=[0, 1]).loc[:, day],
+        COM_UNC_c = list(ttest_ind(raw_data.xs(["COM", 'c'], level=[0, 1]).loc[:, day],
+                                 raw_data.xs(["UNC", 'c'], level=[0, 1]).loc[:, day],
                                  equal_var = False, nan_policy = 'omit')
                                 )
-        MIN_UND_c = list(ttest_ind(raw_data.xs(["MIN", 'c'], level = [0, 1]).loc[:, day],
-                                 raw_data.xs(["UND", 'c'], level = [0, 1]).loc[:,day],
+        MIN_UNC_c = list(ttest_ind(raw_data.xs(["MIN", 'c'], level = [0, 1]).loc[:, day],
+                                 raw_data.xs(["UNC", 'c'], level = [0, 1]).loc[:,day],
                                  equal_var = False, nan_policy = 'omit')
                                 )
 
         all_pairs = {
                      "COM-MIN_t": COM_MIN_t[1],
-                     "COM-UND_t": COM_UND_t[1],
-                     "MIN-UND_t": MIN_UND_t[1],
+                     "COM-UNC_t": COM_UNC_t[1],
+                     "MIN-UNC_t": MIN_UNC_t[1],
                      "COM_MIN_c": COM_MIN_c[1],
-                     "COM_UND_c": COM_UND_c[1],
-                     "MIN_UND_c": MIN_UND_c[1],
+                     "COM_UNC_c": COM_UNC_c[1],
+                     "MIN_UNC_c": MIN_UNC_c[1],
                      }
 
         Ttest_dic[day] = all_pairs
 
-        daily_ttest = pandas.DataFrame.from_dict(Ttest_dic).T
-        daily_ttest.rename_axis("days", inplace=True)
+    daily_ttest = pandas.DataFrame.from_dict(Ttest_dic).T
+    daily_ttest = daily_ttest.astype(float, copy=False).round(2)
+    daily_ttest.rename_axis("days", inplace=True)
 
-        return daily_ttest
+    return daily_ttest

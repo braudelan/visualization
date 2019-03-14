@@ -1,10 +1,12 @@
 from matplotlib import pyplot
 
-def make_tables(weekly_growth, daily_ttest, argv):
+
+def make_growth_table(weekly_growth, argv):
 
     args = (argv.table_number, argv.test)
 
-    daily_ttest = daily_ttest.T
+    pyplot.rc('font', size=18)
+    titles_params = { 'fontsize': 20}
 
     row_labels = []
     for soil in ('COM', 'MIN', 'UNC'):
@@ -13,16 +15,16 @@ def make_tables(weekly_growth, daily_ttest, argv):
         row_labels.append(label_c)
         row_labels.append(label_t)
 
-    title_text = r'$\bf{Table %s.}$  weekly increase in %s for treated soils' %args
+    title_text = r'$\bf{Table %s.}$  weekly change in %s across 4 weeks of incubation' %args
 
     table_figure = pyplot.figure(1)
     table_figure.tight_layout()
     table_figure.subplots_adjust(top=0.3)
 
-    growth = table_figure.add_subplot(211)
+    growth = table_figure.add_subplot(111)
     growth.axis('off')
     growth.axis('tight')
-    growth.set_title(title_text, loc='center', fontsize=16)
+    growth.set_title(title_text, pad=0.2, fontsize=20, position=(0.42, 1.1))
 
     growth_columns = ['1st week', '2nd week', '3rd week', '4th week']
 
@@ -40,26 +42,6 @@ def make_tables(weekly_growth, daily_ttest, argv):
 
     growth_table.scale(2, 3)
 
-    ttest = table_figure.add_subplot(212)
-    ttest.axis('off')
-    ttest.axis('tight')
-    ttest.set_title(title_text, loc='center', fontsize=16)
-
-    ttest_columns = daily_ttest.columns
-
-    ttest_table = pyplot.table(cellText=daily_ttest.values,
-                               loc='center',
-                               colLabels=ttest_columns,
-                               rowLabels=row_labels,
-                               cellLoc='center',
-                               )
-
-    for cell in ttest_table._cells:
-        if cell[0] == 0 or cell[1] == -1:
-            ttest_table._cells[cell].set_text_props(weight='bold')
-
-    ttest_table.scale(2, 3)
 
     return table_figure
 
-    
