@@ -24,7 +24,7 @@ def make_growth_table(weekly_growth, number, test):
     growth = table_figure.add_subplot(111)
     growth.axis('off')
     growth.axis('tight')
-    growth.set_title(title_text, pad=0.2, fontsize=20, position=(0.42, 1.8))
+    growth.set_title(title_text, pad=0.2, fontsize=20, position=(0.42, 2))
 
     growth_columns = ['1st week', '2nd week', '3rd week', '4th week','total change']
 
