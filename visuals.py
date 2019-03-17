@@ -12,7 +12,7 @@ from growth_table import make_growth_table
 parser = argparse.ArgumentParser()
 parser.add_argument("test",type=str)
 parser.add_argument("figure_number", type=int)
-parser.add_argument("table_number", type=int)
+# parser.add_argument("table_number", type=int)
 
 argv = parser.parse_args()
 
@@ -29,14 +29,14 @@ raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 #get statistics and parameters
 means, means_stde, treatment_effect = get_stats(raw_data, argv)
 daily_ttest = get_daily_ttest(raw_data)
-weekly_growth = get_weekly_growth(means)
+# weekly_growth = get_weekly_growth(means)
 
 #visualize
 figures = make_graphs(means, treatment_effect, means_stde, argv)
-figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
+figures.savefig("./figures/%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
-tables = make_growth_table(weekly_growth, argv)
-tables.savefig("%s_tables.png" %argv.test, bbox_inches='tight')
+# tables = make_growth_table(weekly_growth, argv)
+# tables.savefig("./figures/%s_tables.png" %argv.test, bbox_inches='tight')
 
 

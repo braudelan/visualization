@@ -67,19 +67,21 @@ def make_graphs(means, treatment_effect, means_stde, argv):
 
     # treatment effect as percent of control
     effect_axes = figure.add_subplot(212)
+
     if len(means.index) > 5 :
-            treatment_effect.plot(ax=effect_axes,
+        treatment_effect.plot(ax=effect_axes,
                                   xlim=(0,30),
                                  )
-            effect_axes.xaxis.set_major_locator(majorLocator)
-            effect_axes.xaxis.set_minor_locator(minorLocator)
-            effect_axes.legend((effect_axes.get_lines()), (treatment_effect.columns))
+        effect_axes.xaxis.set_major_locator(majorLocator)
+        effect_axes.xaxis.set_minor_locator(minorLocator)
+        effect_axes.legend(effect_axes.get_lines(), (treatment_effect.columns))
     else:
+
         treatment_effect.plot(ax=effect_axes,
                               kind='bar',
                               xlim=(0, 30),
                               )
-        # effect_axes.legend(effect_axes.containers, (treatment_effect.columns))
+        effect_axes.legend(effect_axes.containers, (treatment_effect.columns))
 
     effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=labels_text_params)
     effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
