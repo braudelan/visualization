@@ -84,5 +84,6 @@ def make_graphs(means, treatment_effect, means_stde, argv):
     effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
     effect_axes.tick_params(axis='x', which='minor', width=1,length=3)
     effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)
+
     return figure
     

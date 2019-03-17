@@ -36,8 +36,11 @@ if len(means.index) > 4:
     tables = make_growth_table(weekly_growth, argv)
     tables.savefig("%s_tables.png" % argv.test, bbox_inches='tight')
 
+pyplot.clf()
+
 figures = make_graphs(means, treatment_effect, means_stde, argv)
 
+# visuals into png
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
