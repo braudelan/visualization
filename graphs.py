@@ -2,10 +2,10 @@ from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
 
-def make_graphs(means, treatment_effect, means_stde, argv):
+def make_graphs(means, treatment_effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
     
-    args = (argv.figure_number, argv.test)
+    args = (number, test)
 
     majorLocator = MultipleLocator(7)
     minorLocator = MultipleLocator(1)

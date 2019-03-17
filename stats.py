@@ -1,6 +1,6 @@
 import pandas
 
-def get_stats(raw_data, argv):
+def get_stats(raw_data):
 
     # means
     groupby_soil_treatment = raw_data.groupby(level=[0, 1],
