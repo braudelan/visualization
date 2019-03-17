@@ -5,7 +5,7 @@ def make_ttest_table(daily_ttest, test):
 
     title_text = r'%s daily Ttest' %test
 
-    figure = pyplot.figure(1)
+    figure = pyplot.figure(3)
 
     axes = figure.add_subplot(111)
     axes.axis('off')
