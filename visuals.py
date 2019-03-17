@@ -18,6 +18,7 @@ argv = parser.parse_args()
 
 input_file = "all_tests.xlsx"
 
+for test in TESTS:
 # input data into DataFrame
 raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
                                  sheet_name=argv.test,
