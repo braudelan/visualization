@@ -7,7 +7,7 @@ from stats import get_stats
 from growth import get_weekly_growth
 from daily_ttest import get_daily_ttest
 from graphs import make_graphs
-from tables import make_tables
+from growth_table import make_growth_table
 
 parser = argparse.ArgumentParser()
 parser.add_argument("test",type=str)
@@ -27,16 +27,16 @@ raw_data.columns.rename(["soil", "treatment", "replicate"],
 raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
 #get statistics and parameters
-means, stde_means, treatment_effect = get_stats(raw_data, argv)
+means, means_stde, treatment_effect = get_stats(raw_data, argv)
 daily_ttest = get_daily_ttest(raw_data)
 weekly_growth = get_weekly_growth(means)
 
 #visualize
-figures = make_graphs(means, treatment_effect, stde_means, argv)
+figures = make_graphs(means, treatment_effect, means_stde, argv)
 figures.savefig("%s_figuers.png" %argv.test, bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
-tables = make_tables(weekly_growth, daily_ttest, argv)
+tables = make_growth_table(weekly_growth, argv)
 tables.savefig("%s_tables.png" %argv.test, bbox_inches='tight')
 
 
