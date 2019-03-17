@@ -6,6 +6,7 @@ from growth import get_weekly_growth
 from daily_ttest import get_daily_ttest
 from graphs import make_graphs
 from growth_table import make_growth_table
+from daily_ttest_table import make_ttest_table
 
 
 
@@ -24,16 +25,22 @@ for test, number in zip(TESTS, NUMBERS):
 
     #get statistics and parameters
     means, means_stde, treatment_effect = get_stats(raw_data)
-    daily_ttest = get_daily_ttest(raw_data)
 
     #visualize
     figures = make_graphs(means, treatment_effect, means_stde, number, test)
     figures.savefig("%s_figuers.png" %test, bbox_inches='tight', pad_inches=2)
     pyplot.clf()
 
+    #ttest table
+    daily_ttest = get_daily_ttest(raw_data)
+    ttest_table = make_ttest_table(daily_ttest, test)
+    ttest_table.savefig("%s_Ttest.png" %test, bbox_inches='tight')
+    pyplot.clf()
+
     if len(means.index) > 3:
         weekly_growth = get_weekly_growth(means)
-        tables = make_growth_table(weekly_growth, number, test)
-        tables.savefig("%s_tables.png" %test, bbox_inches='tight')
+        growth_table = make_growth_table(weekly_growth, number, test)
+        growth_table.savefig("%s_growth.png" % test, bbox_inches='tight')
+        pyplot.clf()
 
-    if len
+
