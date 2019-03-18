@@ -4,7 +4,8 @@ from matplotlib.ticker import MultipleLocator
 
 def make_graphs(means, treatment_effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
-    
+
+    DAYS = means.index[-1] + 1
     args = (number, test)
 
     majorLocator = MultipleLocator(7)
@@ -46,7 +47,7 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     means_axes = figure.add_subplot(211)
     if len(means.index) > 5:
         means.plot(ax=means_axes,
-                   xlim=(0,30),
+                   xlim=(0,DAYS),
                    yerr=means_stde,
                    )
         means_axes.xaxis.set_major_locator(majorLocator)
@@ -56,7 +57,7 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     else:
         means.plot(ax=means_axes,
                    kind='bar',
-                   xlim=(0, 30),
+                   xlim=(0, DAYS),
                    yerr=means_stde,
                    )
 
@@ -70,16 +71,18 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
 
     if len(means.index) > 5 :
         treatment_effect.plot(ax=effect_axes,
-                                  xlim=(0,30),
-                                 )
+                              xlim=(0,DAYS),
+                             )
+
         effect_axes.xaxis.set_major_locator(majorLocator)
         effect_axes.xaxis.set_minor_locator(minorLocator)
         effect_axes.legend(effect_axes.get_lines(), (treatment_effect.columns))
+
     else:
 
         treatment_effect.plot(ax=effect_axes,
                               kind='bar',
-                              xlim=(0, 30),
+                              xlim=(0, DAYS),
                               )
         effect_axes.legend(effect_axes.containers, (treatment_effect.columns))
 
@@ -89,4 +92,4 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)
 
     return figure
-    
+
