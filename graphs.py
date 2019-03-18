@@ -5,7 +5,7 @@ from matplotlib.ticker import MultipleLocator
 def make_graphs(means, treatment_effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
 
-    DAYS = means.index[-1] + 1
+    number_of_days = means.index[-1] + 1
     args = (number, test)
 
     majorLocator = MultipleLocator(7)
@@ -15,19 +15,20 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     pyplot.rc('font', size=18)
     pyplot.rc('lines', linewidth=3)
 
+    symbol_text_params = {'weight': 'bold',
+                          'size': 26,
+                          }
+    labels_text_params = {'size': 19}
+
+    marker_treatment_line = []
+
     title_text = r'$\bf{Figure %s.}$ means of %s across 28 days of incubation. (a) all soils, ' \
                  r'(b) normalized to control' % args
+
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
     means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %args[1]
     effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %args[1]
-
-    symbol_text_params = {'weight': 'bold',
-                         'size': 26,
-                         }
-    labels_text_params = {'size': 19
-                          }
-
 
     # means.columns = []
     # for soil in ('COM', 'MIN', 'UNC'):
@@ -47,7 +48,7 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     means_axes = figure.add_subplot(211)
     if len(means.index) > 5:
         means.plot(ax=means_axes,
-                   xlim=(0,DAYS),
+                   xlim=(0,number_of_days),
                    yerr=means_stde,
                    )
         means_axes.xaxis.set_major_locator(majorLocator)
@@ -57,7 +58,7 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     else:
         means.plot(ax=means_axes,
                    kind='bar',
-                   xlim=(0, DAYS),
+                   xlim=(0, number_of_days),
                    yerr=means_stde,
                    )
 
@@ -71,7 +72,8 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
 
     if len(means.index) > 5 :
         treatment_effect.plot(ax=effect_axes,
-                              xlim=(0,DAYS),
+                              xlim=(0,number_of_days),
+                              marker= 'h'
                              )
 
         effect_axes.xaxis.set_major_locator(majorLocator)
@@ -82,7 +84,7 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
 
         treatment_effect.plot(ax=effect_axes,
                               kind='bar',
-                              xlim=(0, DAYS),
+                              xlim=(0, number_of_days),
                               )
         effect_axes.legend(effect_axes.containers, (treatment_effect.columns))
 
