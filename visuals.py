@@ -12,7 +12,7 @@ from daily_ttest_table import make_ttest_table
 
 input_file = "all_tests.xlsx"
 
-TESTS = ['TOC']
+TESTS = ['MBC', 'MBN', 'DOC', 'HWE-S', 'ERG', 'RESP', 'AS', 'TOC']
 NUMBERS = range(1, len(TESTS)+1)
 
 for test, number in zip(TESTS, NUMBERS):
