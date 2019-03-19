@@ -4,7 +4,7 @@ from matplotlib import pyplot
 from stats import get_stats
 from growth import get_weekly_growth
 from daily_ttest import get_daily_ttest
-from graphs import make_graphs
+from plot_stats import make_graphs
 from growth_table import make_growth_table
 from daily_ttest_table import make_ttest_table
 
