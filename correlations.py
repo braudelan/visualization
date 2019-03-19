@@ -26,14 +26,15 @@ for test in TESTS:
     baseline_means = means.xs('t', level=1, axis=1).loc[0]
 
     stats[test + '_means'] = means
+    stats[test + '_effect'] = treatment_effect
     stats[test + '_baseline'] = baseline_means
 
 independent_keys = ['MBC', ]
-dependent_keys = ['HWE-S',]
+dependent_keys = ['MBC']
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
-dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
-
+# dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
+dependent_params = [stats[key + '_effect'] for key in dependent_keys]
 i = 1
 
 for ind, ind_key in zip(independent_params, independent_keys) :
@@ -57,7 +58,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
             rows = -(-num_days // cols)
             axes = figure.add_subplot(rows, cols, n)
-
+            axes.set_title(str(day))
             axes.plot(ind, dep.loc[day], 'ro')
 
             n += 1
