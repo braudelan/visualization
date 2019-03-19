@@ -28,7 +28,7 @@ for test in TESTS:
     stats[test + '_means'] = means
     stats[test + '_baseline'] = baseline_means
 
-independent_keys = ['MBC',]
+independent_keys = ['MBC', ]
 dependent_keys = ['HWE-S',]
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
@@ -41,6 +41,8 @@ for ind, ind_key in zip(independent_params, independent_keys) :
     for dep, dep_key in zip(dependent_params, dependent_keys):
 
         figure = pyplot.figure(i)
+        figure.subplots_adjust(hspace=0.2, wspace=0.2)
+
         i += 1
 
         n = 1
@@ -56,9 +58,9 @@ for ind, ind_key in zip(independent_params, independent_keys) :
             rows = -(-num_days // cols)
             axes = figure.add_subplot(rows, cols, n)
 
-            axes.plot(dep.loc[day], ind)
+            axes.plot(ind, dep.loc[day], 'ro')
 
             n += 1
 
-            figure.savefig("./correlation_figures/%s_%s.png" %(ind_key, dep_key) , bbox_inches='tight', pad_inches=2)
+        figure.savefig("./correlation_figures/%s_%s.png" %(ind_key, dep_key) , bbox_inches='tight', pad_inches=2)
 
