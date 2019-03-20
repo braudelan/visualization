@@ -29,7 +29,7 @@ for test in TESTS:
     stats[test + '_effect'] = treatment_effect
     stats[test + '_baseline'] = baseline_means
 
-independent_keys = ['MBC', ]
+independent_keys = ['MBC',  ]
 dependent_keys = ['MBC']
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
@@ -42,7 +42,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
     for dep, dep_key in zip(dependent_params, dependent_keys):
 
         figure = pyplot.figure(i)
-        figure.subplots_adjust(hspace=0.2, wspace=0.2)
+        figure.subplots_adjust(hspace=0.3, wspace=0.3)
 
         i += 1
 
