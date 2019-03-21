@@ -1,5 +1,6 @@
 import pandas
 from matplotlib import pyplot
+import matplotlib.backends.backend_pdf
 
 from stats import get_stats
 
@@ -29,8 +30,8 @@ for test in TESTS:
     stats[test + '_effect'] = treatment_effect
     stats[test + '_baseline'] = baseline_means
 
-independent_keys = ['MBC',  ]
-dependent_keys = ['MBC']
+independent_keys = ['MBC','RESP','HWE-S', 'AS', 'ERG', 'TOC',   ]
+dependent_keys = ['MBC','HWE-S', 'AS', 'TOC', 'DOC', 'MBN', ]
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
 # dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
@@ -39,11 +40,13 @@ i = 1
 
 for ind, ind_key in zip(independent_params, independent_keys) :
 
+    figures = []
+
     for dep, dep_key in zip(dependent_params, dependent_keys):
 
         figure = pyplot.figure(i)
         figure.subplots_adjust(hspace=0.3, wspace=0.3)
-
+        figure.suptitle(r'$\cal{%s}$' % dep_key)
         i += 1
 
         n = 1
@@ -63,5 +66,18 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
             n += 1
 
-        figure.savefig("./correlation_figures/%s_%s.png" %(ind_key, dep_key) , bbox_inches='tight', pad_inches=2)
+        figures.append(figure)
+
+    pyplot.cla()
+
+    pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_in_pdf/%s.pdf" % ind_key)
+    for fig in figures:
+        pdf.savefig(fig)
+    pdf.close()
+
+
+# todo change tick lables into soil catagories
+# todo remove y and x labels from inside subplots
+# todo increase x_lim so that point markers are not touching the edge of plot
+# todo insert varg
 
