@@ -44,16 +44,18 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
     for dep, dep_key in zip(dependent_params, dependent_keys):
 
-        figure = pyplot.figure(i, figsize=(10,20))
+        figure = pyplot.figure(i, figsize=(16, 8))
         figure.subplots_adjust(hspace=0.3, wspace=0.3)
-        figure.suptitle(r'$\cal{%s}$' % dep_key)
+        figure.suptitle(r'$\bf{%s}$' % dep_key)
         i += 1
 
-        n = 1
-        axes = {}
-
+        n = 0
+        plot_loc = 1
         for day in dep.index:
 
+            plots = pyplot.gcf().get_axes()
+            plot_col = [plots[i].colNum for i in range(len(plots) )]
+            plot_row = [plots[i].rowNum for i in range(len(plots) )]
             num_days = len(dep.index)
 
             if num_days <= 9:
@@ -63,17 +65,31 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
             rows = -(-num_days // cols)
 
-            if n > 1:
-                axes[str(n)] = figure.add_subplot(rows, cols, n, sharex=axes['1'], sharey=axes['1'])
+            if n == 0:
+                ax = figure.add_subplot(rows, cols, plot_loc)
             else:
-                axes[str(n)] = figure.add_subplot(rows, cols, n)
+                ax = figure.add_subplot(rows, cols, plot_loc, sharex=plots[0], sharey=plots[0])
+            #
+            # if not plot_col[n] == 0:
+            #     ax.yaxis.set_major_locator(pyplot.NullLocator())
+            # else:
+            #     None
+            #
+            # if not plot_row[n] == 1:
+            #     ax.xaxis.set_major_locator(pyplot.NullLocator())
+            # else:
+            #     None
 
-            axes[str(n)].set_title(str(day))
+            ax.set_xticklabels(dep.columns)
+            ax.xaxis.set_major_locator(pyplot.FixedLocator(ind.values))
 
-            axes[str(n)].plot(ind, dep.loc[day], 'rh')
+            ax.set_title(str(day))
+
+            ax.plot(ind, dep.loc[day], 'rh')
 
 
             n += 1
+            plot_loc += 1
 
         figures.append(figure)
 
