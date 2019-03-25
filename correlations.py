@@ -44,12 +44,14 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
     for dep, dep_key in zip(dependent_params, dependent_keys):
 
-        figure = pyplot.figure(i)
+        figure = pyplot.figure(i, figsize=(10,20))
         figure.subplots_adjust(hspace=0.3, wspace=0.3)
         figure.suptitle(r'$\cal{%s}$' % dep_key)
         i += 1
 
         n = 1
+        axes = {}
+
         for day in dep.index:
 
             num_days = len(dep.index)
@@ -60,9 +62,16 @@ for ind, ind_key in zip(independent_params, independent_keys) :
                 cols = 5
 
             rows = -(-num_days // cols)
-            axes = figure.add_subplot(rows, cols, n)
-            axes.set_title(str(day))
-            axes.plot(ind, dep.loc[day], 'ro')
+
+            if n > 1:
+                axes[str(n)] = figure.add_subplot(rows, cols, n, sharex=axes['1'], sharey=axes['1'])
+            else:
+                axes[str(n)] = figure.add_subplot(rows, cols, n)
+
+            axes[str(n)].set_title(str(day))
+
+            axes[str(n)].plot(ind, dep.loc[day], 'rh')
+
 
             n += 1
 
@@ -79,5 +88,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 # todo change tick lables into soil catagories
 # todo remove y and x labels from inside subplots
 # todo increase x_lim so that point markers are not touching the edge of plot
-# todo insert varg
+# todo insert argv to be able to run dependent params as either means or effect
+#   use an *if* loop for assigning dependent_params on the condition of argv == 'means'
+#   or argv == 'effect'
 
