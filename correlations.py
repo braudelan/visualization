@@ -1,17 +1,18 @@
+from sys import argv
+
 import pandas
 from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
 
 from stats import get_stats
+from get_qCO2 import get_qCO2
 
+qCO2 = get_qCO2()
 
 input_file = "all_tests.xlsx"
-
 TESTS = ['MBC', 'MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC']
-# NUMBERS = range(1, len(TESTS)+1)
 
 stats = {}
-
 for test in TESTS:
     # input data into DataFrame
     raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
@@ -30,12 +31,16 @@ for test in TESTS:
     stats[test + '_effect'] = treatment_effect
     stats[test + '_baseline'] = baseline_means
 
-independent_keys = ['MBC','RESP','HWE-S', 'AS', 'ERG', 'TOC',   ]
-dependent_keys = ['MBC','HWE-S', 'AS', 'TOC', 'DOC', 'MBN', ]
+stats['qCO2_means'] = qCO2
+stats['qCO2_baseline'] = qCO2.xs('t', level=1, axis=1).loc[0]
+
+independent_keys = ['MBC','MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC','qCO2']
+dependent_keys = ['MBC','HWE-S', 'MBN', 'DOC', 'ERG','RESP', 'AS','TOC','qCO2']
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
-# dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
-dependent_params = [stats[key + '_effect'] for key in dependent_keys]
+dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
+# dependent_params = [stats[key + '_effect'] for key in dependent_keys]
+
 i = 1
 
 for ind, ind_key in zip(independent_params, independent_keys) :
@@ -80,10 +85,10 @@ for ind, ind_key in zip(independent_params, independent_keys) :
             # else:
             #     None
 
+            ax.set_title(str(day))
+
             ax.set_xticklabels(dep.columns)
             ax.xaxis.set_major_locator(pyplot.FixedLocator(ind.values))
-
-            ax.set_title(str(day))
 
             ax.plot(ind, dep.loc[day], 'rh')
 
@@ -93,9 +98,8 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
         figures.append(figure)
 
-    pyplot.cla()
 
-    pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_in_pdf/%s.pdf" % ind_key)
+    pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_means/%s.pdf" % ind_key)
     for fig in figures:
         pdf.savefig(fig)
     pdf.close()
