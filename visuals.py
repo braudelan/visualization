@@ -25,7 +25,7 @@ for test, number in zip(TESTS, NUMBERS):
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
     #get statistics and parameters
-    means, means_stde, treatment_effect, baseline = get_stats(raw_data)
+    means, means_stde, treatment_effect = get_stats(raw_data)
 
     #graphs
     figures = make_graphs(means, treatment_effect, means_stde, number, test)
@@ -38,10 +38,16 @@ for test, number in zip(TESTS, NUMBERS):
     ttest_table.savefig("./one_shot_figures/%s_Ttest.png" %test, bbox_inches='tight')
     pyplot.clf()
 
+
     if len(means.index) > 3:
         weekly_growth = get_weekly_growth(means)
         growth_table = make_growth_table(weekly_growth, number, test)
         growth_table.savefig("./one_shot_figures/%s_growth.png" % test, bbox_inches='tight')
         pyplot.clf()
 
+    # baseline
+    baseline=means.loc[0].xs('c', level=1, )
 
+# todo create a baseline table that holds baseline values for each soil of the important properties (MBC, ERG, qCO2, HWE-S, DOC, TOC, AS)
+#   to create this table, iterate through all TESTS and for every TEST make a dictionary with soils and the corresponding values at day0
+#   then each of these dictionaries will be appended into another dictionary with the name of the TEST as the key

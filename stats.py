@@ -18,7 +18,7 @@ def get_stats(raw_data):
     # baseline properties
     baseline = means.loc[0].xs('c', level=1, axis=1)
 
-    return means, means_stde, treatment_effet, baseline
+    return means, means_stde, treatment_effet,
 
 
 
