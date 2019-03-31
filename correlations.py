@@ -32,14 +32,14 @@ for test in TESTS:
     stats[test + '_baseline'] = baseline_means
 
 stats['qCO2_means'] = qCO2
-stats['qCO2_baseline'] = qCO2.xs('t', level=1, axis=1).loc[0]
+stats['qCO2_baseline'] = qCO2.xs('c', level=1, axis=1).loc[0]
 
-independent_keys = ['MBC','MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC','qCO2']
-dependent_keys = ['MBC','HWE-S', 'MBN', 'DOC', 'ERG','RESP', 'AS','TOC','qCO2']
+independent_keys = ['MBC']#,'MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC','qCO2']
+dependent_keys = ['MBC']#,'HWE-S', 'MBN', 'DOC', 'ERG','RESP', 'AS','TOC',]
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
-dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
-# dependent_params = [stats[key + '_effect'] for key in dependent_keys]
+# dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
+dependent_params = [stats[key + '_effect'] for key in dependent_keys]
 
 i = 1
 
@@ -62,6 +62,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
             plot_col = [plots[i].colNum for i in range(len(plots) )]
             plot_row = [plots[i].rowNum for i in range(len(plots) )]
             num_days = len(dep.index)
+            ind_values = ind.astype(int).values
 
             if num_days <= 9:
                 cols = 3
@@ -74,8 +75,8 @@ for ind, ind_key in zip(independent_params, independent_keys) :
                 ax = figure.add_subplot(rows, cols, plot_loc)
             else:
                 ax = figure.add_subplot(rows, cols, plot_loc, sharex=plots[0], sharey=plots[0])
-            #
-            # if not plot_col[n] == 0:
+
+            # if not plot_col[n] == 0: # Index Error -->on last iteration, n=len(dep.index) while plot_col index is length 9
             #     ax.yaxis.set_major_locator(pyplot.NullLocator())
             # else:
             #     None
@@ -87,7 +88,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
             ax.set_title(str(day))
 
-            ax.set_xticklabels(dep.columns)
+            ax.set_xticklabels([soil + ', ' + str(value) for soil, value in zip(dep.columns, ind_values)])
             ax.xaxis.set_major_locator(pyplot.FixedLocator(ind.values))
 
             ax.plot(ind, dep.loc[day], 'rh')
@@ -99,7 +100,7 @@ for ind, ind_key in zip(independent_params, independent_keys) :
         figures.append(figure)
 
 
-    pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_means/%s.pdf" % ind_key)
+    pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_effect/%s.pdf" % ind_key)
     for fig in figures:
         pdf.savefig(fig)
     pdf.close()
