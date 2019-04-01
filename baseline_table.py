@@ -1,7 +1,7 @@
 from matplotlib import pyplot
 
 
-def make_ttest_table(daily_ttest, test):
+def make_ttest_table(baseline, test):
 
     title_text = r'%s daily Ttest' %test
 
@@ -12,12 +12,12 @@ def make_ttest_table(daily_ttest, test):
     axes.axis('tight')
     ttest_title = axes.set_title(title_text, pad=0.2, fontsize=20, position=(0, 1.1))
 
-    ttest_columns = daily_ttest.columns
+    ttest_columns = baseline.columns
 
-    ttest_table = pyplot.table(cellText=daily_ttest.values,
+    ttest_table = pyplot.table(cellText=baseline.values,
                                loc='center',
-                               colLabels=daily_ttest.columns,
-                               rowLabels=daily_ttest.index,
+                               colLabels=baseline.columns,
+                               rowLabels=baseline.index,
                                cellLoc='center',
                                colWidths=[0.1 for x in ttest_columns],
                                # bbox = [0.0, -1.3, 1.0, 1.0]

@@ -1,6 +1,6 @@
 import pandas
 
-def get_stats(raw_data, argv):
+def get_stats(raw_data):
 
     # means
     groupby_soil_treatment = raw_data.groupby(level=[0, 1],
@@ -15,10 +15,10 @@ def get_stats(raw_data, argv):
     treatment_diff = diff.xs("t", axis=1, level=1)  # slicing out from diff the unwanted results of control minus treatment
     treatment_effect = treatment_diff / means.xs('c', axis=1, level=1) * 100
 
-    return means, means_stde, treatment_effect
+    # baseline properties
+    baseline = means.loc[0].xs('c', level=1, axis=1)
 
-
-
+    return means, means_stde, treatment_effet,
 
 
 
