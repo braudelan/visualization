@@ -29,14 +29,6 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
     effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
 
-    # means.columns = []
-    # for soil in ('COM', 'MIN', 'UNC'):
-    #     label_c = soil + r'$_c$'
-    #     label_t = soil + r'$_t$'
-    #     means.columns.append(label_c)
-    #     means.columns.append(label_t)
-
-
     figure = pyplot.figure(1, figsize=(15,20))
     figure.tight_layout()
     figure.subplots_adjust(hspace=0.3)

@@ -45,21 +45,26 @@ qCO2_inst = RESP_means / MBC_means
 qCO2_average = pandas.read_excel(input_file, index_col=0, header=0, sheet_name='qCO2')
 
 # plotting
-figure = pyplot.figure(4, figsize=(10,10))
+figure = pyplot.figure(4, figsize=(16,12))
 figure.tight_layout()
-figure.subplots_adjust(wspace=0.5)
-figure.text(0.05, 0.01, title_text, fontsize=20)
+figure.subplots_adjust(hspace=0.5)
+figure.text(0.1, -0.1, title_text, fontsize=23)
 
-inst_axes = figure.add_subplot(121)
+# instantaneous qCO2
+inst_axes = figure.add_subplot(211)
 
-qCO2_inst.plot(ax=inst_axes,
-               kind='bar'
-               )
-average_axes = figure.add_subplot(122)
+qCO2_inst.drop(8).plot(ax=inst_axes,
+                      )
+# average qCO2
+average_axes = figure.add_subplot(212)
+
 
 qCO2_average.plot(ax=average_axes,
                   kind='bar'
                   )
+
+xtick_label_rotate = pyplot.xticks(rotation=45)
+
 # save figure
 figure.savefig("./figures/qCO2.png", bbox_inches='tight', pad_inches=2)
 pyplot.clf()

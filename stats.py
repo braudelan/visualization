@@ -15,15 +15,6 @@ def get_stats(raw_data):
     treatment_diff = diff.xs("t", axis=1, level=1)  # slicing out from diff the unwanted results of control minus treatment
     treatment_effect = treatment_diff / means.xs('c', axis=1, level=1) * 100
 
-    # baseline properties
-    baseline = means.loc[0].xs('c', level=1, axis=1)
-
-    return means, means_stde, treatment_effet,
+    return means, means_stde, treatment_effect
 
 
-
-
-    # standard error of normalized means
-    # control_stde_sqrd = (means_stde ** 2).xs("c", axis=1, level=1)  # control stnd error values squared
-    # MRE_stde_sqrd = (means_stde ** 2).xs("t", axis=1, level=1)  # treatment stnd error values squared
-    # stde_effect = ((control_stde_sqrd + MRE_stde_sqrd) ** 0.5).iloc[1:5, :]  # stnd error of treatment effect
