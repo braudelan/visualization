@@ -15,3 +15,5 @@ groupby_soil_treatment = raw_data.groupby(level=[0, 1], axis=1)
 
 means = groupby_soil_treatment.mean()  # means of 4 replicates
 
+
+# todo fit an equation for data points of means for every soil on every week of incubation using scipy curve_fit

@@ -33,7 +33,7 @@ def make_growth_table(weekly_growth, test, number):
                                 colLabels=growth_columns,
                                 rowLabels=row_labels,
                                 cellLoc='center',
-                                colWidths=[0.07, 0.1, 0.1, 0.1, 0.1],
+                                # colWidths=[0.07, 0.1, 0.1, 0.1, 0.1],
                                 )
 
     for cell in growth_table._cells:
