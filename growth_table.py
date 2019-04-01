@@ -1,9 +1,9 @@
 from matplotlib import pyplot
 
 
-def make_growth_table(weekly_growth, argv):
+def make_growth_table(weekly_growth, test, number):
 
-    args = (argv.table_number, argv.test)
+    args = (number, test)
 
     pyplot.rc('font', size=18)
     titles_params = { 'fontsize': 20}
