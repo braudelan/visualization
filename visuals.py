@@ -7,12 +7,12 @@ from daily_ttest import get_daily_ttest
 from plot_stats import make_graphs
 from growth_table import make_growth_table
 from daily_ttest_table import make_ttest_table
-
+from which_round import get_round
 
 
 input_file = "all_tests.xlsx"
 
-TESTS = ['MBC','MBN', 'DOC', 'ERG']
+TESTS = ['MBC','MBN', 'DOC', 'ERG', 'HWE-S', 'RESP', 'AS', 'TOC']
 NUMBERS = range(1, len(TESTS)+1)
 
 baseline_dict = {}
@@ -31,8 +31,8 @@ for test, number in zip(TESTS, NUMBERS):
     means, means_stde, treatment_effect = get_stats(raw_data)
 
     #get baseline values and append to baseline_dict
-    means_control       = means.xs('c', level=1, axis=1).astype(int)
-    baseline            = means_control.loc[0]
+    means_control       = means.xs('c', level=1, axis=1)
+    baseline            = means_control.loc[0].round(get_round(means))
     baseline_to_dict    = baseline.squeeze().to_dict()
     baseline_dict[test] = baseline_to_dict
 
@@ -74,7 +74,7 @@ baseline_table = pyplot.table(cellText=baseline_data.values,
                            colLabels=baseline_data.columns,
                            rowLabels=baseline_data.index,
                            cellLoc='center',
-                           colWidths=[0.1 for x in baseline_data.columns],
+                          # colWidths=[0.1 for x in baseline_data.columns],
                            # bbox = [0.0, -1.3, 1.0, 1.0]
                            )
 
