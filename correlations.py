@@ -1,5 +1,3 @@
-from sys import argv
-
 import pandas
 from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
@@ -10,7 +8,7 @@ from get_qCO2 import get_qCO2
 qCO2 = get_qCO2()
 
 input_file = "all_tests.xlsx"
-TESTS = ['MBC', 'MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC']
+TESTS = ['MBC','MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC']
 
 stats = {}
 for test in TESTS:
@@ -25,21 +23,28 @@ for test in TESTS:
     #get statistics and parameters
     means, means_stde, treatment_effect = get_stats(raw_data)
 
+    diff = means.diff(periods=1, axis=1)
+    treatment_diff = diff.xs("t", axis=1, level=1)
+
     baseline_means = means.xs('t', level=1, axis=1).loc[0]
+
+    total_change = treatment_diff.iloc[-1,:] - baseline_means
 
     stats[test + '_means'] = means
     stats[test + '_effect'] = treatment_effect
     stats[test + '_baseline'] = baseline_means
+    stats[test + '_total_change'] = total_change
 
 stats['qCO2_means'] = qCO2
 stats['qCO2_baseline'] = qCO2.xs('c', level=1, axis=1).loc[0]
 
-independent_keys = ['MBC']#,'MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC','qCO2']
-dependent_keys = ['MBC']#,'HWE-S', 'MBN', 'DOC', 'ERG','RESP', 'AS','TOC',]
+independent_keys = ['MBC','MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC','qCO2']
+dependent_keys = ['MBC','HWE-S', 'MBN', 'DOC', 'ERG','RESP', 'AS','TOC',]
 
 independent_params = [stats[key + '_baseline'] for key in independent_keys]
 # dependent_params = [stats[key + '_means'].xs('t', level=1,axis=1) for key in dependent_keys]
 dependent_params = [stats[key + '_effect'] for key in dependent_keys]
+# dependent_params = [stats[key + '_total_change'] for key in dependent_keys]
 
 i = 1
 
@@ -101,6 +106,8 @@ for ind, ind_key in zip(independent_params, independent_keys) :
 
 
     pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_effect/%s.pdf" % ind_key)
+    # pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_means/%s.pdf" % ind_key)
+    # pdf = matplotlib.backends.backend_pdf.PdfPages("./correlations_total_change/%s.pdf" % ind_key)
     for fig in figures:
         pdf.savefig(fig)
     pdf.close()

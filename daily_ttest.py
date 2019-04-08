@@ -49,7 +49,7 @@ def get_daily_ttest(raw_data: DataFrame):
         Ttest_dic[day] = all_pairs
 
     daily_ttest = pandas.DataFrame.from_dict(Ttest_dic)
-    daily_ttest = daily_ttest.astype(float, copy=False).round(2)
+    daily_ttest = daily_ttest.astype(float, copy=False).round(5)
     # daily_ttest.rename_axis("days", inplace=True)
 
     return daily_ttest
