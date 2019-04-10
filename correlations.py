@@ -21,7 +21,7 @@ for test in TESTS:
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
     #get statistics and parameters
-    means, means_stde, treatment_effect = get_stats(raw_data)
+    means, means_stde, effect = get_stats(raw_data)
 
     diff = means.diff(periods=1, axis=1)
     treatment_diff = diff.xs("t", axis=1, level=1)
@@ -31,7 +31,7 @@ for test in TESTS:
     total_change = treatment_diff.iloc[-1,:] - baseline_means
 
     stats[test + '_means'] = means
-    stats[test + '_effect'] = treatment_effect
+    stats[test + '_effect'] = effect
     stats[test + '_baseline'] = baseline_means
     stats[test + '_total_change'] = total_change
 

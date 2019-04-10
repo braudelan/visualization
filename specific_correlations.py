@@ -8,15 +8,11 @@ from stats import get_stats
 from get_qCO2 import get_qCO2
 from which_round import get_round
 
-parser = argparse.ArgumentParser()
-parser.add_argument('ind', type=str)
-parser.add_argument('dep', type=str)
-parser.add_argument('day', type=int)
-parser.add_argument('correlation_factor', type=str, choices=['means', 'effect', 'total change'])
-args = parser.parse_args()
+file_for_keys = open('corr_input.txt')
+key_names = file_for_keys.readlines()
 
-arguments = ind_key, dep_key, day, corr_factor = args.ind, args.dep, args.day, args.correlation_factor
-
+ind_keys = key_names[0]
+dep_keys = [key_names[1],
 
 qCO2 = get_qCO2()
 
@@ -34,7 +30,7 @@ for test in [ind_key, dep_key]:
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
     #get statistics and parameters
-    means, means_stde, treatment_effect = get_stats(raw_data)
+    means, means_stde, effect = get_stats(raw_data)
 
     diff = means.diff(periods=1, axis=1)
     treatment_diff = diff.xs("t", axis=1, level=1)
@@ -44,7 +40,7 @@ for test in [ind_key, dep_key]:
     total_change = treatment_diff.iloc[-1,:] - baseline_means
 
     stats[test + '_means'] = means
-    stats[test + '_effect'] = treatment_effect
+    stats[test + '_effect'] = effect
     stats[test + '_baseline'] = baseline_means
     stats[test + '_total_change'] = total_change
 

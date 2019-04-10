@@ -2,7 +2,7 @@ from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
 
-def make_graphs(means, treatment_effect, means_stde, argv):
+def make_graphs(means, effect, means_stde, argv):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
     
     args = (argv.figure_number, argv.test)
@@ -67,19 +67,19 @@ def make_graphs(means, treatment_effect, means_stde, argv):
     # treatment effect as percent of control
     effect_axes = figure.add_subplot(212)
     if len(means.index) > 5 :
-            treatment_effect.plot(ax=effect_axes,
+            effect.plot(ax=effect_axes,
                                   xlim=(0,30),
                                  )
             effect_axes.xaxis.set_major_locator(majorLocator)
             effect_axes.xaxis.set_minor_locator(minorLocator)
 
     else:
-        treatment_effect.plot(ax=effect_axes,
+        effect.plot(ax=effect_axes,
                               kind='bar',
                               xlim=(0, 30),
                               )
 
-    effect_axes.legend((effect_axes.get_lines()), (treatment_effect.columns))
+    effect_axes.legend((effect_axes.get_lines()), (effect.columns))
     effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=labels_text_params)
     effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
     effect_axes.tick_params(axis='x', which='minor', width=1,length=3)

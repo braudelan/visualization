@@ -13,8 +13,8 @@ def get_stats(raw_data):
     #treatment effect
     diff = means.diff(periods=1, axis=1)  # substracting over columns index, from right to left
     treatment_diff = diff.xs("t", axis=1, level=1)  # slicing out from diff the unwanted results of control minus treatment
-    treatment_effect = treatment_diff / means.xs('c', axis=1, level=1) * 100
+    effect = treatment_diff / means.xs('c', axis=1, level=1) * 100
 
-    return means, means_stde, treatment_effect
+    return means, means_stde, effect
 
 

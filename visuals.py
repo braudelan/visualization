@@ -8,7 +8,7 @@ from plot_stats import make_graphs
 from growth_table import make_growth_table
 from daily_ttest_table import make_ttest_table
 from which_round import get_round
-
+from control_graphs import plot_control
 
 input_file = "all_tests.xlsx"
 
@@ -28,18 +28,23 @@ for test, number in zip(TESTS, NUMBERS):
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
     #get general statistics
-    means, means_stde, treatment_effect = get_stats(raw_data)
+    means, means_stde, effect = get_stats(raw_data)
 
     #get baseline values and append to baseline_dict
-    means_control       = means.xs('c', level=1, axis=1)
-    baseline            = means_control.loc[0].round(get_round(means))
+    control_means       = means.xs('c', level=1, axis=1)
+    baseline            = control_means.loc[0].round(get_round(means))
     baseline_to_dict    = baseline.squeeze().to_dict()
     baseline_dict[test] = baseline_to_dict
 
-    #graphs
-    figures = make_graphs(means, treatment_effect, means_stde, number, test)
-    figures.savefig("./one_shot_figures/%s_figuers.png" %test, bbox_inches='tight', pad_inches=2)
+    # basic statistics graphs
+    basic_stats_fig = make_graphs(means, effect, means_stde, number, test)
+    basic_stats_fig.savefig("./one_shot_figures/%s_figuers.png" % test, bbox_inches='tight', pad_inches=2)
     pyplot.clf()
+
+    # control graph
+    control_means_fig = plot_control(control_means, test)
+    control_means_fig.savefig('./control_figures/%s.png' %test, bbox_inches='tight')
+    pyplot.cla()
 
     #ttest table
     daily_ttest = get_daily_ttest(raw_data)

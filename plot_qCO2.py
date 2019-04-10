@@ -39,7 +39,7 @@ for test in TESTS:
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
     #get statistics and parameters
-    means, means_stde, treatment_effect = get_stats(raw_data)
+    means, means_stde, effect = get_stats(raw_data)
 
     stats[test] = means
 

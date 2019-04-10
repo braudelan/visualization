@@ -2,7 +2,7 @@ from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
 
-def make_graphs(means, treatment_effect, means_stde, number, test):
+def make_graphs(means, effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
 
     number_of_days = means.index[-1]
@@ -62,22 +62,22 @@ def make_graphs(means, treatment_effect, means_stde, number, test):
     effect_axes = figure.add_subplot(212)
 
     if len(means.index) > 5 :
-        treatment_effect.plot(ax=effect_axes,
+        effect.plot(ax=effect_axes,
                               xlim=(0,number_of_days + 1),
                               marker= 'h'
                              )
 
         effect_axes.xaxis.set_major_locator(majorLocator)
         effect_axes.xaxis.set_minor_locator(minorLocator)
-        effect_axes.legend(effect_axes.get_lines(), (treatment_effect.columns))
+        effect_axes.legend(effect_axes.get_lines(), (effect.columns))
 
     else:
 
-        treatment_effect.plot(ax=effect_axes,
+        effect.plot(ax=effect_axes,
                               kind='bar',
                               xlim=(0, number_of_days + 1),
                               )
-        effect_axes.legend(effect_axes.containers, (treatment_effect.columns))
+        effect_axes.legend(effect_axes.containers, (effect.columns))
 
     effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=labels_text_params)
     effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
