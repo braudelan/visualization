@@ -1,7 +1,7 @@
 from matplotlib import pyplot
 
 
-def make_ttest_table(daily_ttest, test):
+def plot_ttest_table(daily_ttest, test):
 
     title_text = r'%s daily Ttest' %test
 

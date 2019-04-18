@@ -11,8 +11,9 @@ from which_round import get_round
 file_for_keys = open('corr_input.txt')
 key_names = file_for_keys.readlines()
 
-ind_keys = key_names[0]
-dep_keys = [key_names[1],
+corr_factor = key_names[0]
+ind_keys    = key_names[0]
+dep_keys    = key_names[[1],,
 
 qCO2 = get_qCO2()
 
@@ -47,8 +48,9 @@ for test in [ind_key, dep_key]:
 stats['qCO2_means'] = qCO2
 stats['qCO2_baseline'] = qCO2.xs('c', level=1, axis=1).loc[0]
 
-ind = stats[ind_key + '_baseline']
-for ind in ind_keys:
+ = stats[ind_key + '_baseline']
+
+for key in ind_keys:
     for dep_key in dep_keys:
         if corr_factor == 'means':
             dep = stats[dep_key + '_means']
@@ -65,10 +67,10 @@ for ind in ind_keys:
 
         ax = figure.add_subplot(111)
 
-        ax.set_xticklabels([soil + ', ' + str(value) for soil, value in zip(dep.columns, ind.values)])
-        ax.xaxis.set_major_locator(pyplot.FixedLocator(ind.values))
+        ax.set_xticklabels([soil + ', ' + str(value) for soil, value in zip(dep.columns, key.values)])
+        ax.xaxis.set_major_locator(pyplot.FixedLocator(key.values))
 
-        ax.plot(ind, dep.loc[day], 'rh')
+        ax.plot(key, dep.loc[day], 'rh')
 
         pdf = matplotlib.backends.backend_pdf.PdfPages("./specific_correlations/%s-%s-%s-%s.pdf" % arguments)
         pdf.savefig(figure)

@@ -2,7 +2,7 @@ from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
 
-def make_graphs(means, effect, means_stde, number, test):
+def plot_stats(means, effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
 
     number_of_days = means.index[-1]
@@ -29,7 +29,7 @@ def make_graphs(means, effect, means_stde, number, test):
     means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
     effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
 
-    figure = pyplot.figure(1, figsize=(15,20))
+    figure = pyplot.figure(number, figsize=(15,20))
     figure.tight_layout()
     figure.subplots_adjust(hspace=0.3)
     figure.text(0.05, 0.01, title_text, fontsize=20)
@@ -87,3 +87,4 @@ def make_graphs(means, effect, means_stde, number, test):
     return figure
 
 # todo change RESP ylabel into " mg CO2-C * (kg soil * h)^-1 "
+

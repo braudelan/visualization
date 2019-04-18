@@ -3,13 +3,14 @@ from matplotlib.ticker import MultipleLocator
 
 from which_round import get_round
 
-def plot_control(control_means, test):
+def plot_control(control_means, test, number):
 
-
+# data
     control_means = control_means * 24
     round_factor = get_round(control_means)
     control_means = control_means.round(round_factor)
 
+# plotting parameters
     majorLocator = MultipleLocator(7)
     minorLocator = MultipleLocator(1)
 
@@ -17,6 +18,7 @@ def plot_control(control_means, test):
     pyplot.rc('font', size=18)
     pyplot.rc('lines', linewidth=3)
 
+# text for labels
     title_text = r' %s, control samples, means across 28 days of incubation.' % test
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
@@ -27,10 +29,10 @@ def plot_control(control_means, test):
 
     labels_text_params = {'size': 19
                           }
+# plotting
+    figure = pyplot.figure(number, figsize=(15,20))
 
-    figure = pyplot.figure(1, figsize=(15,20))
-    figure.tight_layout()
-    figure.text(0.05, 0.01, title_text, fontsize=20)
+    figure.text(0.05, 0, title_text, fontsize=20) # figure title
 
     axes = figure.add_subplot(111)
 
@@ -40,15 +42,10 @@ def plot_control(control_means, test):
 
     axes.xaxis.set_major_locator(majorLocator)
     axes.xaxis.set_minor_locator(minorLocator)
-    #
-    # else:
-    #     control_means.plot(ax=axes,
-    #                        kind='bar',
-    #                        xlim=(0, 30),
-    #                        yerr=means_stde,
-    #                )
     axes.tick_params(axis='x', which='minor', width=1, length=3)
-    ylabel = axes.set_ylabel(ylabel_text, labelpad=30, fontdict=labels_text_params)
-    xlabel = axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
+    axes.set_ylabel(ylabel_text, labelpad=30, fontdict=labels_text_params)
+    axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
+
+    pyplot.tight_layout(rect=[0.1, 0.1, 0.1, 0.1])
 
     return figure
