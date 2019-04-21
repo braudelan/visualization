@@ -50,10 +50,11 @@ def get_daily_ttest(raw_data: DataFrame):
 
     daily_ttest = pandas.DataFrame.from_dict(Ttest_dic)
     daily_ttest = daily_ttest.astype(float, copy=False).round(5)
-    # daily_ttest.rename_axis("days", inplace=True)
+    daily_ttest.rename_axis("days", inplace=True)
 
-    return Ttest_dic
     return daily_ttest
+    return Ttest_dic
+
 
 # create a boelean mask dataframe of significance
 # for every pair of soils on every sampling day

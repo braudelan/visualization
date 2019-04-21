@@ -1,7 +1,7 @@
 import pandas
 from matplotlib import pyplot
 
-from stats import get_stats
+from get_stats import get_stats
 from which_round import get_round
 
 

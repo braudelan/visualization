@@ -2,7 +2,7 @@ import pandas
 from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
-from stats import get_stats
+from get_stats import get_stats
 
 input_file = "all_tests.xlsx"
 

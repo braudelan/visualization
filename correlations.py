@@ -2,7 +2,7 @@ import pandas
 from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
 
-from stats import get_stats
+from get_stats import get_stats
 from get_qCO2 import get_qCO2
 
 qCO2 = get_qCO2()

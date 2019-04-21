@@ -4,7 +4,7 @@ import pandas
 from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
 
-from stats import get_stats
+from get_stats import get_stats
 from get_qCO2 import get_qCO2
 from which_round import get_round
 
