@@ -3,13 +3,15 @@ from matplotlib.ticker import MultipleLocator
 
 
 def plot_stats(means, effect, means_stde, number, test):
-    stde_treatment_means = means_stde.xs("t", axis=1, level=1)
 
-    last_day = means.index[-1]  # last sampling day
-    len_days = len(means.index) # number of sampling days
+# local variabels
+    last_day = means.index[-1]     # last sampling day
+    len_days = len(means.index)    # number of sampling days
+    excluded = effect.iloc[1:, :]  # treatment effect without day 0
 
-    majorLocator = MultipleLocator(7)
-    minorLocator = MultipleLocator(1)
+# pyplot parameters
+    majorLocator = MultipleLocator(7)  # major ticks locations
+    minorLocator = MultipleLocator(1)  # minor ticks locations
 
     pyplot.rc('legend', facecolor='inherit', frameon=False, markerscale=1.5)
     pyplot.rc('font', size=18)
@@ -18,19 +20,24 @@ def plot_stats(means, effect, means_stde, number, test):
     symbol_text_params = {'weight': 'bold',
                           'size': 26,
                           }
-    labels_text_params = {'size': 19}
+    label_text_params = {'size': 19}
 
     marker_treatment_line = []
 
+# text
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
-                 r'(b) normalized to control' % (number, test, number_of_days)
+                 r'(b) normalized to control' % (number, test, last_day)
 
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
-    means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
+    if test == 'RESP':
+        means_ylabel_text = r'$%s\ \slash\ mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ h^{-1} $' % test
+    else:
+        means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
+
     effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
 
-    #
+# create and adjut figure
     figure_1 = pyplot.figure(number, figsize=(15,20))
     figure_1.tight_layout()
     figure_1.subplots_adjust(hspace=0.3)
@@ -43,7 +50,7 @@ def plot_stats(means, effect, means_stde, number, test):
     if len_days > 5:
         means.plot(
                    ax=means_axes,
-                   xlim=(0,number_of_days + 1),
+                   xlim=(0,last_day + 1),
                    yerr=means_stde,
                    )
 
@@ -55,26 +62,24 @@ def plot_stats(means, effect, means_stde, number, test):
         means.plot(
                    ax=means_axes,
                    kind='bar',
-                   xlim=(0, number_of_days + 1),
+                   xlim=(0, last_day + 1),
                    yerr=means_stde,
                    )
 
     means_axes.tick_params(axis='x', which='minor', width=1, length=3)
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
-    means_ylabel = means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=labels_text_params)
+    means_ylabel = means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
     means_axes.set_xlabel('')
 
 
 # plot treatment effect as percent of control
     effect_axes = figure_1.add_subplot(212)
 
-    excluded = effect.iloc[1:,:] # treatment effect without day 0
-
     if len_days > 3 :
         effect.plot(
                     ax=effect_axes,
                     kind='bar',
-                    xlim=(0,number_of_days + 1),
+                    xlim=(0,last_day + 1),
                    )
 
         effect_axes.xaxis.set_major_locator(majorLocator)
@@ -85,12 +90,12 @@ def plot_stats(means, effect, means_stde, number, test):
 
         excluded.plot(ax=effect_axes,
                               kind='bar',
-                              xlim=(0, number_of_days + 1),
+                              xlim=(0, last_day + 1),
                               )
         effect_axes.legend(effect_axes.containers, (effect.columns))
 
-    effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=labels_text_params)
-    effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
+    effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=label_text_params)
+    effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=label_text_params)
     effect_axes.tick_params(axis='x', which='minor', width=1,length=3)
     effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)
 

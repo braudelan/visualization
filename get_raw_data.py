@@ -10,10 +10,11 @@ import pandas
 def get_args():
 
     """
-    Parse tabs names arguments to be used for getting data sets from excel file
+    Parse tab names arguments to be used for getting data sets from excel file
 
-    returns list of data sets keys
-    returns corresponding id numbers
+    returns a list of data set keys
+    returns a corresponding list of id numbers
+    both argument lists are optional
     """
 
     parser = argparse.ArgumentParser()

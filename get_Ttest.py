@@ -4,7 +4,7 @@ from pandas import DataFrame
 from scipy.stats import ttest_ind
 
 
-def get_daily_ttest(raw_data: DataFrame):
+def get_daily_Ttest(raw_data: DataFrame):
 
     raw_data = raw_data.T
     Ttest_dic = {}
@@ -38,12 +38,12 @@ def get_daily_ttest(raw_data: DataFrame):
                                 )
 
         all_pairs = {
-                     "COM-MIN_t": COM_MIN_t[1],
-                     "COM-UNC_t": COM_UNC_t[1],
-                     "MIN-UNC_t": MIN_UNC_t[1],
-                     "COM_MIN_c": COM_MIN_c[1],
-                     "COM_UNC_c": COM_UNC_c[1],
-                     "MIN_UNC_c": MIN_UNC_c[1],
+                     "$COM_{t}-MIN_{t}$": COM_MIN_t[1],
+                     "$COM_{t}-UNC_{t}$": COM_UNC_t[1],
+                     "$MIN_{t}-UNC_{t}$": MIN_UNC_t[1],
+                     "$COM_{c}-MIN_{c}$": COM_MIN_c[1],
+                     "$COM_{c}-UNC_{c}$": COM_UNC_c[1],
+                     "$MIN_{c}-UNC_{c}$": MIN_UNC_c[1],
                      }
 
         Ttest_dic[day] = all_pairs
@@ -52,17 +52,10 @@ def get_daily_ttest(raw_data: DataFrame):
     daily_ttest = daily_ttest.astype(float, copy=False).round(5)
     daily_ttest.rename_axis("days", inplace=True)
 
-    return daily_ttest
-    return Ttest_dic
+    mask = daily_ttest < 0.05
 
-
-# create a boelean mask dataframe of significance
-# for every pair of soils on every sampling day
-
-def significance(Ttest_dict):
-
-    for day in Ttest_dict.keys():
-            mask = pandas.DataFrame.from_dict(Ttest_dict[day], orient='index', columns=day)
+    return mask, daily_ttest
 
 
 
+# todo sort daily_Ttest.index so that control-control pairs and treatment-treatment pairs are grouped togethter
