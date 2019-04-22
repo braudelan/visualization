@@ -5,7 +5,8 @@ from matplotlib.ticker import MultipleLocator
 def plot_stats(means, effect, means_stde, number, test):
     stde_treatment_means = means_stde.xs("t", axis=1, level=1)
 
-    number_of_days = means.index[-1]
+    last_day = means.index[-1]  # last sampling day
+    len_days = len(means.index) # number of sampling days
 
     majorLocator = MultipleLocator(7)
     minorLocator = MultipleLocator(1)
@@ -29,25 +30,30 @@ def plot_stats(means, effect, means_stde, number, test):
     means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
     effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
 
-    figure = pyplot.figure(number, figsize=(15,20))
-    figure.tight_layout()
-    figure.subplots_adjust(hspace=0.3)
-    figure.text(0.05, 0.01, title_text, fontsize=20)
+    #
+    figure_1 = pyplot.figure(number, figsize=(15,20))
+    figure_1.tight_layout()
+    figure_1.subplots_adjust(hspace=0.3)
+    figure_1.text(0.05, 0.01, title_text, fontsize=20)
 
 
-    # means of all expr. units
-    means_axes = figure.add_subplot(211)
-    if len(means.index) > 5:
-        means.plot(ax=means_axes,
+# plot means of all expr. units
+    means_axes = figure_1.add_subplot(211)
+
+    if len_days > 5:
+        means.plot(
+                   ax=means_axes,
                    xlim=(0,number_of_days + 1),
                    yerr=means_stde,
                    )
+
         means_axes.xaxis.set_major_locator(majorLocator)
         means_axes.xaxis.set_minor_locator(minorLocator)
         means_axes.legend(means_axes.get_lines(), (means.columns))
 
     else:
-        means.plot(ax=means_axes,
+        means.plot(
+                   ax=means_axes,
                    kind='bar',
                    xlim=(0, number_of_days + 1),
                    yerr=means_stde,
@@ -58,14 +64,18 @@ def plot_stats(means, effect, means_stde, number, test):
     means_ylabel = means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=labels_text_params)
     means_axes.set_xlabel('')
 
-    # treatment effect as percent of control
-    effect_axes = figure.add_subplot(212)
 
-    if len(means.index) > 5 :
-        effect.plot(ax=effect_axes,
-                              xlim=(0,number_of_days + 1),
-                              marker= 'h'
-                             )
+# plot treatment effect as percent of control
+    effect_axes = figure_1.add_subplot(212)
+
+    excluded = effect.iloc[1:,:] # treatment effect without day 0
+
+    if len_days > 3 :
+        effect.plot(
+                    ax=effect_axes,
+                    kind='bar',
+                    xlim=(0,number_of_days + 1),
+                   )
 
         effect_axes.xaxis.set_major_locator(majorLocator)
         effect_axes.xaxis.set_minor_locator(minorLocator)
@@ -73,7 +83,7 @@ def plot_stats(means, effect, means_stde, number, test):
 
     else:
 
-        effect.plot(ax=effect_axes,
+        excluded.plot(ax=effect_axes,
                               kind='bar',
                               xlim=(0, number_of_days + 1),
                               )
@@ -84,7 +94,7 @@ def plot_stats(means, effect, means_stde, number, test):
     effect_axes.tick_params(axis='x', which='minor', width=1,length=3)
     effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)
 
-    return figure
+    return figure_1
 
 # todo change RESP ylabel into " mg CO2-C * (kg soil * h)^-1 "
 

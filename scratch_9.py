@@ -1,8 +1,8 @@
-from get_raw_data import get_multi_sets, get_args
+from get_raw_data import get_single_set,get_multi_sets, get_args
 from  get_stats import get_stats
 
-data_keys = get_args()[0]
-dataframes = get_multi_sets(data_keys)
+data_keys = get_args()[0][0]
+raw_data = get_single_set(data_keys)
+means, effect, means_stde = get_stats(raw_data)
 
-print(dataframes['MBC'], dataframes['TOC'])
 

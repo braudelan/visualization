@@ -59,7 +59,7 @@ def get_daily_ttest(raw_data: DataFrame):
 # create a boelean mask dataframe of significance
 # for every pair of soils on every sampling day
 
-def significance_mask(Ttest_dict):
+def significance(Ttest_dict):
 
     for day in Ttest_dict.keys():
             mask = pandas.DataFrame.from_dict(Ttest_dict[day], orient='index', columns=day)

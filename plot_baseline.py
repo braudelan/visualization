@@ -7,7 +7,7 @@ dataframes = get_multi_sets(args)
 
 title_text = r'baseline values of important parameters for each soil'
 
-figure = pyplot.figure(5)
+figure = pyplot.figure(4)
 
 axes = figure.add_subplot(111)
 axes.axis('off')
@@ -31,5 +31,5 @@ for cell in baseline_table._cells:
 
 baseline_table.scale(2, 3)
 
-figure.savefig("./figures/baseline_table.png", bbox_inches='tight')
+figure.savefig("./misc_figures/baseline_table.png", bbox_inches='tight')
 pyplot.cla()

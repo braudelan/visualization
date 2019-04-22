@@ -62,7 +62,7 @@ normalized_qCO2 = qCO2_inst / baseline
 qCO2_average = pandas.read_excel(input_file, index_col=0, header=0, sheet_name='qCO2')
 
 # plotting
-figure = pyplot.figure(4, figsize=(16,18))
+figure = pyplot.figure(3, figsize=(16,18))
 figure.tight_layout()
 figure.subplots_adjust(hspace=0.3)
 figure.text(-0.1, -0.1, title_text, fontsize=23)
@@ -87,7 +87,7 @@ qCO2_average.plot(ax=average_axes,
 xtick_label_rotate = pyplot.xticks(rotation=45)
 
 # save figure
-figure.savefig("./figures/qCO2.png", bbox_inches='tight', pad_inches=2)
+figure.savefig("./misc_figures/qCO2.png", bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
 # todo work on title

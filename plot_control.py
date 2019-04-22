@@ -30,11 +30,11 @@ def plot_control(control_means, test, number):
     labels_text_params = {'size': 19
                           }
 # plotting
-    figure = pyplot.figure(number, figsize=(15,20))
+    figure_2 = pyplot.figure(number, figsize=(15,20))
 
-    figure.text(0.05, 0, title_text, fontsize=20) # figure title
+    figure_2.text(0.05, 0, title_text, fontsize=20) # figure title
 
-    axes = figure.add_subplot(111)
+    axes = figure_2.add_subplot(111)
 
     control_means.plot(ax=axes,
                        xlim=(0,30),
@@ -48,4 +48,4 @@ def plot_control(control_means, test, number):
 
     pyplot.tight_layout(rect=[0.1, 0.1, 0.1, 0.1])
 
-    return figure
+    return figure_2

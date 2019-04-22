@@ -8,11 +8,11 @@ from get_raw_data import get_args
 from get_stats import get_stats
 from plot_stats import plot_stats
 from plot_control import plot_control
-from daily_ttest import get_daily_ttest
-from daily_ttest_table import tabulate_Ttest
+from get_Ttest import get_daily_ttest
+from tabulate_Ttest import tabulate_Ttest
 from which_round import get_round
-from growth import get_weekly_growth
-from growth_table import make_growth_table
+from get_growth import get_weekly_growth
+from tabulate_growth import make_growth_table
 
 specific_sets, specific_nums = get_args()
 
@@ -45,7 +45,7 @@ for test, number in zip(TESTS, NUMBERS):
 
 # plot means and normalized means(effect)
     general_stats_fig = plot_stats(means, effect, means_stde, number, test)
-    general_stats_fig.savefig("./one_shot_figures/%s_figuers.png" % test, bbox_inches='tight', pad_inches=2)
+    general_stats_fig.savefig("./figures/%s_figuers.png" % test, bbox_inches='tight', pad_inches=2)
     pyplot.cla()
 
 # plot control graph
@@ -56,14 +56,14 @@ for test, number in zip(TESTS, NUMBERS):
 # plot ttest table
     daily_ttest = get_daily_ttest(raw_data)
     ttest_table = tabulate_Ttest(daily_ttest, test)
-    ttest_table.savefig("./one_shot_figures/%s_Ttest.png" %test, bbox_inches='tight')
+    ttest_table.savefig("./figures/%s_Ttest.png" %test, bbox_inches='tight')
     pyplot.cla()
 
 
     # if len(means.index) > 3:
     #     weekly_growth = get_weekly_growth(means)
     #     growth_table = make_growth_table(weekly_growth, number, test)
-    #     growth_table.savefig("./one_shot_figures/%s_growth.png" % test, bbox_inches='tight')
+    #     growth_table.savefig("./figures/%s_growth.png" % test, bbox_inches='tight')
     #     pyplot.clf()
 
 
@@ -96,5 +96,5 @@ for cell in baseline_table._cells:
 
 baseline_table.scale(2, 3)
 
-figure.savefig("./figures/baseline_table.png", bbox_inches='tight')
+figure.savefig("./misc_figures/baseline_table.png", bbox_inches='tight')
 pyplot.cla()
