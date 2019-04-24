@@ -28,21 +28,21 @@ for key, number in zip(KEYS, NUMBERS):
 # get general statistics
     means, effect, means_stde = get_stats(raw_data)
 
-# plot means and normalized means(effect)
-#     general_stats_fig = plot_stats(means, effect, means_stde, number, key)
-#     general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight', pad_inches=2)
-#     pyplot.cla()
-#
-# # plot control
-#     control_means_fig = plot_control(control_means, key, number)
-#     control_means_fig.savefig('./control_figures/%s.png' % key) #, bbox_inches='tight')
-#     pyplot.cla()
+plot means and normalized means(effect)
+    general_stats_fig = plot_stats(means, effect, means_stde, number, key)
+    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight', pad_inches=2)
+    pyplot.cla()
 
-# # plot ttest table
-#     daily_ttest = get_daily_Ttest(raw_data)[1]
-#     ttest_table = tabulate_Ttest(daily_ttest, key)
-#     ttest_table.savefig("./figures/%s_Ttest.png" % key, bbox_inches='tight')
-#     pyplot.cla()
+# plot control
+    control_means_fig = plot_control(control_means, key, number)
+    control_means_fig.savefig('./control_figures/%s.png' % key) #, bbox_inches='tight')
+    pyplot.cla()
+
+# plot ttest table
+    daily_ttest = get_daily_Ttest(raw_data)[1]
+    ttest_table = tabulate_Ttest(daily_ttest, key)
+    ttest_table.savefig("./figures/%s_Ttest.png" % key, bbox_inches='tight')
+    pyplot.cla()
 
 # plot weekly growth table
 #     if test != 'RESP':
@@ -80,5 +80,5 @@ for cell in baseline_table._cells:
 
 baseline_table.scale(2, 3)
 
-baseline_figure.savefig("./misc_figures/baseline_table.png", bbox_inches='tight')
+baseline_figure.savefig("./figures/baseline_table.png", bbox_inches='tight')
 pyplot.cla()
