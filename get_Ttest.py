@@ -38,12 +38,12 @@ def get_daily_Ttest(raw_data: DataFrame):
                                 )
 
         all_pairs = {
-                     "$COM_{t}-MIN_{t}$": COM_MIN_t[1],
-                     "$COM_{t}-UNC_{t}$": COM_UNC_t[1],
-                     "$MIN_{t}-UNC_{t}$": MIN_UNC_t[1],
-                     "$COM_{c}-MIN_{c}$": COM_MIN_c[1],
-                     "$COM_{c}-UNC_{c}$": COM_UNC_c[1],
-                     "$MIN_{c}-UNC_{c}$": MIN_UNC_c[1],
+                     "COM_MIN_t": COM_MIN_t[1],
+                     "COM_UNC_t": COM_UNC_t[1],
+                     "MIN_UNC_t": MIN_UNC_t[1],
+                     "COM_MIN_c": COM_MIN_c[1],
+                     "COM_UNC_c": COM_UNC_c[1],
+                     "MIN_UNC_c": MIN_UNC_c[1],
                      }
 
         Ttest_dic[day] = all_pairs
