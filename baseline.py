@@ -4,6 +4,7 @@ from matplotlib import pyplot
 
 from get_raw_data import get_single_set
 from get_stats    import get_stats
+from get_Ttest    import get_daily_Ttest
 from which_round  import get_round
 
 def get_baseline(keys):
@@ -12,25 +13,30 @@ def get_baseline(keys):
     get baseline values of specified data sets and appends them into a single dataframe.
     """
 
-
     # dataframe containing basline values of each parameter for every soil
-    baseline_frame = DataFrame()
+    baseline_dataframe = DataFrame()
 
     # get the data and append into *basline_frame*
     for key in keys:
 
-        data           = get_single_set(key)
+        raw_data       = get_single_set(key)
         means          = get_stats(data)[0]  # get_stats returns 3 variabels, we want only the *means * variable
         control_means  = means.xs('c', level=1, axis=1)
         baseline       = control_means.loc[0].round(get_round(means))
-        baseline_frame = pandas.concat([baseline_frame, baseline], axis=1)
-        baseline_frame = baseline_frame.rename(index=str, columns={0:key})
+        baseline_dataframe = pandas.concat([baseline_dataframe, baseline], axis=1)
+        baseline_dataframe = baseline_dataframe.rename(index=str, columns={0:key})
 
-    return baseline_frame
+    return baseline_dataframe
 
-pandas.DataFrame.rename
-def plot_baseline(baseline_frame):
-    # plot baseline_frame into a table
+
+def plot_baseline(baseline_dataframe):
+
+    """
+    plot baseline_dataframe into a table
+    :param baseline_dataframe:
+    """
+
+
     title_text = r'baseline values of important parameters for each soil'
 
     baseline_figure = pyplot.figure(4)

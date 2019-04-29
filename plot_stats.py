@@ -75,10 +75,9 @@ def plot_stats(means, effect, means_stde, number, test):
 # plot treatment effect as percent of control
     effect_axes = figure_1.add_subplot(212)
 
-    if len_days > 3 :
+    if len_days > 5 :
         effect.plot(
                     ax=effect_axes,
-                    kind='bar',
                     xlim=(0,last_day + 1),
                    )
 
@@ -88,7 +87,7 @@ def plot_stats(means, effect, means_stde, number, test):
 
     else:
 
-        excluded.plot(ax=effect_axes,
+        effect.plot(ax=effect_axes,
                               kind='bar',
                               xlim=(0, last_day + 1),
                               )

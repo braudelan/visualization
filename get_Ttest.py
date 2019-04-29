@@ -9,10 +9,39 @@ from scipy.stats import ttest_ind
 
 def get_daily_Ttest(raw_data: DataFrame):
 
-    raw_data = raw_data.T
+    grouped_by_day  = raw_data.groupby('days')        #  days isindex
+    by_day_dict     = {}
+    for group in grouped_by_day:
+        key    = group[0]
+        Series = group[1].
+
+    by_day_groups   = dict(list(grouped_by_day))      # dataframe of all soil-treatment pairs for every day
+
+    grouped = raw_data.groupby(level=[0, 1], axis=1)
+    groups  = dict(list(grouped))
+
     Ttest_dic = {}
 
-    for day in list(raw_data.columns):
+    for dataframe in by_day_groups.values():
+
+        dataframe   = dataframe.T                              # turn soil-treatment into index
+        grouped     = dataframe.groupby(level=[0, 1], axis=1)  # groupby soil-treatment
+
+        # create a dictionary with soil-treatment as key and pandas.Series as value
+        list_groups = list(grouped)
+        groups      = {}
+        labels      = []
+        for tup in list_groups:
+            key         = tup[0]
+            value       = tup[1].iloc[:,0]
+            groups[key] = value
+            labels.append(key)
+
+        for group in groups:
+            for label in labels:
+
+
+
 
         COM_MIN_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
                                  raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
@@ -58,7 +87,3 @@ def get_daily_Ttest(raw_data: DataFrame):
     mask = daily_ttest < 0.05
 
     return mask, daily_ttest
-
-
-
-# todo sort daily_Ttest.index so that control-control pairs and treatment-treatment pairs are grouped togethter
