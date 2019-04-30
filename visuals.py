@@ -10,6 +10,7 @@ from baseline     import get_baseline
 from plot_stats   import plot_stats
 from plot_control import plot_control
 from get_Ttest    import get_daily_Ttest
+from tabulate_Ttest import tabulate_Ttest
 # from get_growth import get_weekly_growth
 # from tabulate_growth import make_growth_table
 
@@ -28,15 +29,15 @@ for key, number in zip(KEYS, NUMBERS):
 # get general statistics
     means, effect, means_stde = get_stats(raw_data)
 
-plot means and normalized means(effect)
+# plot means and normalized means(effect)
     general_stats_fig = plot_stats(means, effect, means_stde, number, key)
-    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight', pad_inches=2)
+    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight')
     pyplot.cla()
 
-# plot control
-    control_means_fig = plot_control(control_means, key, number)
-    control_means_fig.savefig('./control_figures/%s.png' % key) #, bbox_inches='tight')
-    pyplot.cla()
+# # plot control
+#     control_means_fig = plot_control(control_means, key, number)
+#     control_means_fig.savefig('./control_figures/%s.png' % key) #, bbox_inches='tight')
+#     pyplot.cla()
 
 # plot ttest table
     daily_ttest = get_daily_Ttest(raw_data)[1]

@@ -5,7 +5,7 @@ def tabulate_Ttest(daily_ttest, test):
 
     title_text = r'%s daily Ttest' %test
 
-    figure_5 = pyplot.figure(3)
+    figure_5 = pyplot.figure()
     figure_5.tight_layout()
 
     axes = figure_5.add_subplot(111)
