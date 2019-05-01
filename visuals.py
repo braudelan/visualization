@@ -50,8 +50,8 @@ for key, number in zip(KEYS, NUMBERS):
 #         pyplot.clf()
 
 
-# # get baseline dataframe
-# baseline = get_baseline(KEYS)
-#
-# # plot baseline table of all tests
-# plot_baseline(baseline)
+# get baseline dataframe
+baseline = get_baseline(KEYS)
+
+# plot baseline table of all tests
+plot_baseline(baseline)

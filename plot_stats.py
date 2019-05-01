@@ -85,7 +85,7 @@ def plot_stats(means, effect, means_stde, number, test):
         effect_axes.xaxis.set_minor_locator(minorLocator)
         effect_axes.legend(effect_axes.get_lines(), (effect.columns))
 
-    else:
+    elif len_days > 3:
 
         effect.plot(ax=effect_axes,
                               kind='bar',
@@ -93,7 +93,15 @@ def plot_stats(means, effect, means_stde, number, test):
                               )
         effect_axes.legend(effect_axes.containers, (effect.columns))
 
-    effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=label_text_params)
+    else:
+
+        excluded.plot(ax=effect_axes,
+                    kind='bar',
+                    xlim=(0, last_day + 1),
+                    )
+        effect_axes.legend(effect_axes.containers, (effect.columns))
+
+    effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=label_text_params)
     effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=label_text_params)
     effect_axes.tick_params(axis='x', which='minor', width=1,length=3)
     effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)

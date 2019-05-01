@@ -22,9 +22,11 @@ def get_daily_Ttest(raw_data: DataFrame):
         list_groups = list(grouped)
         groups      = {}
         labels      = []
-        for tup in list_groups:
-            key         = tup[0]
-            value       = tup[1].iloc[:,0]
+        for group in list_groups:
+            soil      = group[0][0]
+            treatment = group[0][1]
+            data      = group[1].iloc[:,0]
+
 
 
 

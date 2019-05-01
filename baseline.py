@@ -41,19 +41,18 @@ def plot_baseline(baseline_dataframe):
 
     baseline_figure = pyplot.figure()
 
-    axes = figure.add_subplot(111)
+    axes = baseline_figure.add_subplot(111)
     axes.axis('off')
     axes.axis('tight')
     ttest_title = axes.set_title(title_text, pad=0.2, fontsize=20, position=(0, 1.1))
 
-    baseline_columns = baseline_data.columns
 
-    baseline_table = pyplot.table(cellText=baseline_data.values,
+    baseline_table = pyplot.table(cellText=baseline_dataframe.values,
                                loc='center',
-                               colLabels=baseline_data.columns,
-                               rowLabels=baseline_data.index,
+                               colLabels=baseline_dataframe.columns,
+                               rowLabels=baseline_dataframe.index,
                                cellLoc='center',
-                              # colWidths=[0.1 for x in baseline_data.columns],
+                              # colWidths=[0.1 for x in baseline_dataframe.columns],
                                # bbox = [0.0, -1.3, 1.0, 1.0]
                                )
 
