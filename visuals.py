@@ -28,7 +28,7 @@ for key, number in zip(KEYS, NUMBERS):
 
 # plot means and normalized means(effect)
     general_stats_fig = plot_stats(means, effect, means_stde, number, key)
-    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight', pad_inches=2)
+    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight')
     pyplot.cla()
 
 # # plot control
@@ -42,7 +42,7 @@ for key, number in zip(KEYS, NUMBERS):
 #     ttest_table.savefig("./figures/%s_Ttest.png" % key, bbox_inches='tight')
 #     pyplot.cla()
 
-# plot weekly growth table
+# # plot weekly growth table
 #     if test != 'RESP':
 #         weekly_growth = get_weekly_growth(means)
 #         growth_table = make_growth_table(weekly_growth, number, test)
@@ -50,8 +50,8 @@ for key, number in zip(KEYS, NUMBERS):
 #         pyplot.clf()
 
 
-# get baseline dataframe
-baseline = get_baseline(KEYS)
-
-# plot baseline table of all tests
-plot_baseline(baseline)
+# # get baseline dataframe
+# baseline = get_baseline(KEYS)
+#
+# # plot baseline table of all tests
+# plot_baseline(baseline)

@@ -20,7 +20,7 @@ def get_baseline(keys):
     for key in keys:
 
         raw_data       = get_single_set(key)
-        means          = get_stats(data)[0]  # get_stats returns 3 variabels, we want only the *means * variable
+        means          = get_stats(raw_data)[0]  # get_stats returns 3 variabels, we want only the *means * variable
         control_means  = means.xs('c', level=1, axis=1)
         baseline       = control_means.loc[0].round(get_round(means))
         baseline_dataframe = pandas.concat([baseline_dataframe, baseline], axis=1)
@@ -39,7 +39,7 @@ def plot_baseline(baseline_dataframe):
 
     title_text = r'baseline values of important parameters for each soil'
 
-    baseline_figure = pyplot.figure(4)
+    baseline_figure = pyplot.figure()
 
     axes = figure.add_subplot(111)
     axes.axis('off')
@@ -63,5 +63,5 @@ def plot_baseline(baseline_dataframe):
 
     baseline_table.scale(2, 3)
 
-    figure.savefig("./misc_figures/baseline_table.png", bbox_inches='tight')
+    baseline_figure.savefig("./misc_figures/baseline_table.png", bbox_inches='tight')
     pyplot.cla()

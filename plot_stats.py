@@ -68,7 +68,7 @@ def plot_stats(means, effect, means_stde, number, test):
 
     means_axes.tick_params(axis='x', which='minor', width=1, length=3)
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
-    means_ylabel = means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
+    means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
     means_axes.set_xlabel('')
 
 

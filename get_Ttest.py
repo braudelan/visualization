@@ -9,19 +9,10 @@ from scipy.stats import ttest_ind
 
 def get_daily_Ttest(raw_data: DataFrame):
 
-    grouped_by_day  = raw_data.groupby('days')        #  days isindex
-    by_day_dict     = {}
-    for group in grouped_by_day:
-        key    = group[0]
-        Series = group[1].
+    grouped_by_day  = raw_data.groupby('days')        #  days is index
+    by_day_groups   = dict(list(grouped_by_day))      #  {day: four replicates of all soil-treatment pairs}
 
-    by_day_groups   = dict(list(grouped_by_day))      # dataframe of all soil-treatment pairs for every day
-
-    grouped = raw_data.groupby(level=[0, 1], axis=1)
-    groups  = dict(list(grouped))
-
-    Ttest_dic = {}
-
+    # loop through the dataframes for every day and group them into soil-treatment pairs
     for dataframe in by_day_groups.values():
 
         dataframe   = dataframe.T                              # turn soil-treatment into index
@@ -34,11 +25,7 @@ def get_daily_Ttest(raw_data: DataFrame):
         for tup in list_groups:
             key         = tup[0]
             value       = tup[1].iloc[:,0]
-            groups[key] = value
-            labels.append(key)
 
-        for group in groups:
-            for label in labels:
 
 
 
