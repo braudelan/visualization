@@ -1,5 +1,5 @@
 """
-test significance between soils for a given data set and for every sampling day
+test significance between soils on every sampling day for a given data set
 """
 
 import pandas
@@ -9,70 +9,57 @@ from scipy.stats import ttest_ind
 
 def get_daily_Ttest(raw_data: DataFrame):
 
-    grouped_by_day  = raw_data.groupby('days')        #  days is index
-    by_day_groups   = dict(list(grouped_by_day))      #  {day: four replicates of all soil-treatment pairs}
+    # group raw_data by day
+    groupby_day   = raw_data.groupby('days')            #  days is index
+    by_day_groups = dict(list(groupby_day))      #  {day: four replicates of all soil-treatment pairs}
 
-    # loop through the dataframes for every day and group them into soil-treatment pairs
-    for dataframe in by_day_groups.values():
+    by_day_Ttest = {}
 
-        dataframe   = dataframe.T                              # turn soil-treatment into index
-        grouped     = dataframe.groupby(level=[0, 1], axis=1)  # groupby soil-treatment
+    # group by treatment (MRE\control)
+    for daily_data in list(by_day_groups.items()):
 
-        # create a dictionary with soil-treatment as key and pandas.Series as value
-        list_groups = list(grouped)
-        groups      = {}
-        labels      = []
-        for group in list_groups:
-            soil      = group[0][0]
-            treatment = group[0][1]
-            data      = group[1].iloc[:,0]
+        day  = daily_data[0]
+        data = daily_data[1].T
+
+        groupby_treatment = data.groupby(level=[1])
+        treatment_groups  = dict(list(groupby_treatment))
+
+        by_treatment_Ttest = {}
+
+        # group by soil and run Ttest
+        for group in treatment_groups.items():
+
+            treatment = group[0]
+            data      = group[1]
+
+            # groupby
+            groupby_soil = data.groupby(level=[0])
+            list_soils   = list(groupby_soil)
+
+            soil_a = list_soils[0]
+            soil_b = list_soils[1]
+            soil_c = list_soils[2]
+
+            label_ab = (treatment, (soil_a[0], soil_b[0]))
+            label_bc = (treatment, (soil_b[0], soil_c[0]))
+            label_ac = (treatment, (soil_a[0], soil_c[0]))
+
+            data_a = soil_a[1]
+            data_b = soil_b[1]
+            data_c = soil_c[1]
+
+            # Ttest
+            Ttest_ab = ttest_ind(data_a, data_b, equal_var='False', nan_policy='omit')
+            Ttest_bc = ttest_ind(data_b, data_c, equal_var='False', nan_policy='omit')
+            Ttest_ac = ttest_ind(data_a, data_c, equal_var='False', nan_policy='omit')
+
+            by_treatment_Ttest[label_ab] = Ttest_ab
+            by_treatment_Ttest[label_bc] = Ttest_bc
+            by_treatment_Ttest[label_ac] = Ttest_ac
+
+        by_day_Ttest[day] = by_treatment_Ttest
 
 
+    daily_Ttest = pandas.DataFrame.from_dict(by_day_Ttest)
 
-
-
-
-        COM_MIN_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
-                                 raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
-                                 equal_var=False, nan_policy='omit')
-                                )
-        COM_UNC_t = list(ttest_ind(raw_data.xs(["COM", 't'], level=[0,1]).loc[:, day],
-                                 raw_data.xs(["UNC", 't'], level=[0,1]).loc[:, day],
-                                 equal_var=False, nan_policy='omit')
-                                )
-        MIN_UNC_t = list(ttest_ind(raw_data.xs(["MIN", 't'], level=[0,1]).loc[:, day],
-                                 raw_data.xs(["UNC", 't'], level=[0,1]).loc[:, day],
-                                 equal_var=False, nan_policy='omit')
-                                )
-
-        COM_MIN_c = list(ttest_ind(raw_data.xs(["COM", 'c'], level=[0, 1]).loc[:, day],
-                                 raw_data.xs(["MIN", 'c'], level=[0, 1]).loc[:, day],
-                                 equal_var = False, nan_policy = 'omit')
-                                )
-        COM_UNC_c = list(ttest_ind(raw_data.xs(["COM", 'c'], level=[0, 1]).loc[:, day],
-                                 raw_data.xs(["UNC", 'c'], level=[0, 1]).loc[:, day],
-                                 equal_var = False, nan_policy = 'omit')
-                                )
-        MIN_UNC_c = list(ttest_ind(raw_data.xs(["MIN", 'c'], level = [0, 1]).loc[:, day],
-                                 raw_data.xs(["UNC", 'c'], level = [0, 1]).loc[:,day],
-                                 equal_var = False, nan_policy = 'omit')
-                                )
-
-        all_pairs = {
-                     "COM_MIN_t": COM_MIN_t[1],
-                     "COM_UNC_t": COM_UNC_t[1],
-                     "MIN_UNC_t": MIN_UNC_t[1],
-                     "COM_MIN_c": COM_MIN_c[1],
-                     "COM_UNC_c": COM_UNC_c[1],
-                     "MIN_UNC_c": MIN_UNC_c[1],
-                     }
-
-        Ttest_dic[day] = all_pairs
-
-    daily_ttest = pandas.DataFrame.from_dict(Ttest_dic)
-    daily_ttest = daily_ttest.astype(float, copy=False).round(5)
-    daily_ttest.rename_axis("days", inplace=True)
-
-    mask = daily_ttest < 0.05
-
-    return mask, daily_ttest
+    return daily_Ttest

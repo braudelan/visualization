@@ -4,7 +4,7 @@ from matplotlib import pyplot
 from get_raw_data import get_keys
 from get_raw_data import get_single_set
 from get_stats    import get_stats
-# from get_Ttest    import get_daily_Ttest
+from get_Ttest    import get_daily_Ttest
 # from baseline     import get_baseline
 
 
@@ -15,6 +15,7 @@ raw_data = get_single_set(keys)
 
 means, normalized, means_stde = get_stats(raw_data)
 
+Ttest = get_daily_Ttest(raw_data)
 """
 get the p-value of Ttest and a boolean for significance 
 """
