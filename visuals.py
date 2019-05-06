@@ -1,35 +1,39 @@
 import pandas
 from matplotlib import pyplot
 
-from get_raw_data import get_keys
-from get_raw_data import get_single_set
-from get_stats    import get_stats
+from raw_data     import get_keys, get_raw_data
+from stats        import get_stats, plot_stats
 from baseline     import get_baseline, plot_baseline
-from plot_stats   import plot_stats
-from plot_control import plot_control
-from get_Ttest    import get_daily_Ttest
-from get_growth import get_weekly_growth
-from tabulate_growth import make_growth_table
+from control      import plot_control
+from Ttest        import get_daily_Ttest, tabulate_Ttest
+from growth       import get_weekly_growth, tabulate_growth
 
-KEYS, NUMBERS = get_keys()
 
-input_file = "all_tests.xlsx"
+INPUT_FILE = "all_tests.xlsx"
+
+# arguments to specify which data sets to load from INPUT_FILE
+keys_output = get_keys()
+if type(keys_output) != tuple:
+    KEYS    = get_keys().specific
+    NUMBERS = get_keys().numbers
+else:
+    KEYS    = get_keys()[0]
+    NUMBERS = get_keys()[1]
+
 
 baseline_dict = {}
-
-
 for key, number in zip(KEYS, NUMBERS):
 
 # input data into DataFrame
-    raw_data = get_single_set(key)
+    raw_data = get_raw_data(key)
 
 # get general statistics
-    means, effect, means_stde = get_stats(raw_data)
+    means, normalized, means_stde, difference = get_stats(raw_data)
 
-# plot means and normalized means(effect)
-    general_stats_fig = plot_stats(means, effect, means_stde, number, key)
-    general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight')
-    pyplot.cla()
+# # plot means and normalized means(effect)
+#     general_stats_fig = plot_stats(means, effect, means_stde, number, key)
+#     general_stats_fig.savefig("./figures/%s_figuers.png" % key, bbox_inches='tight')
+#     pyplot.cla()
 
 # # plot control
 #     control_means_fig = plot_control(control_means, key, number)
@@ -37,7 +41,7 @@ for key, number in zip(KEYS, NUMBERS):
 #     pyplot.cla()
 
 # # plot ttest table
-#     daily_ttest = get_daily_Ttest(raw_data)[1]
+#     daily_ttest = get_daily_Ttest(raw_data)
 #     ttest_table = tabulate_Ttest(daily_ttest, key)
 #     ttest_table.savefig("./figures/%s_Ttest.png" % key, bbox_inches='tight')
 #     pyplot.cla()
@@ -45,13 +49,11 @@ for key, number in zip(KEYS, NUMBERS):
 # # plot weekly growth table
 #     if test != 'RESP':
 #         weekly_growth = get_weekly_growth(means)
-#         growth_table = make_growth_table(weekly_growth, number, test)
+#         growth_table = tabulate_growth(weekly_growth, number, test)
 #         growth_table.savefig("./figures/%s_growth.png" % test, bbox_inches='tight')
 #         pyplot.clf()
 
 
-# get baseline dataframe
-baseline = get_baseline(KEYS)
-
-# plot baseline table of all tests
-plot_baseline(baseline)
+# # baseline dataframe
+# baseline = get_baseline(KEYS)
+# plot_baseline(baseline)

@@ -6,7 +6,7 @@ from which_round import get_round
 def plot_control(control_means, test, number):
 
 # data
-    control_means = control_means * 24
+    control_means = control_means
     round_factor = get_round(control_means)
     control_means = control_means.round(round_factor)
 
@@ -19,7 +19,7 @@ def plot_control(control_means, test, number):
     pyplot.rc('lines', linewidth=3)
 
 # text for labels
-    title_text = r' %s, control samples, means across 28 days of incubation.' % test
+    title_text = r'mean values of %s for control samples across 28 days of incubation.' % test
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
     if test == 'RESP':
@@ -30,11 +30,11 @@ def plot_control(control_means, test, number):
     labels_text_params = {'size': 19
                           }
 # plotting
-    figure_2 = pyplot.figure(number, figsize=(15,20))
+    control_figure = pyplot.figure(number, figsize=(15,20))
 
-    figure_2.text(0.05, 0, title_text, fontsize=20) # figure title
+    control_figure.text(0.05, 0, title_text, fontsize=20) # figure title
 
-    axes = figure_2.add_subplot(111)
+    axes = control_figure.add_subplot(111)
 
     control_means.plot(ax=axes,
                        xlim=(0,30),
@@ -48,4 +48,4 @@ def plot_control(control_means, test, number):
 
     pyplot.tight_layout(rect=[0.1, 0.1, 0.1, 0.1])
 
-    return figure_2
+    return control_figure
