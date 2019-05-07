@@ -1,36 +1,37 @@
 import pandas
 from matplotlib import pyplot
 
-from get_stats import get_stats
+from raw_data import get_keys
+from stats import get_stats
 from which_round import get_round
 
 
 input_file = "all_tests.xlsx"
 
-TESTS = ['MBC','MBN', 'DOC', 'ERG', 'HWE-S', 'RESP', 'AS', 'TOC', 'NH4', 'NO3']
+DATA_SET_KEYS = get_keys().specific
 
 means_dict = {}
-for test in TESTS:
+for data_set in DATA_SET_KEYS:
 
     # input data into DataFrame
     raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                     sheet_name=test,
-                                     na_values=["-", " "]).rename_axis("days")
+                                 sheet_name=data_set,
+                                 na_values=["-", " "]).rename_axis("days")
     raw_data.columns.rename(["soil", "treatment", "replicate"],
                             level=None, inplace=True)
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
-    means, means_stde, effect = get_stats(raw_data)
+    means, means_stde, normalized, diff = get_stats(raw_data)
 
     # if test == 'NH4' or test == 'NO3':
     #     continue
 
-    if test == 'RESP':
+    if data_set == 'RESP':
         means = means * 24
 
     round_factor = get_round(means)
 
-    means_dict[test] = means.round(round_factor).T
+    means_dict[data_set] = means.round(round_factor).T
 
 means_dict['Ni'] = means_dict['NH4'] + means_dict['NO3']
 means_dict['Ni'] = means_dict['Ni'].round(get_round(means_dict['Ni']))

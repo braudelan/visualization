@@ -1,6 +1,6 @@
 import pandas
 
-from get_stats import get_stats
+from stats import get_stats
 
 def get_qCO2():
     input_file = "all_tests.xlsx"
@@ -20,7 +20,7 @@ def get_qCO2():
         raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
         #get statistics and parameters
-        means, means_stde, effect = get_stats(raw_data)
+        means, means_stde, normalized = get_stats(raw_data)
 
         stats[test] = means
 

@@ -2,7 +2,7 @@ import pandas
 from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
-from get_stats import get_stats
+from stats import get_stats
 
 # variabels
 input_file = "all_tests.xlsx"
@@ -40,7 +40,7 @@ for test in TESTS:
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
 
 #get statistics and parameters
-    means, means_stde, effect = get_stats(raw_data)
+    means, means_stde, normalized = get_stats(raw_data)
 
     stats[test] = means
 

@@ -1,13 +1,34 @@
+import pandas
 from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
+def get_stats(raw_data):
 
-def plot_stats(means, effect, means_stde, number, test):
+    # means
+    groupby_soil_treatment = raw_data.groupby(level=[0, 1],axis=1)  # group 4 replicates from every soil-treatment pair
+    means                  = groupby_soil_treatment.mean()          # means of 4 replicates
+    means_stde             = groupby_soil_treatment.sem()           # stnd error of means
+
+    # means of control
+    control      = means.xs('c', axis=1, level=1)
+
+    #treatment effect
+    substract  = means.diff(periods=1, axis=1)       # substracting across columns, right to left
+    difference = substract.xs("t", axis=1, level=1)  # treatment - control
+    normalized = difference / control * 100          # difference normalized to control (percent)
+
+    stats = {'control': control}
+
+    return means, normalized, means_stde, difference
+
+
+
+def plot_stats(means, normalized, means_stde, number, test):
 
 # local variabels
     last_day = means.index[-1]     # last sampling day
     len_days = len(means.index)    # number of sampling days
-    excluded = effect.iloc[1:, :]  # treatment effect without day 0
+    excluded = normalized.iloc[1:, :]  # treatment effect without day 0
 
 # pyplot parameters
     majorLocator = MultipleLocator(7)  # major ticks locations
@@ -35,7 +56,7 @@ def plot_stats(means, effect, means_stde, number, test):
     else:
         means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' %test
 
-    effect_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
+    normalized_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' %test
 
 # create and adjut figure
     figure_1 = pyplot.figure(number, figsize=(15,20))
@@ -68,38 +89,42 @@ def plot_stats(means, effect, means_stde, number, test):
 
     means_axes.tick_params(axis='x', which='minor', width=1, length=3)
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
-    means_ylabel = means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
+    means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
     means_axes.set_xlabel('')
 
 
 # plot treatment effect as percent of control
-    effect_axes = figure_1.add_subplot(212)
+    normalized_axes = figure_1.add_subplot(212)
 
-    if len_days > 3 :
-        effect.plot(
-                    ax=effect_axes,
-                    kind='bar',
+    if len_days > 5 :
+        normalized.plot(
+                    ax=normalized_axes,
                     xlim=(0,last_day + 1),
                    )
 
-        effect_axes.xaxis.set_major_locator(majorLocator)
-        effect_axes.xaxis.set_minor_locator(minorLocator)
-        effect_axes.legend(effect_axes.get_lines(), (effect.columns))
+        normalized_axes.xaxis.set_major_locator(majorLocator)
+        normalized_axes.xaxis.set_minor_locator(minorLocator)
+        normalized_axes.legend(normalized_axes.get_lines(), (normalized.columns))
 
-    else:
+    elif len_days > 3:
 
-        excluded.plot(ax=effect_axes,
+        normalized.plot(ax=normalized_axes,
                               kind='bar',
                               xlim=(0, last_day + 1),
                               )
-        effect_axes.legend(effect_axes.containers, (effect.columns))
+        normalized_axes.legend(normalized_axes.containers, (normalized.columns))
 
-    effect_ylabel = effect_axes.set_ylabel(effect_ylabel_text, labelpad=30, fontdict=label_text_params)
-    effect_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=label_text_params)
-    effect_axes.tick_params(axis='x', which='minor', width=1,length=3)
-    effect_axes.text(0.03, 1.05, "b", transform=effect_axes.transAxes, fontdict=symbol_text_params)
+    else:
+
+        excluded.plot(ax=normalized_axes,
+                    kind='bar',
+                    xlim=(0, last_day + 1),
+                    )
+        normalized_axes.legend(normalized_axes.containers, (normalized.columns))
+
+    normalized_axes.set_ylabel(normalized_ylabel_text, labelpad=30, fontdict=label_text_params)
+    normalized_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=label_text_params)
+    normalized_axes.tick_params(axis='x', which='minor', width=1,length=3)
+    normalized_axes.text(0.03, 1.05, "b", transform=normalized_axes.transAxes, fontdict=symbol_text_params)
 
     return figure_1
-
-# todo change RESP ylabel into " mg CO2-C * (kg soil * h)^-1 "
-

@@ -3,12 +3,13 @@ from matplotlib.ticker import MultipleLocator
 
 from which_round import get_round
 
-def plot_control(control_means, test, number):
+def plot_control(means, means_stde, test, number):
 
 # data
-    control_means = control_means * 24
-    round_factor = get_round(control_means)
+    control_means = means.xs('c', level=1, axis=1)
+    round_factor  = get_round(control_means)
     control_means = control_means.round(round_factor)
+    control_stde  = means_stde.xs('c', level=1, axis=1)
 
 # plotting parameters
     majorLocator = MultipleLocator(7)
@@ -19,7 +20,7 @@ def plot_control(control_means, test, number):
     pyplot.rc('lines', linewidth=3)
 
 # text for labels
-    title_text = r' %s, control samples, means across 28 days of incubation.' % test
+    title_text = r'mean values of %s for control samples across 28 days of incubation.' % test
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
     if test == 'RESP':
@@ -30,14 +31,14 @@ def plot_control(control_means, test, number):
     labels_text_params = {'size': 19
                           }
 # plotting
-    figure_2 = pyplot.figure(number, figsize=(15,20))
+    control_figure = pyplot.figure(number, figsize=(15,20))
 
-    figure_2.text(0.05, 0, title_text, fontsize=20) # figure title
-
-    axes = figure_2.add_subplot(111)
+    axes = control_figure.add_subplot(111)
+    axes.text(0, -0.15, title_text, fontsize=20, transform=axes.transAxes) # figure title
 
     control_means.plot(ax=axes,
                        xlim=(0,30),
+                       yerr= control_stde
                       )
 
     axes.xaxis.set_major_locator(majorLocator)
@@ -46,6 +47,8 @@ def plot_control(control_means, test, number):
     axes.set_ylabel(ylabel_text, labelpad=30, fontdict=labels_text_params)
     axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
 
-    pyplot.tight_layout(rect=[0.1, 0.1, 0.1, 0.1])
+    pyplot.tight_layout() #rect=[0.1, 0.1, 0.1, 0.1]
 
-    return figure_2
+    return control_figure
+
+#todo scale figure so that x side is longer
