@@ -117,9 +117,5 @@ pdf.close()
 
 
 # todo change tick lables into soil catagories
-# todo remove y and x labels from inside subplots
 # todo increase x_lim so that point markers are not touching the edge of plot
-# todo insert argv to be able to run dependent params as either means or effect
-#   use an *if* loop for assigning dependent_params on the condition of argv == 'means'
-#   or argv == 'effect'
 

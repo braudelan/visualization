@@ -19,6 +19,16 @@ independent_dependent = {}
 i = 2
 for key in INDEPENDENT_KEYS_LINE:
     dependent_keys = keys[i]
+
+    independent_raw_data = get_raw_data(key).T
+    independent_baseline = independent_raw_data.loc[]
+
+
+
+
+
+
+
     independent_dependent['key'] = dependent_keys
     i += 1
 

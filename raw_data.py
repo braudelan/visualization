@@ -60,6 +60,7 @@ def get_raw_data(key):
     raw_data.columns.rename(["soil", "treatment", "replicate"],
                             level=None, inplace=True)
     raw_data.columns.set_levels(["c", "t"], level=1, inplace=True)
+    raw_data = raw_data.swaplevel('soil', 'treatment')
 
     return raw_data
 

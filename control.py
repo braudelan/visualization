@@ -5,19 +5,19 @@ from which_round import get_round
 
 def plot_control(means, means_stde, test, number):
 
+# plotting parameters
+    major_tick_locator = MultipleLocator(7)  # ticks every 7 axis units
+    minor_tick_locator = MultipleLocator(1)  # ticks on every axis unit
+
+    pyplot.rc('legend', facecolor='inherit', frameon=False, markerscale=1.5)
+    pyplot.rc('font', size=18)
+    pyplot.rc('lines', linewidth=3)
+
 # data
     control_means = means.xs('c', level=1, axis=1)
     round_factor  = get_round(control_means)
     control_means = control_means.round(round_factor)
     control_stde  = means_stde.xs('c', level=1, axis=1)
-
-# plotting parameters
-    majorLocator = MultipleLocator(7)
-    minorLocator = MultipleLocator(1)
-
-    pyplot.rc('legend', facecolor='inherit', frameon=False, markerscale=1.5)
-    pyplot.rc('font', size=18)
-    pyplot.rc('lines', linewidth=3)
 
 # text for labels
     title_text = r'mean values of %s for control samples across 28 days of incubation.' % test
@@ -41,8 +41,8 @@ def plot_control(means, means_stde, test, number):
                        yerr= control_stde
                       )
 
-    axes.xaxis.set_major_locator(majorLocator)
-    axes.xaxis.set_minor_locator(minorLocator)
+    axes.xaxis.set_major_locator(major_tick_locator)
+    axes.xaxis.set_minor_locator(minor_tick_locator)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
     axes.set_ylabel(ylabel_text, labelpad=30, fontdict=labels_text_params)
     axes.set_xlabel(xlabel_text, labelpad=30, fontdict=labels_text_params)
