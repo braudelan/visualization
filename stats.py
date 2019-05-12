@@ -2,6 +2,7 @@ import pandas
 from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator
 
+
 def get_stats(raw_data):
 
     # means
@@ -9,21 +10,39 @@ def get_stats(raw_data):
     means                  = groupby_soil_treatment.mean()          # means of 4 replicates
     means_stde             = groupby_soil_treatment.sem()           # stnd error of means
 
-    # means of control
-    control      = means.xs('c', axis=1, level=1)
+    # means of control\MRE-treatment
+    control    = means.xs('c', axis=1, level='treatment')
+    MRE        = means.xs('t', axis=1, level='treatment')
 
     #treatment effect
-    substract  = means.diff(periods=1, axis=1)       # substracting across columns, right to left
-    difference = substract.xs("t", axis=1, level=1)  # treatment - control
-    normalized = difference / control * 100          # difference normalized to control (percent)
+    difference            = MRE - control               # treatment - control
+    normalized_to_control = difference / control * 100  # difference normalized to control (percent)
 
     stats = {'control': control}
 
-    return means, normalized, means_stde, difference
+    return means, normalized_to_control, means_stde, difference
 
 
 
 def plot_stats(means, normalized, means_stde, number, test):
+
+# define soil colors
+    def color_map_generator(dataframe):
+        colors = ['r', 'b', 'g']
+        soils = ['COM', 'MIN', 'UNC']
+        soils_colors = dict(zip(soils, colors))
+        color_map = [soils_colors.get(x[1]) for x in dataframe.columns]
+
+        return color_map
+
+# define treatment line style
+    def line_styler(dataframe):
+        MRE_line_style     = '-'
+        control_line_style = '-.'
+        line_style_dict    = {'t': MRE_line_style, 'c': control_line_style}
+        line_style_map     = [line_style_dict.get(x[0]) for x in dataframe.columns]
+
+        return line_style_map
 
 # local variabels
     last_day = means.index[-1]     # last sampling day
@@ -73,6 +92,8 @@ def plot_stats(means, normalized, means_stde, number, test):
                    ax=means_axes,
                    xlim=(0,last_day + 1),
                    yerr=means_stde,
+                   color=color_map_generator(means),
+                   style=  '--'
                    )
 
         means_axes.xaxis.set_major_locator(majorLocator)
@@ -128,3 +149,6 @@ def plot_stats(means, normalized, means_stde, number, test):
     normalized_axes.text(0.03, 1.05, "b", transform=normalized_axes.transAxes, fontdict=symbol_text_params)
 
     return figure_1
+
+# todo set different style for MRE and control ( ask stack-overflow)
+#   set line style\bar styles for line plots\bar plots

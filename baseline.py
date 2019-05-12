@@ -19,10 +19,10 @@ def get_baseline(keys):
     # get the data and append into *basline_frame*
     for key in keys:
 
-        raw_data       = get_raw_data(key)
-        means          = get_stats(raw_data)[0]  # get_stats returns 4 variabels, we want only the *means* variable
-        control_means  = means.xs('c', level=1, axis=1)
-        baseline       = control_means.loc[0].round(get_round(means))
+        raw_data           = get_raw_data(key)
+        means              = get_stats(raw_data)[0]  # get_stats returns 4 variabels, we want only the *means* variable
+        control_means      = means.xs('c', level='treatment', axis=1)
+        baseline           = control_means.loc[0].round(get_round(means))
         baseline_dataframe = pandas.concat([baseline_dataframe, baseline], axis=1)
         baseline_dataframe = baseline_dataframe.rename(index=str, columns={0:key})
 

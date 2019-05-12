@@ -9,32 +9,29 @@ from stats import get_stats
 from get_qCO2 import get_qCO2
 from which_round import get_round
 
+
 file_for_keys = open('corr_input.txt')
-keys          = file_for_keys.readlines()
+keys_lines    = file_for_keys.readlines()
 
-WHICH_DEPENDENT_LINE  = keys[0]
-INDEPENDENT_KEYS_LINE = keys[1]
+WHICH_NORMALIZATION   = keys_lines[0]
+INDEPENDENT_VARIABLES = keys_lines[1]
+SOILS                 = ['COM', 'MIN', 'UNC']
 
-independent_dependent = {}
+
 i = 2
-for key in INDEPENDENT_KEYS_LINE:
-    dependent_keys = keys[i]
+for ind_key in INDEPENDENT_VARIABLES:
+    DEPENDENT_VARIABLES = keys_lines[i]
 
-    independent_raw_data = get_raw_data(key).T
-    independent_baseline = independent_raw_data.loc[]
+    independent_raw_data = get_raw_data(ind_key).T
+    independent_baseline = independent_raw_data.loc[('c',SOILS), 0]
 
+    for dep_key DEPENDENT_VARIABLES:
+        dependent_raw_data = get_raw_data(dep_key).T
+        dependent_data = dependent_data.loc[('t', SOILS), :]
 
+        for day in independent_raw_data.columns:
 
-
-
-
-
-    independent_dependent['key'] = dependent_keys
-    i += 1
-
-for item in independent_dependent.items():
-    independent_key = item[0]
-    dep
+# todo plot *ind* against every *dep* in DEPENDENT_VARIABLES using *ind*, *dep* and *day* as title
 
 
 
@@ -50,52 +47,8 @@ for item in independent_dependent.items():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    qCO2 = get_qCO2()
-
-d_variabels, i_variabels = get_keys()
-
-input_file = "all_tests.xlsx"
-TESTS = ['MBC','MBN', 'DOC', 'HWE-S', 'ERG','RESP', 'AS','TOC']
-
-stats = {}
-for test in [ind_key, dep_key]:
-    # input data into DataFrame
-    raw_data = get_raw_data(test)
-
-    #get statistics and parameters
-    means, normalized, normalized, difference = get_stats(raw_data)
-
-    baseline_means = means.xs('t', level=1, axis=1).loc[0].round(get_round(means))
-
-    total_change = treatment_diff.iloc[-1,:] - baseline_means
-
-    stats[test + '_means']    = means
-    stats[test + '_normalized']   = normalized
-    stats[test + '_diff']     = difference
-    stats[test + '_baseline'] = baseline_means
-
-stats['qCO2_means'] = qCO2
-stats['qCO2_baseline'] = qCO2.xs('c', level=1, axis=1).loc[0]
-
-
-for key in INDEPENDENT_KEY:
-    for dep_key in DEPENDENT_KEYS:
+for ind_key in INDEPENDENT_KEY:
+    for dep_key in DEPENDENT_VARIABLES:
         if WHICH_TO_CORRELATE_KEY == 'means':
             dep = stats[dep_key + '_means']
 
@@ -109,10 +62,10 @@ for key in INDEPENDENT_KEY:
 
         ax = figure.add_subplot(111)
 
-        ax.set_xticklabels([soil + ', ' + str(value) for soil, value in zip(dep.columns, key.values)])
-        ax.xaxis.set_major_locator(pyplot.FixedLocator(key.values))
+        ax.set_xticklabels([soil + ', ' + str(value) for soil, value in zip(dep.columns, ind_key.values)])
+        ax.xaxis.set_major_locator(pyplot.FixedLocator(ind_key.values))
 
-        ax.plot(key, dep.loc[day], 'rh')
+        ax.plot(ind_key, dep.loc[day], 'rh')
 
         pdf = matplotlib.backends.backend_pdf.PdfPages("./specific_correlations/%s-%s-%s-%s.pdf" % arguments)
         pdf.savefig(figure)

@@ -16,6 +16,21 @@ raw_data = get_raw_data(keys)
 #
 means, normalized, means_stde, diff = get_stats(raw_data)
 #
-Ttest = get_daily_Ttest(raw_data)
-mask  = Ttest < 0.05
+def color_map_generator(dataframe):
+    colors = ['r', 'b', 'g']
+    soils = ['COM', 'MIN', 'UNC']
+    soils_colors = dict(zip(soils, colors))
+    color_map = [soils_colors.get(x[1]) for x in dataframe.columns]
 
+    return color_map
+
+def line_styler(dataframe):
+    MRE_line_style     = '-'
+    control_line_style = '--'
+    line_style_dict    = {'t': MRE_line_style, 'c': control_line_style}
+    line_style_map     = [line_style_dict.get(x[0]) for x in dataframe.columns]
+
+    return line_style_map
+
+style= line_styler(means)
+color = color_map_generator(means)
