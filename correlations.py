@@ -2,7 +2,7 @@ import pandas
 from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
 
-from raw_data import get_raw_data, get_keys
+from raw_data import get_raw_data, get_setup_arguments
 from stats    import get_stats
 from get_qCO2     import get_qCO2
 
@@ -11,13 +11,10 @@ def get_correlation_variables():
 
     INPUT_FILE = "all_tests.xlsx"
 
-    WHICH_EFFECT_KEY = get_keys().which
-    INDEPENDENT_KEY  = get_keys().independent
-
-    if get_keys().specific:
-        DEPENDENT_KEYS = get_keys().specific
-    else:
-        DEPENDENT_KEYS = ['MBC', 'MBN', 'DOC', 'ERG', 'HWE-S', 'RESP', 'AS', 'TOC']
+    keys_output = get_setup_arguments()
+    WHICH_EFFECT_KEY = keys_output.which
+    INDEPENDENT_KEY  = keys_output.independent_sets
+    DEPENDENT_KEYS = keys_output.sets
 
     All_KEYS = list(set(DEPENDENT_KEYS) | set(INDEPENDENT_KEY))
 

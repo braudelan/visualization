@@ -1,36 +1,38 @@
 """
 Import data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
+from collections import namedtuple
 
 import argparse
 
 import pandas
 
-
-def get_keys():
+ParsedArgs = namedtuple('ParsedArgs', ['sets', 'numbers', 'independent_sets', 'which'])
+def get_setup_arguments() -> ParsedArgs:
 
     """Return arguments specifying which data sets will be imported from input file."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-specific', help='names of specific data sets to read from excel input file', nargs='+')
-    parser.add_argument('-numbers', help='numbers to be assignd to data sets', nargs='+', type=int)
-    parser.add_argument('-independent', help='independent parameters to pass to correlations', nargs='+')
-    parser.add_argument('-which', help='choose between normalized means or difference of means',choices=['norm', 'diff'])
+    parser.add_argument('--sets', help='names of specific data sets to read from excel input file', nargs='+')
+    parser.add_argument('--numbers', help='numbers to be assignd to data sets', nargs='+', type=int)
+    parser.add_argument('--independent_sets', help='independent parameters to pass to correlations', nargs='+')
+    parser.add_argument('--which', help='choose between normalized means or difference of means',
+                        default='norm', choices=['norm', 'diff'])
 
-    parsed_args   = parser.parse_args()
+    parsed_args = parser.parse_args()
 
-    specfic       = parser.parse_args().specific
-    numbers       = parser.parse_args().numbers
-    independent   = parser.parse_args().independent
-    which_normalized  = parser.parse_args().which
+    sets = parsed_args.sets
+    numbers = parsed_args.numbers
+    independent = parsed_args.independent_sets
+    which = parsed_args.which
 
     all_data_sets = ['MBC', 'MBN', 'DOC', 'ERG', 'HWE-S', 'RESP', 'AS', 'TOC']
-    all_numbers   = range(1, len(all_data_sets)+1)
+    all_numbers = range(1, len(all_data_sets)+1)
 
-    if specfic or numbers or independent:
+    if sets or numbers or (independent and which) :
         return parsed_args
     else:
-        return all_data_sets, all_numbers
+        return ParsedArgs(sets=all_data_sets, numbers=all_numbers)
     #
     # if specfic and independent :
     #     return specfic, independent

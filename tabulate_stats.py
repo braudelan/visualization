@@ -1,14 +1,14 @@
 import pandas
 from matplotlib import pyplot
 
-from raw_data import get_keys
+from raw_data import get_setup_arguments
 from stats import get_stats
 from which_round import get_round
 
 
 input_file = "all_tests.xlsx"
 
-DATA_SET_KEYS = get_keys().specific
+DATA_SET_KEYS = get_setup_arguments().specific
 
 means_dict = {}
 for data_set in DATA_SET_KEYS:
