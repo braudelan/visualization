@@ -1,8 +1,7 @@
-import pandas
 from matplotlib import pyplot
 
 from raw_data import get_setup_arguments, get_raw_data
-from stats import get_stats, plot_stats
+from stats import get_stats, plot_stats, plot_week_ends
 from baseline import get_baseline, plot_baseline
 from control import plot_control
 from Ttest import get_daily_Ttest, tabulate_daily_Ttest
@@ -36,9 +35,14 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
     normalized = BasicStats.normalized_diff
     means_stde = BasicStats.means_stde
 
-# plot means and normalized means(effect)
-    general_stats_fig = plot_stats(means, normalized, means_stde, number, set_name)
-    general_stats_fig.savefig("./%s/%s_figuers.png" % (output_dir, set_name))
+# # plot means and normalized means(effect)
+#     general_stats_fig = plot_stats(means, normalized, means_stde, number, set_name)
+#     general_stats_fig.savefig("./%s/%s_figuers.png" % (output_dir, set_name))
+#     pyplot.cla()
+
+# plot week ends means and normalized means of MBC and RESP
+    week_ends_fig = plot_week_ends(means, normalized, means_stde, number, set_name)
+    week_ends_fig.savefig("./%s/%s_week_ends.png" % (output_dir, set_name))
     pyplot.cla()
 
 # # plot control

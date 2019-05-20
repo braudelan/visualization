@@ -50,7 +50,10 @@ def get_raw_data(key):
                             level=None, inplace=True)
     raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
     raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
+    soil_level = raw_data.columns.get_level_values('soil')
+    treatment_level = raw_data.columns.get_level_values('treatment')
 
+    multi_index = pandas.MultiIndex
     return raw_data
 
 
