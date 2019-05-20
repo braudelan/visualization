@@ -79,11 +79,12 @@ def get_multi_sets(keys):
 
         # input data into DataFrame ahd append into dataframes
         raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                         sheet_name=test,
-                                         na_values=["-", " "]).rename_axis("days")
+                                     sheet_name=test,
+                                     na_values=["-", " "]).rename_axis("days")
         raw_data.columns.rename(["soil", "treatment", "replicate"],
                                 level=None, inplace=True)
         raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
+        raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
         dataframes[test] = raw_data
 

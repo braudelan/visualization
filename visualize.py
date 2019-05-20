@@ -32,18 +32,19 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
     BasicStats = get_stats(raw_data)
 
     means = BasicStats.means
-    normalized = BasicStats.normalized_diff
     means_stde = BasicStats.means_stde
+    difference = BasicStats.difference
+    normalized = BasicStats.normalized_diff
 
-# # plot means and normalized means(effect)
-#     general_stats_fig = plot_stats(means, normalized, means_stde, number, set_name)
-#     general_stats_fig.savefig("./%s/%s_figuers.png" % (output_dir, set_name))
-#     pyplot.cla()
-
-# plot week ends means and normalized means of MBC and RESP
-    week_ends_fig = plot_week_ends(means, normalized, means_stde, number, set_name)
-    week_ends_fig.savefig("./%s/%s_week_ends.png" % (output_dir, set_name))
+# plot means and normalized means(effect)
+    general_stats_fig = plot_stats(means, normalized, means_stde, number, set_name)
+    general_stats_fig.savefig("./%s/%s_figuers.png" % (output_dir, set_name))
     pyplot.cla()
+
+# # plot week ends means and normalized means of MBC and RESP
+#     week_ends_fig = plot_week_ends(means, normalized, means_stde, number, set_name)
+#     week_ends_fig.savefig("./%s/%s_week_ends.png" % (output_dir, set_name))
+#     pyplot.cla()
 
 # # plot control
 #     control_means_fig = plot_control(means, means_stde, set_name, number)

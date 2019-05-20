@@ -49,7 +49,7 @@ def plot_axes_lines(data, std_error, axes):
     """
     x_data = data['days']
     data_columns = data.columns[1:]
-    colors = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']                     #  todo choose better colors (https://python-graph-gallery.com/line-chart/)
+    colors = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']  #  todo colors (https://python-graph-gallery.com/line-chart/)
     which_data = 'means' if len(data.columns) == 7 else 'normalized'
     line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
@@ -117,7 +117,7 @@ def plot_stats(means, normalized, means_stde, number, set_name):
         frame.reset_index(inplace=True)
     normalized.reset_index(inplace=True)
     last_day = means['days'].iloc[-1]     # last sampling day
-    week_ends
+
 
     # figure text
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
@@ -197,8 +197,8 @@ def plot_stats(means, normalized, means_stde, number, set_name):
 
 
 
-def plot_week_ends(means, normalized, means_stde, number, set_name): # todo slice dataframes for week ends only using
-                                                                     #      dataframe.loc[dataframe['days'].isin(every_seven)]
+def plot_week_ends(means, normalized, means_stde, number, set_name):
+
 
     # pyplot parameters
 
@@ -231,9 +231,11 @@ def plot_week_ends(means, normalized, means_stde, number, set_name): # todo slic
         frame.reset_index(inplace=True)
     normalized.reset_index(inplace=True)
     last_day = means['days'].iloc[-1]     # last sampling day
-    every_seven = [0,7,14,21,28]
-    for frame in [means, means_stde, normalized]:
-         = frame.loc[frame['days'].isin(every_seven)]
+    every_7th_day = means['days'].isin([0,7,14,21,28])
+    means = means.loc[every_7th_day]
+    means_stde = means_stde.loc[every_7th_day]
+    normalized = normalized.loc[every_7th_day]
+
 
     # figure text
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
@@ -269,7 +271,7 @@ def plot_week_ends(means, normalized, means_stde, number, set_name): # todo slic
 
 
     # plot all means
-    means_lines = plot_axes_lines(means.loc[every_seven], means_stde.loc[every_seven], means_axes) # todo take out specific data points (MBC)
+    means_lines = plot_axes_lines(means, means_stde, means_axes) # todo take out specific data points (MBC)
                                                                  #      insert markings for time points where
                                                                  #      MRE was applied
 
@@ -303,7 +305,7 @@ def plot_week_ends(means, normalized, means_stde, number, set_name): # todo slic
 
 
     # plot normalized
-    normalized_lines = plot_axes_lines(normalized.loc[every_seven], normalized_stde, normalized_axes)
+    normalized_lines = plot_axes_lines(normalized, normalized_stde, normalized_axes)
 
     normalized_axes.legend()
 

@@ -5,21 +5,44 @@ from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator, NullLocator
 
 from raw_data import get_setup_arguments
-from raw_data import get_raw_data
+from raw_data import get_raw_data, get_multi_sets
 from stats import get_stats
 from Ttest import get_daily_Ttest
 
 # arguments to specify which data sets to load from INPUT_FILE
 setup_arguments = get_setup_arguments()
 
-set_name = setup_arguments.sets[0]
-number = setup_arguments.numbers[0]
+sets_names = setup_arguments.sets
+number = setup_arguments.numbers
 
-raw_data = get_raw_data(set_name)
-stats_output = get_stats(raw_data)
-means = stats_output.means
-means_stde = stats_output.means_stde
-normalized = stats_output.normalized_diff
+dataframes = get_multi_sets(sets_names)
+stats_frames = {}
+for set in sets_names:
+    raw = dataframes[set]
+    stats = get_stats(raw)
+    means = stats.means
+    means_stde = stats.means_stde
+    set_stats = {'means': means, 'means_stde': means_stde}
+    stats_frames[set] = set_stats
+
+MBC_means = stats_frames['MBC']['means']
+MBN_means = stats_frames['MBN']['means']
+RESP_means = stats_frames['RESP']['means']
+DOC_means = stats_frames['DOC']['means']
+HWES_means = stats_frames['HWE-S']['means']
+HWES_C_means = HWES_means / 4  # 40% C in glucose
+C_to_N_ratio = MBC_means / MBN_means
+
+
+#
+# MBC_raw = dataframes['MBC']
+# MBN_raw = dataframes['MBN']
+# MBC_stats = get_stats(MBC_raw)
+# MBN_stats = get_stats(MBN_raw)
+
+# means = stats_output.means
+# means_stde = stats_output.means_stde
+# normalized = stats_output.normalized_diff
 # normalized_stde = stats_output.normal
 # # raw_data.res
 # # group raw_data by day
