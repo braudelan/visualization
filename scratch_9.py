@@ -25,15 +25,17 @@ for set in sets_names:
     set_stats = {'means': means, 'means_stde': means_stde}
     stats_frames[set] = set_stats
 
-MBC_means = stats_frames['MBC']['means']
-MBN_means = stats_frames['MBN']['means']
-RESP_means = stats_frames['RESP']['means']
-DOC_means = stats_frames['DOC']['means']
-HWES_means = stats_frames['HWE-S']['means']
-HWES_C_means = HWES_means / 4  # 40% C in glucose
-C_to_N_ratio = MBC_means / MBN_means
-
-
+MBC = stats_frames['MBC']['means']
+MBN = stats_frames['MBN']['means']
+RESP = stats_frames['RESP']['means']
+DOC = stats_frames['DOC']['means']
+HWES = stats_frames['HWE-S']['means']
+HWES_C = HWES / 4  # 40% C in glucose
+C_to_N_ratio = MBC / MBN
+soil_available_C = MBC + HWES_C + DOC
+available_C_control = available_C.xs(key='c', level=0, axis=1)
+available_C_MRE = available_C.xs(key='t', level=0, axis=1)
+available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
 #
 # MBC_raw = dataframes['MBC']
 # MBN_raw = dataframes['MBN']
