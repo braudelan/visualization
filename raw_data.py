@@ -2,7 +2,6 @@
 Import data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
 from collections import namedtuple
-
 import argparse
 
 import pandas
@@ -32,19 +31,7 @@ def get_setup_arguments() -> ParsedArgs:
     if sets or numbers or (independent and which) :
         return parsed_args
     else:
-        return ParsedArgs(sets=all_data_sets, numbers=all_numbers)
-    #
-    # if specfic and independent :
-    #     return specfic, independent
-    # elif specfic and numbers:
-    #     return specfic, numbers
-    # elif specfic and not numbers :
-    #     return  specfic, range(1,len(specfic)+1)
-    # elif independent and not specfic and not numbers:
-    #     return all_data_sets, independent
-    # else:
-    #     return all_data_sets, all_numbers
-
+        return ParsedArgs(sets=all_data_sets, numbers=all_numbers, independent_sets=independent, which=which)
 
 def get_raw_data(key):
 

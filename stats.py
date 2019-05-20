@@ -4,7 +4,6 @@ from matplotlib import pyplot
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
 
-from raw_data import get_setup_arguments
 
 BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_stde', 'difference', 'normalized_diff'])
 def get_stats(raw_data):
@@ -50,7 +49,7 @@ def plot_axes_lines(data, std_error, axes):
     """
     x_data = data['days']
     data_columns = data.columns[1:]
-    colors = ['b', 'g', 'r']
+    colors = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']                     #  todo choose better colors (https://python-graph-gallery.com/line-chart/)
     which_data = 'means' if len(data.columns) == 7 else 'normalized'
     line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
@@ -77,7 +76,7 @@ def plot_axes_lines(data, std_error, axes):
                   label=column_name,
                   color=color,
                   ls=style,
-                 )
+                 )                 # todo add merkers? conflict with error bars
 
         lines[column_name] = ax
 
@@ -87,48 +86,40 @@ def plot_axes_lines(data, std_error, axes):
 
 def plot_stats(means, normalized, means_stde, number, set_name):
 
-    # # arguments to specify which data sets to load from INPUT_FILE
-    # setup_arguments = get_setup_arguments()
-    #
-    # set_name = setup_arguments.sets[0]
-    # number = setup_arguments.numbers[0]
-    #
-    # raw_data = get_raw_data(set_name)
-    #
-    # BasicStats = get_stats(raw_data)
-    #
-    # means = BasicStats.means
-    # normalized = BasicStats.normalized_diff
-    # means_stde = BasicStats.means_stde
-    # normalized_stde = None
-    for frame in [means, means_stde]:
-        frame.columns = frame.columns.map('_'.join)
-        frame.reset_index(inplace=True)
-    normalized.reset_index(inplace=True)
-
-    # local parameters
-    last_day = means.index[-1]     # last sampling day
-    normalized_stde = None
-    num_data_points = len(means.index)    # number of sampling days
-    excluded = normalized.iloc[1:, :]  # treatment effect without day 0
-
-
     # pyplot parameters
-    major_locator = MultipleLocator(7)  # major ticks locations
-    minor_locator = MultipleLocator(1)  # minor ticks locations
 
-    pyplot.rc('legend', facecolor='inherit', frameon=False, markerscale=1.5)
-    pyplot.rc('font', size=18)
+    pyplot.style.use('seaborn-darkgrid')
+
+    pyplot.rc('legend',
+              facecolor='inherit',
+              framealpha=0,
+              markerscale=1.5)
+    pyplot.rc('font', size=19) # control text size when not defined locally
     pyplot.rc('lines', linewidth=3)
 
     symbol_text_params = {'weight': 'bold',
                           'size': 26,
                           }
-    label_text_params = {'size': 19}
+
 
     line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
-    # text
+    major_locator = MultipleLocator(7)  # major ticks locations
+    minor_locator = MultipleLocator(1)  # minor ticks locations
+
+
+    # local parameters
+    normalized_stde = None
+    num_data_points = len(means.index)    # number of sampling days
+    excluded = normalized.iloc[1:, :]  # treatment effect without day 0
+    for frame in [means, means_stde]:
+        frame.columns = frame.columns.map('_'.join)
+        frame.reset_index(inplace=True)
+    normalized.reset_index(inplace=True)
+    last_day = means['days'].iloc[-1]     # last sampling day
+    week_ends
+
+    # figure text
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
                  r'(b) normalized to control' % (number, set_name, last_day)
 
@@ -143,26 +134,28 @@ def plot_stats(means, normalized, means_stde, number, set_name):
 
 
     # create and adjut figure
-    figure_1 = pyplot.figure(number, figsize=(15,20))
+    figure_1 = pyplot.figure(number, figsize=(25,15))
     figure_1.tight_layout()
     figure_1.subplots_adjust(hspace=0.3)
-    figure_1.text(0.05, 0.01, title_text, fontsize=20)
+
 
 
     # create all means axes and set parameters
     means_axes = figure_1.add_subplot(211)
 
+    means_axes.set_xlim((0,last_day))
     means_axes.xaxis.set_minor_locator(minor_locator)
     means_axes.xaxis.set_major_locator(major_locator)
     means_axes.tick_params(axis='x', which='minor', width=1, length=3)
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
-    means_axes.set_ylabel(means_ylabel_text, labelpad=30, fontdict=label_text_params)
+    means_axes.set_ylabel(means_ylabel_text, labelpad=30)
     means_axes.set_xlabel('')
 
 
     # plot all means
-    means_lines = plot_axes_lines(means, means_stde, means_axes)
-
+    means_lines = plot_axes_lines(means, means_stde, means_axes) # todo take out specific data points (MBC)
+                                                                 #      insert markings for time points where
+                                                                 #      MRE was applied
 
     # costumize all means legend
     list_lines = list(means_lines.items())
@@ -178,16 +171,17 @@ def plot_stats(means, normalized, means_stde, number, set_name):
     treatment_handles = [Line2D([0], [0], linewidth=5, linestyle=solid, color='k'),
                          Line2D([0], [0], linewidth=5, linestyle=densly_dashed, color='k')]
     handles.extend(treatment_handles)
-    means_legend = means_axes.legend(handles, lables)
+    means_legend = means_axes.legend(handles, lables) # todo remove error bars from legend objects.
 
 
     # create normalized axes and set parameters
     normalized_axes = figure_1.add_subplot(212)
 
+    normalized_axes.set_xlim((0, last_day))
     normalized_axes.xaxis.set_major_locator(major_locator)
     normalized_axes.xaxis.set_minor_locator(minor_locator)
-    normalized_axes.set_ylabel(normalized_ylabel_text, labelpad=30, fontdict=label_text_params)
-    normalized_axes.set_xlabel(xlabel_text, labelpad=30, fontdict=label_text_params)
+    normalized_axes.set_ylabel(normalized_ylabel_text, labelpad=30)
+    normalized_axes.set_xlabel(xlabel_text, labelpad=30)
     normalized_axes.tick_params(axis='x', which='minor', width=1,length=3)
     normalized_axes.text(0.03, 1.05, "b", transform=normalized_axes.transAxes, fontdict=symbol_text_params)
 
@@ -197,4 +191,7 @@ def plot_stats(means, normalized, means_stde, number, set_name):
 
     normalized_axes.legend()
 
+    figure_1.text(0, -0.4, title_text, fontsize=22, transform=normalized_axes.transAxes)
+
     return figure_1
+
