@@ -1,29 +1,6 @@
-from collections import namedtuple
-
 from matplotlib import pyplot
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
-
-
-BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_stde', 'difference', 'normalized_diff'])
-def get_stats(raw_data):
-
-    # means
-    groupby_soil_treatment = raw_data.groupby(level=[0, 1],axis=1)  # group 4 replicates from every soil-treatment pair
-    means                  = groupby_soil_treatment.mean()  # means of 4 replicates
-    means_stde             = groupby_soil_treatment.sem()  # stnd error of means
-
-    # means of control\MRE-treatment
-    control    = means.xs('c', axis=1, level='treatment')
-    MRE        = means.xs('t', axis=1, level='treatment')
-
-    #treatment effect
-    difference            = MRE - control   # treatment - control
-    normalized_diff = difference / control * 100  # difference normalized to control (percent)
-
-
-    return BasicStats(means=means, MRE=MRE, control=control, means_stde=means_stde, difference=difference,
-                      normalized_diff=normalized_diff)
 
 
 def plot_axes_lines(data, std_error, axes):
@@ -81,7 +58,6 @@ def plot_axes_lines(data, std_error, axes):
         lines[column_name] = ax
 
     return lines
-
 
 
 def plot_stats(means, normalized, means_stde, number, set_name):
@@ -194,7 +170,6 @@ def plot_stats(means, normalized, means_stde, number, set_name):
     stats_figure.text(0, -0.4, title_text, fontsize=22, transform=normalized_axes.transAxes)
 
     return stats_figure
-
 
 
 def plot_week_ends(means, normalized, means_stde, number, set_name):

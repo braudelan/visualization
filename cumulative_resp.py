@@ -4,7 +4,7 @@ from matplotlib import pyplot
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 
-from stats import get_stats
+from get_stats import get_stats
 
 input_file = "all_tests.xlsx"
 raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],

@@ -2,7 +2,7 @@ import pandas
 from matplotlib import pyplot
 
 from raw_data import get_setup_arguments
-from stats import get_stats
+from get_stats import get_stats
 from which_round import get_round
 
 

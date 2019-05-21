@@ -6,7 +6,7 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 
 from raw_data import get_setup_arguments
 from raw_data import get_raw_data, get_multi_sets
-from stats import get_stats
+from get_stats import get_stats
 from Ttest import get_daily_Ttest
 
 # arguments to specify which data sets to load from INPUT_FILE
@@ -14,29 +14,34 @@ setup_arguments = get_setup_arguments()
 
 sets_names = setup_arguments.sets
 number = setup_arguments.numbers
+def get_carbon_info():
+    sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWE-S','TOC']
+    dataframes = get_multi_sets(sets_names)
+    stats_frames = {}
+    for set in sets_names:
+        raw = dataframes[set]
+        stats = get_stats(raw)
+        means = stats.means
+        means_stde = stats.means_stde
+        set_stats = {'means': means, 'means_stde': means_stde}
+        stats_frames[set] = set_stats
 
-dataframes = get_multi_sets(sets_names)
-stats_frames = {}
-for set in sets_names:
-    raw = dataframes[set]
-    stats = get_stats(raw)
-    means = stats.means
-    means_stde = stats.means_stde
-    set_stats = {'means': means, 'means_stde': means_stde}
-    stats_frames[set] = set_stats
+    MBC = stats_frames['MBC']['means']
+    MBN = stats_frames['MBN']['means']
+    RESP = stats_frames['RESP']['means']
+    DOC = stats_frames['DOC']['means']
+    HWES = stats_frames['HWE-S']['means']
+    HWES_C = HWES / 4  # 40% C in glucose
+    C_to_N_ratio = MBC / MBN
+    soil_available_C = MBC + HWES_C + DOC
+    available_C_control = available_C.xs(key='c', level=0, axis=1)
+    available_C_MRE = available_C.xs(key='t', level=0, axis=1)
+    available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
 
-MBC = stats_frames['MBC']['means']
-MBN = stats_frames['MBN']['means']
-RESP = stats_frames['RESP']['means']
-DOC = stats_frames['DOC']['means']
-HWES = stats_frames['HWE-S']['means']
-HWES_C = HWES / 4  # 40% C in glucose
-C_to_N_ratio = MBC / MBN
-soil_available_C = MBC + HWES_C + DOC
-available_C_control = available_C.xs(key='c', level=0, axis=1)
-available_C_MRE = available_C.xs(key='t', level=0, axis=1)
-available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
-#
+    return soil_available_C, available_C_difference, C_to_N_ratio
+
+
+
 # MBC_raw = dataframes['MBC']
 # MBN_raw = dataframes['MBN']
 # MBC_stats = get_stats(MBC_raw)

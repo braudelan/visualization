@@ -3,7 +3,7 @@ from matplotlib import pyplot
 import matplotlib.backends.backend_pdf
 
 from raw_data import get_raw_data, get_setup_arguments
-from stats    import get_stats
+from get_stats    import get_stats
 from get_qCO2     import get_qCO2
 
 

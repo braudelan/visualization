@@ -1,7 +1,8 @@
 from matplotlib import pyplot
 
 from raw_data import get_setup_arguments, get_raw_data
-from stats import get_stats, plot_stats, plot_week_ends
+from get_stats import get_stats
+from plot_stats import plot_stats, plot_week_ends
 from baseline import get_baseline, plot_baseline
 from control import plot_control
 from Ttest import get_daily_Ttest, tabulate_daily_Ttest
