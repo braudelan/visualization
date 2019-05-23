@@ -19,7 +19,7 @@ for data_set in DATA_SET_KEYS:
                                  na_values=["-", " "]).rename_axis("days")
     raw_data.columns.rename(["soil", "treatment", "replicate"],
                             level=None, inplace=True)
-    raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
+    raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
 
     means, means_stde, normalized, diff = get_stats(raw_data)
 

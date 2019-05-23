@@ -34,8 +34,8 @@ def get_carbon_info():
     HWES_C = HWES / 4  # 40% C in glucose
     C_to_N_ratio = MBC / MBN
     soil_available_C = MBC + HWES_C + DOC
-    available_C_control = available_C.xs(key='c', level=0, axis=1)
-    available_C_MRE = available_C.xs(key='t', level=0, axis=1)
+    available_C_control = available_C.xs(key='control', level=0, axis=1)
+    available_C_MRE = available_C.xs(key='MRE', level=0, axis=1)
     available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
 
     return soil_available_C, available_C_difference, C_to_N_ratio

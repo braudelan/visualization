@@ -12,7 +12,7 @@ raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
                                  na_values=["-", " "]).rename_axis("days")
 raw_data.columns.rename(["soil", "treatment", "replicate"],
                         level=None, inplace=True)
-raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
+raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
 
 groupby_soil_treatment = raw_data.groupby(level=[0, 1], axis=1)
 
@@ -23,7 +23,7 @@ second  = [8, 10, 14]
 
 TIME_STEPS = [first, second]
 SOILS = ('COM', 'MIN', 'UNC')
-TREATMENTS = ['t', 'c']
+TREATMENTS = ['MRE', 'control']
 
 for soil in SOILS:
     for treatment in TREATMENTS:

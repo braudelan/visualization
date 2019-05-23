@@ -23,11 +23,11 @@ for ind_key in INDEPENDENT_VARIABLES:
     DEPENDENT_VARIABLES = keys_lines[i]
 
     independent_raw_data = get_raw_data(ind_key).T
-    independent_baseline = independent_raw_data.loc[('c',SOILS), 0]
+    independent_baseline = independent_raw_data.loc[('control',SOILS), 0]
 
     for dep_key DEPENDENT_VARIABLES:
         dependent_raw_data = get_raw_data(dep_key).T
-        dependent_data = dependent_data.loc[('t', SOILS), :]
+        dependent_data = dependent_data.loc[('MRE', SOILS), :]
 
         for day in independent_raw_data.columns:
 

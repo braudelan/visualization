@@ -44,16 +44,13 @@ def get_raw_data(key):
 
     # data set into DataFrame
     raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                 sheet_name=key,
-                                 na_values=["-", " "]).rename_axis("days")
-    raw_data.columns.rename(["soil", "treatment", "replicate"],
-                            level=None, inplace=True)
-    raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
-    raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
-    soil_level = raw_data.columns.get_level_values('soil')
-    treatment_level = raw_data.columns.get_level_values('treatment')
+                                 sheet_name=key, na_values=["-", " "]).rename_axis("days")
 
-    multi_index = pandas.MultiIndex
+    raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)
+    raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
+    raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True)
+    raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
+
     return raw_data
 
 
@@ -83,7 +80,7 @@ def get_multi_sets(keys):
                                      na_values=["-", " "]).rename_axis("days")
         raw_data.columns.rename(["soil", "treatment", "replicate"],
                                 level=None, inplace=True)
-        raw_data.columns.set_levels(["c", "t"], level='treatment', inplace=True)
+        raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
         raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
         dataframes[test] = raw_data

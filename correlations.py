@@ -28,7 +28,7 @@ def get_correlation_variables():
         # statistics
         means, means_stde, normalized, difference = get_stats(raw_data)
 
-        baseline_means = means.xs('t', level='treatment', axis=1).loc[0]
+        baseline_means = means.xs('MRE', level='treatment', axis=1).loc[0]
 
         stats[parameter + 'means']        = means
         stats[parameter + 'diff']         = difference
@@ -37,7 +37,7 @@ def get_correlation_variables():
 
     # METABOLIC_QUATIENT = get_qCO2()
     # stats['qCO2_means'] = qCO2
-    # stats['qCO2_baseline'] = qCO2.xs('c', level='treatment', axis=1).loc[0]
+    # stats['qCO2_baseline'] = qCO2.xs('control', level='treatment', axis=1).loc[0]
 
     independent_variables = stats[INDEPENDENT_KEY + 'baseline']
 

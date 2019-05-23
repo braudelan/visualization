@@ -40,11 +40,11 @@ def plot_axes_lines(data, std_error, axes):
         y_error = std_error[column_name] if which_data == 'means' else None
 
         color = (
-                 colors[0] if (soil_label == 'COM') else
+                 colors[0] if (soil_label == 'ORG') else
                  colors[1] if (soil_label == 'MIN') else
                  colors[2]
                 )
-        style = densly_dashed if treatment_label == 'c' else solid
+        style = densly_dashed if treatment_label == 'control' else solid
 
         ax = axes.errorbar(
                   x_data,

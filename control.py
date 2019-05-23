@@ -14,10 +14,10 @@ def plot_control(means, means_stde, test, number):
     pyplot.rc('lines', linewidth=3)
 
 # data
-    control_means = means.xs('c', level='treatment', axis=1)
+    control_means = means.xs('control', level='treatment', axis=1)
     round_factor  = get_round(control_means)
     control_means = control_means.round(round_factor)
-    control_stde  = means_stde.xs('c', level='treatment', axis=1)
+    control_stde  = means_stde.xs('control', level='treatment', axis=1)
 
 # text for labels
     title_text = r'mean values of %s for control samples across 28 days of incubation.' % test
