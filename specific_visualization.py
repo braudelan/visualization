@@ -86,7 +86,7 @@ def plot_week_ends(means, normalized, means_stde, number, set_name):
         handel = line[1]
         lables.append(label)
         handles.append(handel)
-    treatment_labels = ['MRE apllied', 'control']
+    treatment_labels = ['MRE apllied', 'c']
     lables.extend(treatment_labels)
     treatment_handles = [Line2D([0], [0], linewidth=5, linestyle=solid, color='k'),
                          Line2D([0], [0], linewidth=5, linestyle=densly_dashed, color='k')]

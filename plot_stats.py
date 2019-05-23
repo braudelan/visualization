@@ -44,7 +44,7 @@ def plot_axes_lines(data, std_error, axes):
                  colors[1] if (soil_label == 'MIN') else
                  colors[2]
                 )
-        style = densly_dashed if treatment_label == 'control' else solid
+        style = densly_dashed if treatment_label == 'c' else solid
 
         ax = axes.errorbar(
                   x_data,
@@ -126,12 +126,15 @@ def plot_stats(means, normalized, means_stde, number, set_name):
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
     means_axes.set_ylabel(means_ylabel_text, labelpad=30)
     means_axes.set_xlabel('')
+    MRE_time_points = [0, 7, 14 ]
+    for time_point in MRE_time_points:
+        means_axes.annotate('', xy=(time_point-1, -0.2), xycoords=("data", "axes fraction"),
+                            arrowprops=dict( shrink=0.05,facecolor='black'), annotation_clip=False) # todo check why annotatin arrow is not visible
 
 
     # plot all means
     means_lines = plot_axes_lines(means, means_stde, means_axes) # todo take out specific data points (MBC)
-                                                                 #      insert markings for time points where
-                                                                 #      MRE was applied
+
 
     # costumize all means legend
     list_lines = list(means_lines.items())
@@ -142,7 +145,7 @@ def plot_stats(means, normalized, means_stde, number, set_name):
         handel = line[1]
         lables.append(label)
         handles.append(handel)
-    treatment_labels = ['MRE apllied', 'control']
+    treatment_labels = ['MRE apllied', 'c']
     lables.extend(treatment_labels)
     treatment_handles = [Line2D([0], [0], linewidth=5, linestyle=solid, color='k'),
                          Line2D([0], [0], linewidth=5, linestyle=densly_dashed, color='k')]
@@ -259,7 +262,7 @@ def plot_week_ends(means, normalized, means_stde, number, set_name):
         handel = line[1]
         lables.append(label)
         handles.append(handel)
-    treatment_labels = ['MRE apllied', 'control']
+    treatment_labels = ['MRE apllied', 'c']
     lables.extend(treatment_labels)
     treatment_handles = [Line2D([0], [0], linewidth=5, linestyle=solid, color='k'),
                          Line2D([0], [0], linewidth=5, linestyle=densly_dashed, color='k')]

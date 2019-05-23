@@ -17,7 +17,7 @@ def get_qCO2():
                                          na_values=["-", " "]).rename_axis("days")
         raw_data.columns.rename(["soil", "treatment", "replicate"],
                                 level=None, inplace=True)
-        raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
+        raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
 
         #get statistics and parameters
         means, means_stde, normalized = get_stats(raw_data)

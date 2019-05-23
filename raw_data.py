@@ -47,7 +47,7 @@ def get_raw_data(key):
                                  sheet_name=key, na_values=["-", " "]).rename_axis("days")
 
     raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)
-    raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
+    raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
     raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True)
     raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
@@ -80,7 +80,7 @@ def get_multi_sets(keys):
                                      na_values=["-", " "]).rename_axis("days")
         raw_data.columns.rename(["soil", "treatment", "replicate"],
                                 level=None, inplace=True)
-        raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
+        raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
         raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
         dataframes[test] = raw_data

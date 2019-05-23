@@ -37,7 +37,7 @@ for test in TESTS:
                                      na_values=["-", " "]).rename_axis("days")
     raw_data.columns.rename(["soil", "treatment", "replicate"],
                             level=None, inplace=True)
-    raw_data.columns.set_levels(['control', 'MRE'], level='treatment', inplace=True)
+    raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
 
 #get statistics and parameters
     means, means_stde, normalized = get_stats(raw_data)
@@ -51,7 +51,7 @@ qCO2_inst  = RESP_means / MBC_means
 qCO2_inst  = qCO2_inst.drop(8)
 
 # baseline instantaneous qCO2
-control  = qCO2_inst.xs('control', level='treatment', axis=1)
+control  = qCO2_inst.xs('c', level='treatment', axis=1)
 droped   = control.drop(labels=[0,7])
 baseline = droped.mean().mean()
 
