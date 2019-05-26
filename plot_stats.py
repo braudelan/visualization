@@ -1,3 +1,5 @@
+import math
+
 from matplotlib import pyplot
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator
@@ -58,6 +60,30 @@ def plot_axes_lines(data, std_error, axes):
         lines[column_name] = ax
 
     return lines
+
+def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.patches.FancyArrowPatch instead of annotate
+
+    MRE_time_points = [0, 7, 14 ] # days when MRE was applied
+    offset_head_x = 0.2 # offset of arrow head x coordinate from annotation point, given in data coordinates(=days)
+    arrow_angle = 0.4 # radians from a downwards line perpendicular to x axis
+    offset_base_x = 0.2 + math.sin(arrow_angle) # offset of arrow base
+    head_y = -0.02 # fraction of axes size
+    base_y = -0.1 # fraction of axes size
+
+    arrow_properties = dict(
+                            arrowstyle='wedge',
+                            facecolor='r',
+                            mutation_scale=1.2,
+                           )
+
+    for time_point in MRE_time_points:
+      axes.annotate(
+                    s='',
+                    xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
+                    xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+                    xycoords=('data', 'axes fraction'),
+                    arrowprops=arrow_properties,
+                    )
 
 
 def plot_stats(means, normalized, means_stde, number, set_name):
@@ -126,11 +152,7 @@ def plot_stats(means, normalized, means_stde, number, set_name):
     means_axes.text(0.03, 1.05, "a", transform=means_axes.transAxes, fontdict=symbol_text_params)  # symbol
     means_axes.set_ylabel(means_ylabel_text, labelpad=30)
     means_axes.set_xlabel('')
-    MRE_time_points = [0, 7, 14 ]
-    for time_point in MRE_time_points:
-        means_axes.annotate('', xy=(time_point-1, -0.2), xycoords=("data", "axes fraction"),
-                            arrowprops=dict( shrink=0.05,facecolor='black'), annotation_clip=False) # todo check why annotatin arrow is not visible
-
+    MRE_notation_marks(means_axes) # add arrows where MRE was applied
 
     # plot all means
     means_lines = plot_axes_lines(means, means_stde, means_axes) # todo take out specific data points (MBC)
