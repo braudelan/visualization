@@ -2,7 +2,7 @@ from matplotlib import pyplot
 
 from raw_data import get_setup_arguments, get_raw_data
 from get_stats import get_stats
-from plot_stats import plot_stats, plot_week_ends
+from plot_stats import plot_stats, plot_week_ends, plot_seperatlly
 from baseline import get_baseline, plot_baseline
 from control import plot_control
 from Ttest import get_daily_Ttest, tabulate_daily_Ttest
@@ -22,7 +22,7 @@ setup_arguments = get_setup_arguments()
 SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 
-
+SOILS = ['ORG', 'MIN', 'UNC']
 baseline_dict = {}
 for set_name, number in zip(SETS_NAMES, NUMBERS):
 
@@ -32,14 +32,19 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
 # get general statistics
     BasicStats = get_stats(raw_data)
 
-    means = BasicStats.means
-    means_stde = BasicStats.means_stde
+    means = BasicStats.means.loc[:,('t', SOILS)]
+    means_stde = BasicStats.means_stde.loc[:, ('t', SOILS)]
     difference = BasicStats.difference
     normalized = BasicStats.normalized_diff
 
 # plot means and normalized means(effect)
     general_stats_fig = plot_stats(means, normalized, means_stde, number, set_name)
-    general_stats_fig.savefig("./%s/%s_figuers.png" % (output_dir, set_name))
+    general_stats_fig.savefig("./%s/%s_all_means_&_normalized.png" % (output_dir, set_name))
+    pyplot.cla()
+
+# plot MRE and control seperatly
+    treatment_figure = plot_stats(means, normalized, means_stde, number, set_name)
+    treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
     pyplot.cla()
 
 # # plot week ends means and normalized means of MBC and RESP

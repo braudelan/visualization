@@ -1,24 +1,28 @@
 from collections import namedtuple
 
-BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_stde', 'difference', 'normalized_diff'])
+BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_stde',
+                                               'MRE_stde', 'difference', 'normalized_diff'])
 def get_stats(raw_data):
 
     # means
-    groupby_soil_treatment = raw_data.groupby(level=[0, 1],axis=1)  # group 4 replicates from every soil-treatment pair
+    groupby_soil_treatment = raw_data.iloc[:,1:].groupby(level=['treatment', 'soil'],axis=1)  # group 4 replicates from every soil-treatment pair
     means                  = groupby_soil_treatment.mean()  # means of 4 replicates
     means_stde             = groupby_soil_treatment.sem()  # stnd error of means
 
     # means of control\MRE-treatment
-    control    = means.xs('c', axis=1, level='treatment')
-    MRE        = means.xs('t', axis=1, level='treatment')
+    control = means.xs('c', axis=1, level='treatment')
+    MRE = means.xs('t', axis=1, level='treatment')
+    MRE_stde = means_stde.xs('t', axis=1, level='treatment')
+    control_stde = means_stde.xs('c', axis=1, level='treatment')
 
     #treatment effect
-    difference            = MRE - control   # treatment - control
+    difference = MRE - control   # treatment - control
     normalized_diff = difference / control * 100  # difference normalized to control (percent)
 
 
-    return BasicStats(means=means, MRE=MRE, control=control, means_stde=means_stde, difference=difference,
-                      normalized_diff=normalized_diff)
+    return BasicStats(means=means, MRE=MRE, control=control, means_stde=means_stde, MRE_stde=MRE_stde,
+                                                             difference=difference, normalized_diff=normalized_diff)
+
 
 
 def get_carbon_info():
