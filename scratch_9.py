@@ -1,11 +1,12 @@
 from pandas import DataFrame
 from matplotlib import pyplot
+from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator, NullLocator
 
-from raw_data import get_setup_arguments
-from raw_data import get_raw_data, get_multi_sets
+from get_raw_data import get_setup_arguments
+from get_raw_data import get_raw_data, get_multi_sets
 from get_stats import get_stats
 from Ttest import get_daily_Ttest
 
@@ -19,9 +20,29 @@ raw_data = get_raw_data(set_name)
 
 stats = get_stats(raw_data)
 means = stats.means
-means_stde = stats.means_stde
+means_SE = stats.means_SE
+MRE = stats.MRE
+MRE_SE = stats.MRE_SE
 normalized = stats.normalized_diff
+
+def get_week_ends(dataframe):
+
+    every_7th = dataframe.index.isin([0, 7, 14, 21, 28])
+
+    return every_7th
 #
+# fig = pyplot.figure()
+#
+# ax_ratio = 0.2
+# ax = fig.add_subplot(111)
+#
+# line_ORG = MRE['ORG'].plot()
+# line_MIN = MRE['MIN'].plot()
+#
+# ax.set_aspect(1.0/ax.get_data_ratio()*ax_ratio)
+#
+# fig.savefig('./test_pyplot')
+
 # def get_carbon_info():
 #     sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWE-S','TOC']
 #     dataframes = get_multi_sets(sets_names)
@@ -30,8 +51,8 @@ normalized = stats.normalized_diff
 #         raw = dataframes[set]
 #         stats = get_stats(raw)
 #         means = stats.means
-#         means_stde = stats.means_stde
-#         set_stats = {'means': means, 'means_stde': means_stde}
+#         means_SE = stats.means_SE
+#         set_stats = {'means': means, 'means_SE': means_SE}
 #         stats_frames[set] = set_stats
 #
 #     MBC = stats_frames['MBC']['means']
@@ -56,9 +77,9 @@ normalized = stats.normalized_diff
 # MBN_stats = get_stats(MBN_raw)
 
 # means = stats_output.means
-# means_stde = stats_output.means_stde
+# means_SE = stats_output.means_SE
 # normalized = stats_output.normalized_diff
-# normalized_stde = stats_output.normal
+# normalized_SE = stats_output.normal
 # # raw_data.res
 # # group raw_data by day
 # # groupby_day   = raw_data.groupby('days')
@@ -89,10 +110,10 @@ normalized = stats.normalized_diff
 #
 #
 # # local parameters
-# normalized_stde = None
+# normalized_SE = None
 # num_data_points = len(means.index)    # number of sampling days
 # excluded = normalized.iloc[1:, :]  # treatment effect without day 0
-# for frame in [means, means_stde]:
+# for frame in [means, means_SE]:
 #     frame.columns = frame.columns.map('_'.join)
 #     frame.reset_index(inplace=True)
 # normalized.reset_index(inplace=True)
@@ -134,7 +155,7 @@ normalized = stats.normalized_diff
 #
 #
 # # plot all means
-# means_lines = plot_axes_lines(means.loc[every_seven], means_stde.loc[every_seven], means_axes) # todo take out specific data points (MBC)
+# means_lines = plot_all_lines(means.loc[every_seven], means_SE.loc[every_seven], means_axes) # todo take out specific data points (MBC)
 #                                                              #      insert markings for time points where
 #                                                              #      MRE was applied
 #
@@ -168,7 +189,7 @@ normalized = stats.normalized_diff
 #
 #
 # # plot normalized
-# normalized_lines = plot_axes_lines(normalized.loc[every_seven], normalized_stde.loc[every_seven], normalized_axes)
+# normalized_lines = plot_all_lines(normalized.loc[every_seven], normalized_SE.loc[every_seven], normalized_axes)
 #
 # normalized_axes.legend()
 #

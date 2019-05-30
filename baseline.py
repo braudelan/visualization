@@ -2,7 +2,7 @@ import pandas
 from pandas     import DataFrame
 from matplotlib import pyplot
 
-from raw_data import get_raw_data
+from get_raw_data import get_raw_data
 from get_stats    import get_stats
 from Ttest    import get_daily_Ttest
 from which_round  import get_round

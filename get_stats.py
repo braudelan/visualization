@@ -1,28 +1,29 @@
 from collections import namedtuple
 
-BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_stde',
-                                               'MRE_stde', 'difference', 'normalized_diff'])
+BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
+                                               'MRE_SE', 'control_SE', 'difference', 'normalized_diff'])
 def get_stats(raw_data):
 
     # means
-    groupby_soil_treatment = raw_data.iloc[:,1:].groupby(level=['treatment', 'soil'],axis=1)  # group 4 replicates from every soil-treatment pair
-    means                  = groupby_soil_treatment.mean()  # means of 4 replicates
-    means_stde             = groupby_soil_treatment.sem()  # stnd error of means
+    groupby_soil_treatment = raw_data.groupby(level=['treatment', 'soil'],axis=1)  # group 4 replicates from every soil-treatment pair
+    means = groupby_soil_treatment.mean()  # means of 4 replicates
+    means_SD = groupby_soil_treatment.std() # std deviation
+    means_SE = groupby_soil_treatment.sem()  # std error
 
     # means of control\MRE-treatment
-    control = means.xs('c', axis=1, level='treatment')
     MRE = means.xs('t', axis=1, level='treatment')
-    MRE_stde = means_stde.xs('t', axis=1, level='treatment')
-    control_stde = means_stde.xs('c', axis=1, level='treatment')
+    MRE.treatment_label = 't'
+    MRE_SE = means_SE.xs('t', axis=1, level='treatment')
+    control = means.xs('c', axis=1, level='treatment')
+    control.treatment_label = 'c'
+    control_SE = means_SE.xs('c', axis=1, level='treatment')
 
     #treatment effect
     difference = MRE - control   # treatment - control
     normalized_diff = difference / control * 100  # difference normalized to control (percent)
 
-
-    return BasicStats(means=means, MRE=MRE, control=control, means_stde=means_stde, MRE_stde=MRE_stde,
-                                                             difference=difference, normalized_diff=normalized_diff)
-
+    return BasicStats(means=means, MRE=MRE, control=control, means_SE=means_SE, MRE_SE=MRE_SE,
+                                 control_SE=control_SE, difference=difference, normalized_diff=normalized_diff)
 
 
 def get_carbon_info():
@@ -34,8 +35,8 @@ def get_carbon_info():
         raw = dataframes[set]
         stats = get_stats(raw)
         means = stats.means
-        means_stde = stats.means_stde
-        set_stats = {'means': means, 'means_stde': means_stde}
+        means_SE = stats.means_SE
+        set_stats = {'means': means, 'means_SE': means_SE}
         stats_frames[set] = set_stats
 
     MBC = stats_frames['MBC']['means']

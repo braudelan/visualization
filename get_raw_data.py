@@ -25,13 +25,14 @@ def get_setup_arguments() -> ParsedArgs:
     independent = parsed_args.independent_sets
     which = parsed_args.which
 
-    all_data_sets = ['MBC', 'MBN', 'DOC', 'ERG', 'HWE-S', 'RESP', 'AS', 'TOC']
+    all_data_sets = ['MBC', 'MBN', 'DOC', 'ERG', 'HWS', 'RESP', 'AS', 'TOC']
     all_numbers = range(1, len(all_data_sets)+1)
 
     if sets or numbers or (independent and which) :
         return parsed_args
     else:
         return ParsedArgs(sets=all_data_sets, numbers=all_numbers, independent_sets=independent, which=which)
+
 
 def get_raw_data(key):
 
@@ -43,16 +44,15 @@ def get_raw_data(key):
     input_file = "all_tests.xlsx"
 
     # data set into DataFrame
-    raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                 sheet_name=key, na_values=["-", " "]).rename_axis("days")
+    raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2], sheet_name=key, na_values=["-", " "])
 
-    raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)
-    raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
-    raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True)
+    raw_data.rename_axis('days', inplace=True) # label for index
+    raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)  # level labels
+    raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True) # treatment level categories
+    raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True) # soil level categories
     raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
     return raw_data
-
 
 
 def get_multi_sets(keys):
