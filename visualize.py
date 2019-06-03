@@ -1,10 +1,9 @@
 from matplotlib import pyplot             # todo solve: running visualize.py with all data sets raises an error
 
-from get_raw_data import get_setup_arguments, get_raw_data
-from get_stats import get_stats
-from plot import plot_all_means, plot_data
-from baseline import get_baseline, plot_baseline
-from control import plot_control
+from get_raw_data import get_setup_arguments, get_raw_data, get_multi_sets
+from get_stats import get_stats, get_carbon_stats
+from plot import plot_data, plot_baseline, plot_c_to_n
+from helper_functions import get_week_ends
 from Ttest import get_daily_Ttest, tabulate_daily_Ttest
 from growth import get_weekly_growth, tabulate_growth
 
@@ -22,11 +21,8 @@ SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 
 SOILS = ['ORG', 'MIN', 'UNC']
-def get_week_ends(dataframe):
-    every_7th = dataframe.index.isin([0, 7, 14, 21, 28])
-    return every_7th
 
-# main loop
+#main loop
 for set_name, number in zip(SETS_NAMES, NUMBERS):
 
 # input data into DataFrame
@@ -38,24 +34,59 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
     means = BasicStats.means
     means_SE = BasicStats.means_SE
     MRE = BasicStats.MRE
-    MRE = MRE.loc[get_week_ends(MRE)] if set_name == 'MBC' else MRE
+    MRE = MRE.loc[get_week_ends(MRE)] if set_name == 'RESP' else MRE
     MRE_SE = BasicStats.MRE_SE
-    MRE_SE = MRE_SE.loc[get_week_ends(MRE_SE)] if set_name == 'MBC' else MRE_SE
+    MRE_SE = MRE_SE.loc[get_week_ends(MRE_SE)] if set_name == 'RESP' else MRE_SE
     control = BasicStats.control
     control_SE = BasicStats.control_SE
     difference = BasicStats.difference
     normalized = BasicStats.normalized_diff
-    normalized = normalized.loc[get_week_ends(normalized)] if set_name == 'MBC' else normalized
+    normalized = normalized.loc[get_week_ends(normalized)] if set_name == 'RESP' else normalized
+
+# # plot MRE and control seperatly
+#     treatment_figure = plot_data(MRE, MRE_SE, number, set_name, normalized=normalized)
+#     treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
+#     pyplot.cla()
+
+
+# # plot baseline
+# raw_data_sets = get_multi_sets(SETS_NAMES)
+# baseline_figure = plot_baseline(raw_data_sets)
+# baseline_figure.savefig('./%s/baseline.png' %output_dir)
+
+# plot C to N ratio
+c_to_n = get_carbon_stats()
+carbon_figure = plot_c_to_n(c_to_n)
+carbon_figure.savefig('./%s/C_to_N.png' %output_dir)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # # plot means and normalized means(effect)
 #     general_stats_fig = plot_all_means(means, normalized, means_SE, number, set_name)
 #     general_stats_fig.savefig("./%s/%s_all_means_&_normalized.png" % (output_dir, set_name))
 #     pyplot.cla()
-
-# plot MRE and control seperatly
-    treatment_figure = plot_data(MRE, MRE_SE, number, set_name, normalized=normalized)
-    treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
-    pyplot.cla()
 
 # # plot week ends means and normalized means of MBC and RESP
 #     week_ends_fig = plot_week_ends(means, normalized, means_SE, number, set_name)
@@ -79,8 +110,3 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
 #         growth_table = tabulate_growth(weekly_growth, number, set_name)
 #         growth_table.savefig("./%s/%s_growth.png" %(output_dir,set_name) bbox_inches='tight')
 #         pyplot.clf()
-
-
-# # baseline dataframe
-# baseline = get_baseline(nameS)
-# plot_baseline(baseline)

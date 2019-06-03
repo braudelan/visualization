@@ -1,4 +1,9 @@
+# todo get baseline values by calculating an average over control.
+#   use dataframe.drop([]) to get only week ends and dataframde.mean() for averages
+
 from collections import namedtuple
+from get_raw_data import get_multi_sets
+from helper_functions import get_week_ends
 
 BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
                                                'MRE_SE', 'control_SE', 'difference', 'normalized_diff'])
@@ -13,6 +18,7 @@ def get_stats(raw_data):
     # means of control\MRE-treatment
     MRE = means.xs('t', axis=1, level='treatment')
     MRE.treatment_label = 't'
+    # MRE_SD = means_SD.
     MRE_SE = means_SE.xs('t', axis=1, level='treatment')
     control = means.xs('c', axis=1, level='treatment')
     control.treatment_label = 'c'
@@ -26,9 +32,19 @@ def get_stats(raw_data):
                                  control_SE=control_SE, difference=difference, normalized_diff=normalized_diff)
 
 
-def get_carbon_info():
+def get_baseline(control_data):
 
-    sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWE-S','TOC']
+    control_weekly = control_data.loc[get_week_ends(control)]
+    control_averages = control_weekly.mean()
+
+    return control_averages
+
+
+
+
+def get_carbon_stats():
+
+    sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWS','TOC']
     dataframes = get_multi_sets(sets_names)
     stats_frames = {}
     for set in sets_names:
@@ -43,14 +59,15 @@ def get_carbon_info():
     MBN = stats_frames['MBN']['means']
     RESP = stats_frames['RESP']['means']
     DOC = stats_frames['DOC']['means']
-    HWES = stats_frames['HWE-S']['means']
+    HWES = stats_frames['HWS']['means']
     HWES_C = HWES / 4  # 40% C in glucose
     C_to_N_ratio = MBC / MBN
-    soil_available_C = MBC + HWES_C + DOC
-    available_C_control = available_C.xs(key='c', level=0, axis=1)
-    available_C_MRE = available_C.xs(key='t', level=0, axis=1)
-    available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
+    C_to_N_ratio = C_to_N_ratio.loc[get_week_ends(C_to_N_ratio)]
+    # soil_available_C = MBC + HWES_C + DOC
+    # available_C_control = available_C.xs(key='c', level=0, axis=1)
+    # available_C_MRE = available_C.xs(key='t', level=0, axis=1)
+    # available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
 
-    return soil_available_C, available_C_difference, C_to_N_ratio
+    return C_to_N_ratio
 
 

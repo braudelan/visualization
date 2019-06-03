@@ -34,7 +34,7 @@ def get_setup_arguments() -> ParsedArgs:
         return ParsedArgs(sets=all_data_sets, numbers=all_numbers, independent_sets=independent, which=which)
 
 
-def get_raw_data(key):
+def get_raw_data(data_set_name):
 
     """
     imports a single data set into a DataFrame
@@ -44,7 +44,7 @@ def get_raw_data(key):
     input_file = "all_tests.xlsx"
 
     # data set into DataFrame
-    raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2], sheet_name=key, na_values=["-", " "])
+    raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2], sheet_name=data_set_name, na_values=["-", " "])
 
     raw_data.rename_axis('days', inplace=True) # label for index
     raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)  # level labels
@@ -55,7 +55,7 @@ def get_raw_data(key):
     return raw_data
 
 
-def get_multi_sets(keys):
+def get_multi_sets(keys) -> dict:
 
     """
     Import multipule data sets as DataFrames
@@ -67,23 +67,24 @@ def get_multi_sets(keys):
     input_file = "all_tests.xlsx"
 
     # which data sets to iterate through
-    TESTS = keys
+    data_set_names = keys
 
     # dictionary of DataFrames to append data sets into
     dataframes = {}
 
-    for test in TESTS:
+
+    for data_set_name in data_set_names:
 
         # input data into DataFrame ahd append into dataframes
-        raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                     sheet_name=test,
-                                     na_values=["-", " "]).rename_axis("days")
-        raw_data.columns.rename(["soil", "treatment", "replicate"],
-                                level=None, inplace=True)
-        raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)
+        raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2], sheet_name=data_set_name, na_values=["-", " "])
+
+        raw_data.rename_axis('days', inplace=True)  # label for index
+        raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)  # level labels
+        raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True)  # treatment level categories
+        raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True)  # soil level categories
         raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
-        dataframes[test] = raw_data
+        dataframes[data_set_name] = raw_data
 
     return dataframes
 
