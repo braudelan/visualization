@@ -5,8 +5,12 @@ from collections import namedtuple
 from get_raw_data import get_multi_sets
 from helper_functions import get_week_ends
 
+
+SOILS = ['ORG', 'MIN', 'UNC']
+
 BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
-                                               'MRE_SE', 'control_SE', 'difference', 'normalized_diff'])
+                                       'MRE_SE', 'control_SE', 'MRE_SD', 'control_SD', 'difference', 'normalized_diff'])
+
 def get_stats(raw_data):
 
     # means
@@ -16,20 +20,21 @@ def get_stats(raw_data):
     means_SE = groupby_soil_treatment.sem()  # std error
 
     # means of control\MRE-treatment
-    MRE = means.xs('t', axis=1, level='treatment')
+    MRE = means.loc[:,('t', SOILS)]
+    MRE_SD = means_SD.loc[:,('t', SOILS)]
+    MRE_SE = means_SE.loc[:,('t', SOILS)]
     MRE.treatment_label = 't'
-    # MRE_SD = means_SD.
-    MRE_SE = means_SE.xs('t', axis=1, level='treatment')
-    control = means.xs('c', axis=1, level='treatment')
+    control = means.loc[:,('c', SOILS)]
+    control_SE = means_SE.loc[:,('c', SOILS)]
+    control_SD = means_SD.loc[:,('c', SOILS)]
     control.treatment_label = 'c'
-    control_SE = means_SE.xs('c', axis=1, level='treatment')
-
     #treatment effect
     difference = MRE - control   # treatment - control
     normalized_diff = difference / control * 100  # difference normalized to control (percent)
 
     return BasicStats(means=means, MRE=MRE, control=control, means_SE=means_SE, MRE_SE=MRE_SE,
-                                 control_SE=control_SE, difference=difference, normalized_diff=normalized_diff)
+                                       control_SE=control_SE, MRE_SD=MRE_SD, control_SD=control_SD,
+                                            difference=difference, normalized_diff=normalized_diff)
 
 
 def get_baseline(control_data):
@@ -38,8 +43,6 @@ def get_baseline(control_data):
     control_averages = control_weekly.mean()
 
     return control_averages
-
-
 
 
 def get_carbon_stats():

@@ -1,3 +1,4 @@
+import pdb
 import math
 
 import numpy
@@ -11,9 +12,12 @@ from pandas import Series
 from get_stats import get_stats
 from helper_functions import get_week_ends
 
+# constants
+SOILS = ['ORG', 'MIN', 'UNC']
+
 # pyplot parameters
 
-# pyplot.style.use('seaborn-darkgrid')
+# # pyplot.style.use('seaborn-darkgrid')
 
 pyplot.rc('legend',
           facecolor='inherit',
@@ -206,7 +210,15 @@ def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.pat
 
 
 def plot_baseline(raw_data_sets: dict) -> dict:
-    """plot baseline values of multiple data sets on a bar plot"""
+    """plot baseline values of multiple data sets.
+
+    this function takes only the control replicates from every data set(=category or analysis)
+    and produces the average for every soil over day 0 and every week end (week_ends).
+    all replicates from all week_ends are pooled together representing replicates of the same sample
+    and the mean and std error are calculated accordingly.
+    means and std errors are divided by the mean of UNC soil to normalize the results.
+
+    """
 
     # data parameters
     CATEGORIES = raw_data_sets.keys()
@@ -216,7 +228,7 @@ def plot_baseline(raw_data_sets: dict) -> dict:
 
     # axes parameters
     category_width = 0.5
-    soil_width = category_width / 3
+    soil_width = category_width / 2
 
     # text
     y_label = r'normalized means \\' + '\n' + 'percent of smallest mean'
@@ -233,78 +245,47 @@ def plot_baseline(raw_data_sets: dict) -> dict:
     axes.set_yticks([])
 
     all_bars = {}
-    for x_location, raw_data in zip(X_LOCATIONS, CATEGORIES_DATA):
+    for x_location, data_set in zip(X_LOCATIONS, CATEGORIES_DATA):
 
-        # data
-        data = get_stats(raw_data).control  # get means of control samples
-        data_
-        week_ends = data.loc[get_week_ends(data)]  # drop week days
-        means = week_ends.mean()  # average across day 1 and all week ends for every soil
-        normalization_factor = means.min()
-        normalized_control = means / normalization_factor * 100
+        # raw_data
+        raw_data_control = data_set.loc[get_week_ends(data_set), ('c', SOILS)]  # week ends control samples from raw data
+        raw_data_control.columns = raw_data_control.columns.droplevel('treatment')
+        control_stacked = raw_data_control.stack(level='replicate')
 
-        heights = normalized_control.values
-        soil_labels = means.index
+        # statistics
+        means = control_stacked.mean().reindex(SOILS)
+        std_error_of_means = control_stacked.sem()
+        normalization_factor = means['UNC']
+        normalized = means / normalization_factor
+        std_error_normalized = std_error_of_means / normalization_factor
+
+        # bar plot input
+        heights = normalized.values
+        soil_labels = normalized.index
 
         category_bars = {}
         i = 0
 
         # plot
-        for label, value in zip(soil_labels, heights):
-            bar = axes.bar(x=x_location + i,
-                           height=value,
-                           width=soil_width,
-                           label=label,
-                           color=(
-                               colors[0] if (label == 'ORG') else
-                               colors[1] if (label == 'MIN') else
-                               colors[2]
-                           )
-                           )
+        for soil_label, value in zip(soil_labels, heights):
+            if soil_label != 'UNC':
+                bar = axes.bar(
+                               x=x_location + i,
+                               height=value,
+                               width=soil_width,
+                               yerr=std_error_normalized[soil_label],
+                               label=soil_label,
+                               color=(
+                                      colors[0] if (soil_label == 'ORG') else
+                                      colors[1]                                     ),
+                               )
 
-            i += soil_width
+                i += soil_width
 
-            category_bars[label] = bar
-        # plot_baseline_bars(axes, data_set, data_set_name, x_location)
+                category_bars[soil_label] = bar
 
     return baseline_figure
 
-
-def plot_baseline_bars(axes, data_set, data_set_name, x_location):
-
-    data_set = get_stats(data_set).control  # get means of control samples
-    week_ends = data_set.loc[get_week_ends(data_set)]  # drop week days
-    control_averages = week_ends.mean()  # average across day 1 and all week ends for every soil
-    max_value = control_averages.max()
-    normalized_control = control_averages / max_value * 100
-
-    width = 0.3
-    category = data_set_name
-
-    heights = normalized_control.values
-    labels = control_averages.index
-
-    category_bars={}
-    i = 0
-    width_indent = width/3
-    for label, value in zip(labels, heights):
-
-        bar = axes.bar(x=x_location + i,
-                       height=value,
-                       width=width_indent,
-                       label=label,
-                       color= (
-                               colors[0] if (label == 'ORG') else
-                               colors[1] if (label == 'MIN') else
-                               colors[2]
-                              )
-                       )
-
-        i += width_indent
-
-        category_bars[label] = bar
-
-    return category_bars
 
 def plot_c_to_n(data):
 

@@ -10,23 +10,23 @@ from get_raw_data import get_raw_data, get_multi_sets
 from get_stats import get_stats, get_carbon_stats
 from Ttest import get_daily_Ttest
 
-# # arguments to specify which data sets to load from INPUT_FILE
-# setup_arguments = get_setup_arguments()
-#
-# set_name = setup_arguments.sets[0]
-# number = setup_arguments.numbers[0]
-#
-# raw_data = get_raw_data(set_name)
-#
-# stats = get_stats(raw_data)
-# means = stats.means
-# means_SE = stats.means_SE
-# MRE = stats.MRE
-# MRE_SE = stats.MRE_SE
-# normalized = stats.normalized_diff
-# control = stats.control
+# arguments to specify which data sets to load from INPUT_FILE
+setup_arguments = get_setup_arguments()
 
-c_to_n = get_carbon_stats()
+set_name = setup_arguments.sets[0]
+number = setup_arguments.numbers[0]
+
+raw_data = get_raw_data(set_name)
+
+stats = get_stats(raw_data)
+means = stats.means
+means_SE = stats.means_SE
+MRE = stats.MRE
+MRE_SE = stats.MRE_SE
+normalized = stats.normalized_diff
+control = stats.control
+
+# c_to_n = get_carbon_stats()
 
 def get_week_ends(dataframe):
 
