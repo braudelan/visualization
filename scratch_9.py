@@ -7,7 +7,7 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 
 from get_raw_data import get_setup_arguments
 from get_raw_data import get_raw_data, get_multi_sets
-from get_stats import get_stats, get_carbon_stats
+from get_stats import get_stats, get_carbon_stats, get_baseline
 from plot import plot_baseline
 from Ttest import get_daily_Ttest
 
@@ -28,6 +28,7 @@ MRE_SE = stats.MRE_SE
 normalized = stats.normalized_diff
 control = stats.control
 
+baseline = get_baseline(raw_data)
 # c_to_n = get_carbon_stats()
 
 def get_week_ends(dataframe):

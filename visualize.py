@@ -42,16 +42,16 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
 
     microbial_c_to_n = get_carbon_stats()
 #
-# plot MRE and control seperatly
-    treatment_figure = plot_dynamics(MRE, MRE_SE, number, set_name, normalized=normalized)
-    treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
-    pyplot.cla()
+# # plot MRE and control seperatly
+#     treatment_figure = plot_dynamics(MRE, MRE_SE, number, set_name, normalized=normalized)
+#     treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
+#     pyplot.cla()
 
 
-# # plot baseline
-# raw_data_sets = get_multi_sets(SETS_NAMES)
-# baseline_figure = plot_baseline(raw_data_sets)
-# baseline_figure.savefig('./%s/baseline.png' %output_dir)
+# plot baseline
+raw_data_sets = get_multi_sets(SETS_NAMES)
+baseline_figure = plot_baseline(raw_data_sets)
+baseline_figure.savefig('./%s/baseline.png' %output_dir)
 
 # # plot C to N ratio
 # c_to_n = get_carbon_stats()

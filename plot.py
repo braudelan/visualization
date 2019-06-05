@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from pandas import Series
 
-from get_stats import get_stats
+from get_stats import get_stats, get_baseline
 from helper_functions import get_week_ends
 
 # constants
@@ -259,17 +259,14 @@ def plot_baseline(raw_data_sets: dict) -> Figure:
     all_bars = {}
     for x_location, data_set, category_name in zip(X_LOCATIONS, CATEGORIES_DATA, CATEGORIES):
 
-        # raw_data
-        raw_data_control = data_set.loc[get_week_ends(data_set), ('c', SOILS)]  # week ends control samples from raw data
-        raw_data_control.columns = raw_data_control.columns.droplevel('treatment')
-        control_stacked = raw_data_control.stack(level='replicate')
+        # get baseline
+        baseline_statistics = get_baseline(data_set)
+        baseline = baseline_statistics[0]
+        std_error = baseline_statistics[1]
 
-        # statistics
-        means = control_stacked.mean().reindex(SOILS)
-        std_error_of_means = control_stacked.sem()
         normalization_factor = means['UNC']
-        normalized = means / normalization_factor
-        std_error_normalized = std_error_of_means / normalization_factor
+        normalized = baseline / normalization_factor
+        std_error_normalized = baseline_std_error / normalization_factor
 
         # bar plot input
         heights = normalized.values
@@ -310,7 +307,26 @@ def plot_baseline(raw_data_sets: dict) -> Figure:
     return baseline_figure
 
 
-# def plot_total_increase():
+def plot_total_increase(raw_data_sets: dict) -> Figure:
+
+    for data_set_name, data_set in raw_data_sets.items():
+
+        # baseline
+        baseline = get_baseline(data_set)[0]
+        baseline_std_error = get_baseline(data_set)[1]
+
+        # last day of incubation
+        MRE_means = get_stats(data_set).MRE
+        MRE_std_error = get_stats(data_set).MRE_SE
+        last_day_means = MRE_means.iloc[-1]
+        last_day_std_error = MRE_std_error.iloc[-1]
+
+        # total increase
+        baseline_increase = last_day_means - baseline
+        normalized = baseline_increase / baseline
+
+
+
 
 
 def plot_c_to_n(data):

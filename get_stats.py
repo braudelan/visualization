@@ -37,12 +37,16 @@ def get_stats(raw_data):
                                             difference=difference, normalized_diff=normalized_diff)
 
 
-def get_baseline(control_data):
+def get_baseline(raw_data):
 
-    control_weekly = control_data.loc[get_week_ends(control)]
-    control_averages = control_weekly.mean()
+    raw_data_control = raw_data.loc[get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
+    raw_data_control.columns = raw_data_control.columns.droplevel('treatment')
+    control_stacked = raw_data_control.stack(level='replicate')
 
-    return control_averages
+    means = control_stacked.mean().reindex(SOILS)
+    std_error_of_means = control_stacked.sem()
+
+    return means, std_error_of_means
 
 
 def get_carbon_stats():
