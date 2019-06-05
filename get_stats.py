@@ -10,7 +10,6 @@ SOILS = ['ORG', 'MIN', 'UNC']
 
 BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
                                        'MRE_SE', 'control_SE', 'MRE_SD', 'control_SD', 'difference', 'normalized_diff'])
-
 def get_stats(raw_data):
 
     # means
@@ -20,14 +19,15 @@ def get_stats(raw_data):
     means_SE = groupby_soil_treatment.sem()  # std error
 
     # means of control\MRE-treatment
-    MRE = means.loc[:,('t', SOILS)]
-    MRE_SD = means_SD.loc[:,('t', SOILS)]
-    MRE_SE = means_SE.loc[:,('t', SOILS)]
+    MRE = means.xs('t', level=0, axis=1)
+    MRE_SD = means_SD.xs('t', level=0, axis=1)
+    MRE_SE = means_SE.xs('t', level=0, axis=1)
     MRE.treatment_label = 't'
-    control = means.loc[:,('c', SOILS)]
-    control_SE = means_SE.loc[:,('c', SOILS)]
-    control_SD = means_SD.loc[:,('c', SOILS)]
+    control = means.xs('c', level=0, axis=1)
+    control_SE = means_SE.xs('c', level=0, axis=1)
+    control_SD = means_SD.xs('c', level=0, axis=1)
     control.treatment_label = 'c'
+
     #treatment effect
     difference = MRE - control   # treatment - control
     normalized_diff = difference / control * 100  # difference normalized to control (percent)

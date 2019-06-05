@@ -8,6 +8,7 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 from get_raw_data import get_setup_arguments
 from get_raw_data import get_raw_data, get_multi_sets
 from get_stats import get_stats, get_carbon_stats
+from plot import plot_baseline
 from Ttest import get_daily_Ttest
 
 # arguments to specify which data sets to load from INPUT_FILE
@@ -17,7 +18,8 @@ set_name = setup_arguments.sets[0]
 number = setup_arguments.numbers[0]
 
 raw_data = get_raw_data(set_name)
-
+# figure = plot_baseline(raw_data)
+#
 stats = get_stats(raw_data)
 means = stats.means
 means_SE = stats.means_SE
