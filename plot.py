@@ -10,10 +10,10 @@ from matplotlib.axes import Axes
 from pandas import Series
 
 from get_stats import get_stats, get_baseline
-from helper_functions import get_week_ends
+from helpers import get_week_ends, SOILS
 
 # constants
-SOILS = ['ORG', 'MIN', 'UNC']
+# SOILS = ['ORG', 'MIN', 'UNC']
 
 # pyplot parameters
 
@@ -31,8 +31,8 @@ symbol_text_params = {'weight': 'bold',
                       'size': 26,
                       }
 
-colors = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']  #  todo colors (https://python-graph-gallery.com/line-chart/)
-markers = ['h', '*', 'D' ]
+COLORS = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']  #  todo colors (https://python-graph-gallery.com/line-chart/)
+MARKERS = ['h', '*', 'D']
 line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
 major_locator = MultipleLocator(7)  # major ticks locations
@@ -73,16 +73,16 @@ def plot_dynamics(data, data_SE, number, set_name, normalized=None):
     treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
 
     # create means axes and set parameters
-    means_axes = make_dynamics_axes(treatment_figure, last_day, major_locator, minor_locator,
-                                    x_label='', y_label=means_ylabel_text, axes_lineup=1)
+    means_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
+                                x_label='', y_label=means_ylabel_text, axes_lineup=1)
 
     # plot_means
     means_lines = plot_lines(means_axes, data, data_SE=data_SE) # todo take out specific data points (MBC)
 
 
     # create normalized axes and set parameters
-    normalized_axes = make_dynamics_axes(treatment_figure, last_day, major_locator, minor_locator,
-                                         x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
+    normalized_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
+                                     x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
 
     # plot normalized
     normalized_lines = plot_lines(normalized_axes, normalized)
@@ -102,7 +102,7 @@ def plot_dynamics(data, data_SE, number, set_name, normalized=None):
     return treatment_figure
 
 
-def make_dynamics_axes(figure: Figure, last_day, major_locator, minor_locator, x_label='', y_label='', axes_lineup=0):
+def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_label='', y_label='', axes_lineup=0) -> Axes:
 
     position = (
                     111 if axes_lineup == 0 else
@@ -154,21 +154,22 @@ def plot_lines(axes, data, data_SE=None):
 
     lines = {}
     for label in y_data_labels:
+
         soil_label = label
 
         y_data = data[label]
         y_error = data_SE[label] if data_SE is not None else None
 
         color = (
-                 colors[0] if (soil_label == 'ORG') else
-                 colors[1] if (soil_label == 'MIN') else
-                 colors[2]
+                 COLORS[0] if (soil_label == 'ORG') else
+                 COLORS[1] if (soil_label == 'MIN') else
+                 COLORS[2]
                 )
 
         marker = (
-                  markers[0] if (soil_label == 'ORG') else
-                  markers[1] if (soil_label == 'MIN') else
-                  markers[2]
+                  MARKERS[0] if (soil_label == 'ORG') else
+                  MARKERS[1] if (soil_label == 'MIN') else
+                  MARKERS[2]
                  )
 
         # style = densly_dashed if treatment_label == 'c' else solid
@@ -190,6 +191,7 @@ def plot_lines(axes, data, data_SE=None):
                            color=color,
                            marker=marker
                           )  # todo add merkers? conflict with error bars
+
 
         lines[label] = line
 
@@ -221,7 +223,7 @@ def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.pat
                     )
 
 
-def plot_baseline(raw_data_sets: dict) -> Figure:
+def plot_all_parameters(raw_data_sets: dict) -> Figure:
     """plot baseline values of multiple data sets.
 
     this function takes only the control replicates from every data set(=category or analysis)
@@ -238,73 +240,138 @@ def plot_baseline(raw_data_sets: dict) -> Figure:
     X_LOCATIONS = numpy.arange(N)
     CATEGORIES_DATA = raw_data_sets.values()
 
-    # axes parameters
-    category_width = 0.5
-    soil_width = category_width / 2
+    # plot parameters
+    CATEGORY_WIDTH = 0.5
+    SOIL_WIDTH = CATEGORY_WIDTH / 2
 
-    # text
-    y_label = r'normalized means \\' + '\n' + 'percent of smallest mean'
+    # labels
+    baseline_y_label = r'normalized means \\' + '\n' + 'percent of smallest mean'
+    growth_y_label = ''
+    x_label = ''
 
     # figure
-    baseline_figure = pyplot.figure(figsize=(15,10))
+    basline_growth_figure = pyplot.figure(figsize=(15,10))
 
-    # axes
-    axes = baseline_figure.add_subplot(111)
+    basline_growth_figure.subplots_adjust(hspace=0)
 
-    axes.set_xticks(X_LOCATIONS + category_width/2)
-    axes.set_xticklabels(CATEGORIES)
-    axes.set_ylabel(y_label, rotation=45, position=(20, 0.65), ha='right')
-    axes.set_yticks([])
+    # baseline_axes
+    baseline_axes = make_bar_axes(basline_growth_figure, X_LOCATIONS, SOIL_WIDTH, baseline_y_label, axes_lineup=1)
 
+    # growth axes
+    growth_axes = make_bar_axes(basline_growth_figure, X_LOCATIONS, SOIL_WIDTH, growth_y_label,
+                                                        x_label=x_label, categories= CATEGORIES, axes_lineup=2)
     all_bars = {}
     for x_location, data_set, category_name in zip(X_LOCATIONS, CATEGORIES_DATA, CATEGORIES):
 
-        # get baseline
+
+        # baseline data
         baseline_statistics = get_baseline(data_set)
         baseline = baseline_statistics[0]
-        std_error = baseline_statistics[1]
+        baseline_SD = baseline_statistics[1]
+        baseline_SE = baseline_statistics[2]
 
-        normalization_factor = means['UNC']
-        normalized = baseline / normalization_factor
-        std_error_normalized = baseline_std_error / normalization_factor
+        normalization_factor = baseline['UNC']
+
+        # total growth data
+        MRE_means = get_stats(data_set).MRE
+        MRE_SD = get_stats(data_set).MRE_SD
+        last_day_mean = MRE_means.iloc[-1]
+        last_day_SD = MRE_SD.iloc[-1]
+        growth = last_day_mean - baseline
+        growth_SD = (baseline_SD ** 2 + last_day_SD ** 2) ** 0.5
+
 
         # bar plot input
-        heights = normalized.values
-        soil_labels = normalized.index
+        baseline_bar_heights = baseline / normalization_factor
+        baseline_bar_errors = baseline_SE / normalization_factor
 
-        category_bars = {}
-        i = 0
+        growth_bar_heights = growth / baseline
 
-        # plot
-        for soil_label, value in zip(soil_labels, heights):
+        labels = SOILS
+
+        # plot baseline
+        baseline_bars = {}
+        baseline_bars = plot_bars(baseline_axes, x_location,
+                                        baseline_bar_heights, SOIL_WIDTH, SOILS , baseline_bar_errors)
+
+        # plot growth
+        growth_bars = plot_bars(growth_axes, x_location, growth_bar_heights, SOIL_WIDTH, labels, )
+
+        all_bars[category_name + '_baseline'] = baseline_bars
+        all_bars[category_name + '_growth'] = growth_bars
+
+    legend_handles = all_bars['MBC_growth'].values()
+    legend_labels = all_bars['MBC_growth'].keys()
+    basline_growth_figure.legend(legend_handles, legend_labels, loc='center right')                                                                                   # baseline_category_names = [ key for key in all_bars.keys() if 'baseline' in key]
+                                                                                        ## remove rectangle patch of UNC
+    return basline_growth_figure                                                       # for category in baseline_category_names:
+                                                                                        #     for soil in all_bars[category].keys():
+                                                                                        #         if soil == 'UNC':
+                                                                                        #             bar = all_bars[category][soil]
+                                                                                        #             bar_rectangle = bar.patchs
+                                                                                        #             bar_rectangle.clear()
+
+
+def make_bar_axes(figure: Figure, x_locations, soil_width, y_label,
+                                                x_label=None, categories=None, axes_lineup=0) -> Axes:
+
+    position = (
+                111 if axes_lineup == 0 else
+                211 if axes_lineup == 1 else
+                212
+               )
+
+    axes = figure.add_subplot(position)
+
+    axes.set_ylabel(y_label, rotation=45, position=(20, 0.65), ha='right')
+    axes.set_yticks([])
+
+    if categories is not None:
+        axes.set_xticks(x_locations + soil_width)
+        axes.set_xticklabels(categories)
+        axes.xaxis.set_tick_params(length=1, pad=20)
+        axes.set_xlabel(x_label)
+    else:
+        axes.set_xticks([])
+
+    return axes
+
+def plot_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
+
+    bars = {}
+    i = 0
+    for soil_label, height in zip(labels, heights):
+        if bar_error is not None:
             bar = axes.bar(
                            x=x_location + i,
-                           height=value,
-                           width=soil_width,
-                           yerr=std_error_normalized[soil_label],
+                           height=height,
+                           width=width,
+                           yerr=bar_error[soil_label],
                            label=soil_label,
                            color=(
-                                  colors[0] if (soil_label == 'ORG') else
-                                  colors[1] if (soil_label == 'MIN') else
-                                  colors[2]
+                                  COLORS[0] if (soil_label == 'ORG') else
+                                  COLORS[1] if (soil_label == 'MIN') else
+                                  COLORS[2]
+                                 )
+                           )
+        else:
+            bar = axes.bar(
+                           x=x_location + i,
+                           height=height,
+                           width=width,
+                           label=soil_label,
+                           color=(
+                                  COLORS[0] if (soil_label == 'ORG') else
+                                  COLORS[1] if (soil_label == 'MIN') else
+                                  COLORS[2]
                                  ),
                            )
 
-            i += soil_width
+        i += width
 
-            category_bars[soil_label] = bar
+        bars[soil_label] = bar
 
-        all_bars[category_name] = category_bars
-
-    # remove rectangle patch of UNC
-    # for category in all_bars.keys():
-    #     for soil in category_bars.keys():
-    #         if soil == 'UNC':
-    #             bar = all_bars[category][soil]
-    #             bar_rectangle = bar.patchs
-    #             bar_rectangle.clear()
-
-    return baseline_figure
+    return bars
 
 
 def plot_total_increase(raw_data_sets: dict) -> Figure:

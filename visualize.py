@@ -2,9 +2,9 @@ from matplotlib import pyplot             # todo solve: running visualize.py wit
 
 from get_raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from get_stats import get_stats, get_carbon_stats
-from plot import plot_dynamics, plot_baseline, plot_c_to_n
-from helper_functions import get_week_ends
-from Ttest import get_daily_Ttest, tabulate_daily_Ttest
+from plot import plot_dynamics, plot_all_parameters, plot_c_to_n
+from helpers import get_week_ends, SOILS
+from Ttest import get_daily_Ttest
 from growth import get_weekly_growth, tabulate_growth
 
 
@@ -20,15 +20,15 @@ setup_arguments = get_setup_arguments()
 SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 
-SOILS = ['ORG', 'MIN', 'UNC']
+# SOILS = ['ORG', 'MIN', 'UNC']
 
-# main loop
+# plot dynamics of each soil parameter as a seperate graph
 for set_name, number in zip(SETS_NAMES, NUMBERS):
 
-# input data into DataFrame
+    # input data into DataFrame
     raw_data = get_raw_data(set_name)
 
-# get statistics
+    # get statistics
     BasicStats = get_stats(raw_data)
 
     means = BasicStats.means
@@ -41,17 +41,17 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
     normalized = BasicStats.normalized_diff
 
     microbial_c_to_n = get_carbon_stats()
-#
-# # plot MRE and control seperatly
-#     treatment_figure = plot_dynamics(MRE, MRE_SE, number, set_name, normalized=normalized)
-#     treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
-#     pyplot.cla()
+
+    # # plot
+    # treatment_figure = plot_dynamics(MRE, MRE_SE, number, set_name, normalized=normalized)
+    # treatment_figure.savefig("./%s/%s_treatment.png" % (output_dir, set_name))
+    # pyplot.cla()
 
 
 # plot baseline
 raw_data_sets = get_multi_sets(SETS_NAMES)
-baseline_figure = plot_baseline(raw_data_sets)
-baseline_figure.savefig('./%s/baseline.png' %output_dir)
+soil_properties_figure = plot_all_parameters(raw_data_sets)
+soil_properties_figure.savefig('./%s/baseline.png' % output_dir)
 
 # # plot C to N ratio
 # c_to_n = get_carbon_stats()

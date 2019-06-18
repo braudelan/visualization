@@ -1,24 +1,30 @@
 import pandas
 from matplotlib import pyplot
 
-def get_weekly_growth(means):
+from helpers import get_week_ends
 
-    week_ends = [x for x in means.index if x % 7 == 0 or x == 0 ]  # list day 0 and end of every week
 
-    if len(week_ends) == 5:
-        weeks = ['1st', '2nd', '3rd', '4th']
-    else:
-        weeks = ['1st', '2nd', '3rd']
+SOILS = ['ORG', 'MIN', 'UNC']
 
-    weekly_growth = pandas.DataFrame(columns=weeks, dtype=int)
+def get_weekly_growth(means, SE):
 
-    for day, week in zip(week_ends[:-1], weeks):
+    SOILS = ['ORG', 'MIN', 'UNC']
 
-        growth = means.loc[day + 7] - means.loc[day]
-        weekly_growth[week] = growth
+    week_ends = get_week_ends(means)  # list day 0 and end of every week
+    week_end_means = means.loc[week_ends, :]
+    week_end_SE = SE.loc[week_ends, :]
+    week_labels = ['1st', '2nd', '3rd', '4th'] if len(week_end_means.index) == 5 else ['1st', '2nd', '3rd']
+    week_end_days = week_end_means.index
 
-    weekly_growth['total'] = weekly_growth.sum(axis=1)
-    weekly_growth = weekly_growth.round(0)
+    weekly_growth = pandas.DataFrame(index=SOILS)
+
+    for day, label in zip(week_end_days, week_labels):
+
+        growth = week_end_means.loc[day + 7] - week_end_means.loc[day]
+        growth
+        weekly_growth[label] = growth
+
+    # weekly_growth['total'] = weekly_growth.sum(axis=1)
 
     return weekly_growth
 

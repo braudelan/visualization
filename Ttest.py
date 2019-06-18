@@ -6,8 +6,9 @@ from pandas      import DataFrame
 from matplotlib  import pyplot
 from scipy.stats import ttest_ind
 
-from which_round import get_round
+from helpers import get_round
 
+SOILS = ['ORG', 'MIN', 'UNC']
 
 def get_daily_Ttest(raw_data: DataFrame):
 
@@ -23,7 +24,7 @@ def get_daily_Ttest(raw_data: DataFrame):
         day  = daily_data[0]
         data = daily_data[1].T
 
-        groupby_treatment = data.groupby(level=[1])
+        groupby_treatment = data.groupby(level='treatment')
         treatment_groups  = dict(list(groupby_treatment))
 
         Ttest_dict = {}
@@ -35,7 +36,7 @@ def get_daily_Ttest(raw_data: DataFrame):
             data      = group[1]
 
             # groupby
-            groupby_soil = data.groupby(level=[0])
+            groupby_soil = data.groupby(level='soil')
             list_soils   = list(groupby_soil)
 
             soil_a = list_soils[0]
@@ -67,33 +68,81 @@ def get_daily_Ttest(raw_data: DataFrame):
     return daily_Ttest
 
 
-def tabulate_daily_Ttest(daily_ttest, test):
+def between_peaks_Ttest(raw_data_sets: dict) -> dict:
+    """
+    get Ttest p-value between three pairs of peak activity (days 1, 8, 15) for every soil property
+    """
 
-    title_text = r'%s daily Ttest' %test
+    properties_dict = {}
+    for raw_data_name, raw_data in raw_data_sets.items():
 
-    figure_5 = pyplot.figure(3)
-    figure_5.tight_layout()
+        peak_days = raw_data.index.isin([1, 8, 15])
+        raw_data = raw_data['t'].loc[peak_days, :]
+        # raw_data.columns = raw_data.columns.droplevel('treatment'
 
-    axes = figure_5.add_subplot(111)
-    axes.axis('off')
-    axes.axis('tight')
-    ttest_title = axes.set_title(title_text, pad=0.2, fontsize=20, position=(0, 1.1))
+        soils_Ttest = {}
+        for soil in SOILS:
 
-    # ttest_columns = daily_ttest.columns
+            Ttest_dict = {}
 
-    ttest_table = pyplot.table(cellText=daily_ttest.values,
-                               loc='center',
-                               colLabels=daily_ttest.columns,
-                               rowLabels=daily_ttest.index,
-                               cellLoc='center',
-                               colWidths=[0.1 for x in daily_ttest.columns],
-                               # bbox = [0.0, -1.3, 1.0, 1.0]
-                               )
+            data = raw_data[soil]
 
-    for cell in ttest_table._cells:
-        if cell[0] == 0 or cell[1] == -1:
-            ttest_table._cells[cell].set_text_props(weight='bold')
+            peak_1st = data.loc[1]
+            peak_2nd = data.loc[8]
+            peak_3rd = data.loc[15]
 
-    ttest_table.scale(2, 3)
+            label_1st = '1st_peak'
+            label_2nd = '2nd_peak'
+            label_3rd = '3rd_peak'
 
-    return figure_5
+            first_seconed_label = label_1st + '<-->' + label_2nd
+            first_third_label = label_1st + '<-->' + label_3rd
+            seconed_third_label = label_2nd + '<-->' + label_3rd
+
+            first_seconed_Ttest = ttest_ind(peak_1st, peak_2nd, equal_var='False', nan_policy='omit')
+            first_third_Ttest = ttest_ind(peak_1st, peak_3rd, equal_var='False', nan_policy='omit')
+            seconed_third_Ttest = ttest_ind(peak_2nd, peak_3rd, equal_var='False', nan_policy='omit')
+
+            Ttest_dict[first_seconed_label] = first_seconed_Ttest[1]
+            Ttest_dict[first_third_label] = first_third_Ttest[1]
+            Ttest_dict[seconed_third_label] = seconed_third_Ttest[1]
+
+            soils_Ttest[soil] = Ttest_dict
+
+        properties_dict[raw_data_name] = soils_Ttest
+
+    peaks_Ttest = DataFrame.from_dict(properties_dict)
+
+    return peaks_Ttest
+
+
+# def tabulate_daily_Ttest(daily_ttest, test):
+#
+#     title_text = r'%s daily Ttest' %test
+#
+#     figure_5 = pyplot.figure(3)
+#     figure_5.tight_layout()
+#
+#     axes = figure_5.add_subplot(111)
+#     axes.axis('off')
+#     axes.axis('tight')
+#     ttest_title = axes.set_title(title_text, pad=0.2, fontsize=20, position=(0, 1.1))
+#
+#     # ttest_columns = daily_ttest.columns
+#
+#     ttest_table = pyplot.table(cellText=daily_ttest.values,
+#                                loc='center',
+#                                colLabels=daily_ttest.columns,
+#                                rowLabels=daily_ttest.index,
+#                                cellLoc='center',
+#                                colWidths=[0.1 for x in daily_ttest.columns],
+#                                # bbox = [0.0, -1.3, 1.0, 1.0]
+#                                )
+#
+#     for cell in ttest_table._cells:
+#         if cell[0] == 0 or cell[1] == -1:
+#             ttest_table._cells[cell].set_text_props(weight='bold')
+#
+#     ttest_table.scale(2, 3)
+#
+#     return figure_5

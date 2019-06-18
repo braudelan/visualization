@@ -3,10 +3,10 @@
 
 from collections import namedtuple
 from get_raw_data import get_multi_sets
-from helper_functions import get_week_ends
+from helpers import get_week_ends, SOILS
 
 
-SOILS = ['ORG', 'MIN', 'UNC']
+# SOILS = ['ORG', 'MIN', 'UNC']
 
 BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
                                        'MRE_SE', 'control_SE', 'MRE_SD', 'control_SD', 'difference', 'normalized_diff'])
@@ -38,15 +38,17 @@ def get_stats(raw_data):
 
 
 def get_baseline(raw_data):
+    """get the mean and std error of control samples of each soil, excluding week days. """
 
     raw_data_control = raw_data.loc[get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
     raw_data_control.columns = raw_data_control.columns.droplevel('treatment')
     control_stacked = raw_data_control.stack(level='replicate')
 
     means = control_stacked.mean().reindex(SOILS)
-    std_error_of_means = control_stacked.sem()
+    means_SD = control_stacked.std()
+    means_SE = control_stacked.sem()
 
-    return means, std_error_of_means
+    return means, means_SD, means_SE
 
 
 def get_carbon_stats():

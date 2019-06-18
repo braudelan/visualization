@@ -25,7 +25,7 @@ def get_setup_arguments() -> ParsedArgs:
     independent = parsed_args.independent_sets
     which = parsed_args.which
 
-    all_data_sets = ['MBC', 'MBN', 'DOC', 'ERG', 'HWS', 'RESP', 'AS', 'TOC']
+    all_data_sets = ['MBC', 'HWS', 'DOC', 'AS', 'RESP', 'MBN', 'ERG', 'TOC']
     all_numbers = range(1, len(all_data_sets)+1)
 
     if sets or numbers or (independent and which) :

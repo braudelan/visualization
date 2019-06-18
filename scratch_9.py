@@ -4,32 +4,41 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator, NullLocator
+from scipy.stats import ttest_ind
 
 from get_raw_data import get_setup_arguments
 from get_raw_data import get_raw_data, get_multi_sets
 from get_stats import get_stats, get_carbon_stats, get_baseline
-from plot import plot_baseline
-from Ttest import get_daily_Ttest
+from helpers import SOILS
+from growth import get_weekly_growth
+# from plot import plot_all_parameters
+# from Ttest import between_peaks_Ttest
 
+# SOILS = ['ORG', 'MIN', 'UNC']
 # arguments to specify which data sets to load from INPUT_FILE
 setup_arguments = get_setup_arguments()
 
 set_name = setup_arguments.sets[0]
-number = setup_arguments.numbers[0]
+number = setup_arguments.numbers
 
 raw_data = get_raw_data(set_name)
-# figure = plot_baseline(raw_data)
-#
-stats = get_stats(raw_data)
-means = stats.means
-means_SE = stats.means_SE
-MRE = stats.MRE
-MRE_SE = stats.MRE_SE
-normalized = stats.normalized_diff
-control = stats.control
+# raw_data_sets = get_multi_sets(set_name)
 
-baseline = get_baseline(raw_data)
-# c_to_n = get_carbon_stats()
+# figure = plot_all_parameters(raw_data)
+
+# peaks_Ttest = between_peaks_Ttest(raw_data_sets)
+
+stats = get_stats(raw_data)
+# means = stats.means
+# means_SE = stats.means_SE
+MRE = stats.MRE
+# MRE_SE = stats.MRE_SE
+# normalized = stats.normalized_diff
+# control = stats.control
+#
+# baseline = get_baseline(raw_data)
+# # c_to_n = get_carbon_stats()
+# weekly_growth = get_weekly_growth(MRE)
 
 def get_week_ends(dataframe):
 
