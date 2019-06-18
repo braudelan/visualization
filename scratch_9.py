@@ -9,7 +9,8 @@ from scipy.stats import ttest_ind
 from get_raw_data import get_setup_arguments
 from get_raw_data import get_raw_data, get_multi_sets
 from get_stats import get_stats, get_carbon_stats, get_baseline
-from helpers import SOILS
+from helpers import replace_nan, SOILS
+
 from growth import get_weekly_growth
 # from plot import plot_all_parameters
 # from Ttest import between_peaks_Ttest
@@ -22,6 +23,7 @@ set_name = setup_arguments.sets[0]
 number = setup_arguments.numbers
 
 raw_data = get_raw_data(set_name)
+raw_data_nan_handled = replace_nan(raw_data, 't')
 # raw_data_sets = get_multi_sets(set_name)
 
 # figure = plot_all_parameters(raw_data)

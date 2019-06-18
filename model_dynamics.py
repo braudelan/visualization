@@ -18,9 +18,9 @@ data_set = setup_arguments.sets[0]
 
 # get data
 raw_data = get_raw_data(data_set)
-stats = get_stats(raw_data)
-week_ends = get_week_ends(stats.MRE)
-data = stats.MRE.loc[week_ends,:].reset_index()
+week_ends = get_week_ends(raw_data)
+data = raw_data.loc[week_ends, ('t', SOILS)].reset_index(col_level=1, col_fill='')
+data.columns = data.columns.droplevel('treatment')
 
 # define x data and names of data series
 data_series_names = SOILS
