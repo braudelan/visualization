@@ -52,6 +52,9 @@ def get_raw_data(data_set_name):
     raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True) # soil level categories
     raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
+    if data_set_name == 'RESP':
+        raw_data = raw_data * 24
+
     return raw_data
 
 

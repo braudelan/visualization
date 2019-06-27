@@ -2,36 +2,41 @@ import pdb
 import math
 
 import numpy
+from numpy import exp
+from pandas import DataFrame
 from matplotlib import pyplot
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator, NullLocator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from scipy.optimize import curve_fit
+from sklearn.metrics import r2_score
 from pandas import Series
 
 from get_stats import get_stats, get_baseline
-from helpers import get_week_ends, SOILS
-
+from helpers import get_week_ends, SOILS, COLORS
+from model_dynamics import get_model, DAYS_TO_FIT
 # constants
+
 # SOILS = ['ORG', 'MIN', 'UNC']
 
 # pyplot parameters
 
-# # pyplot.style.use('seaborn-darkgrid')
+# pyplot.style.use('ggplot')
+
 
 pyplot.rc('legend',
           facecolor='inherit',
           framealpha=0,
           markerscale=2)
 pyplot.rc('font', size=19) # control text size when not defined locally
-pyplot.rc('lines', linewidth=3)
+pyplot.rc('lines', linewidth=5)
 # pyplot.rc('marker', size=5)
 
 symbol_text_params = {'weight': 'bold',
                       'size': 26,
                       }
 
-COLORS = ['xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod']  #  todo colors (https://python-graph-gallery.com/line-chart/)
 MARKERS = ['h', '*', 'D']
 line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
@@ -42,11 +47,7 @@ minor_locator = MultipleLocator(1)  # minor ticks locations
 # todo for MRE_&_normalized work on legend and x_label
 # todo work on MRE_notation_marks()
 # todo change rcparams for marker size to stand
-def plot_dynamics(data, data_SE, number, set_name, normalized=None):
-
-
-    # local variables and parameter adjutments
-    # excluded = normalized.iloc[1:, :]  # treatment effect without day 0
+def plot_dynamics(data, data_SE, data_SD, number, set_name, normalized=None):
 
 
     # figure text
@@ -59,7 +60,7 @@ def plot_dynamics(data, data_SE, number, set_name, normalized=None):
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
     if set_name == 'RESP':
-        means_ylabel_text = r'$%s\ \slash\ mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ h^{-1} $' % set_name
+        means_ylabel_text = r'$mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
     else:
         means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' % set_name
 
@@ -73,19 +74,22 @@ def plot_dynamics(data, data_SE, number, set_name, normalized=None):
     treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
 
     # create means axes and set parameters
-    means_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
-                                x_label='', y_label=means_ylabel_text, axes_lineup=1)
+    means_axes = make_dynamics_axes(data, treatment_figure, last_day, major_locator, minor_locator,
+                                    x_label='', y_label=means_ylabel_text, axes_lineup=1)
+
+    # create normalized axes and set parameters
+    normalized_axes = make_dynamics_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
+                                         x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
 
     # plot_means
     means_lines = plot_lines(means_axes, data, data_SE=data_SE) # todo take out specific data points (MBC)
 
-
-    # create normalized axes and set parameters
-    normalized_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
-                                     x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
-
     # plot normalized
     normalized_lines = plot_lines(normalized_axes, normalized)
+
+    # # plot model lines
+    # model_lines = plot_model(normalized_axes, normalized, data_SD)
+
 
     # costumize legend
     list_lines = list(means_lines.items())  # item of the from e.g.  'ORG': <ErrorbarContainer object of 3 artists>
@@ -97,7 +101,6 @@ def plot_dynamics(data, data_SE, number, set_name, normalized=None):
         lables.append(label)
         handles.append(handel)
     treatment_figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
-
 
     return treatment_figure
 
@@ -113,20 +116,23 @@ def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_lab
     axes = figure.add_subplot(position)
 
     axes.set_xlim((0, last_day))
+    # axes.set_ylim(0, max_value)
     axes.xaxis.set_minor_locator(minor_locator)
     axes.xaxis.set_major_locator(major_locator)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
-    set_ylabel = axes.set_ylabel(y_label, labelpad=30) if bool(y_label) == True else None
-    set_xlabel = axes.set_xlabel(x_label) if bool(x_label) == True else None
-    if axes_lineup == 2:
+    axes.set_ylabel(y_label, labelpad=30) if bool(y_label) == True else None
+    axes.set_xlabel(x_label) if bool(x_label) == True else None
+
+    if axes_lineup == 2 or axes_lineup == 0:
         MRE_notation_marks(axes)  # add arrows where MRE was applied
     if axes_lineup == 1:
         axes.get_xaxis().set_visible(False)
 
     return axes
 
-
 def plot_lines(axes, data, data_SE=None):
+
+
     """
     plot a dataframe columns onto pyplot axes.
 
@@ -154,6 +160,8 @@ def plot_lines(axes, data, data_SE=None):
 
     lines = {}
     for label in y_data_labels:
+
+
 
         soil_label = label
 

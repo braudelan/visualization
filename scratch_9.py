@@ -23,7 +23,7 @@ set_name = setup_arguments.sets[0]
 number = setup_arguments.numbers
 
 raw_data = get_raw_data(set_name)
-raw_data_nan_handled = replace_nan(raw_data, 't')
+# raw_data_nan_handled = replace_nan(raw_data, 't')
 # raw_data_sets = get_multi_sets(set_name)
 
 # figure = plot_all_parameters(raw_data)
@@ -34,6 +34,8 @@ stats = get_stats(raw_data)
 # means = stats.means
 # means_SE = stats.means_SE
 MRE = stats.MRE
+control = stats.control
+difference = MRE - control
 # MRE_SE = stats.MRE_SE
 # normalized = stats.normalized_diff
 # control = stats.control

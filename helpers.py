@@ -3,7 +3,8 @@ from pandas import DataFrame
 
 
 SOILS = ['ORG', 'MIN', 'UNC']
-
+COLORS = ORG_color, MIN_color, UNC_color = ('xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod')  #  todo colors (https://python-graph-gallery.com/line-chart/)
+MARKERS = ORG_marker, MIN_marker, UNC_marker = ('*', 'o', 'd')
 
 def get_week_ends(dataframe):
 
