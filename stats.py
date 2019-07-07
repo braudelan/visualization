@@ -2,14 +2,23 @@
 #   use dataframe.drop([]) to get only week ends and dataframde.mean() for averages
 
 from collections import namedtuple
-from get_raw_data import get_multi_sets
-from helpers import get_week_ends, SOILS
+from raw_data import get_multi_sets
+from helpers import get_week_ends, Constants
+
+SOILS = Constants.soils
+
+BasicStats = namedtuple('BasicStats', ['means',
+                                       'MRE',
+                                       'control',
+                                       'means_SE',
+                                       'MRE_SE',
+                                       'control_SE',
+                                       'MRE_SD',
+                                       'control_SD',
+                                       'difference',
+                                       'normalized_diff'] )
 
 
-# SOILS = ['ORG', 'MIN', 'UNC']
-
-BasicStats = namedtuple('BasicStats', ['means', 'MRE', 'control', 'means_SE',
-                                       'MRE_SE', 'control_SE', 'MRE_SD', 'control_SD', 'difference', 'normalized_diff'])
 def get_stats(raw_data):
 
     # means
@@ -32,9 +41,18 @@ def get_stats(raw_data):
     difference = MRE - control   # treatment - control
     normalized_diff = difference / control * 100  # difference normalized to control (percent)
 
-    return BasicStats(means=means, MRE=MRE, control=control, means_SE=means_SE, MRE_SE=MRE_SE,
-                                       control_SE=control_SE, MRE_SD=MRE_SD, control_SD=control_SD,
-                                            difference=difference, normalized_diff=normalized_diff)
+    return BasicStats(
+                      means=means,
+                      MRE=MRE,
+                      control=control,
+                      means_SE=means_SE,
+                      MRE_SE=MRE_SE,
+                      control_SE=control_SE,
+                      MRE_SD=MRE_SD,
+                      control_SD=control_SD,
+                      difference=difference,
+                      normalized_diff=normalized_diff
+                      )
 
 
 def get_baseline(raw_data):

@@ -13,17 +13,17 @@ from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 from pandas import Series
 
-from get_stats import get_stats, get_baseline
-from helpers import get_week_ends, SOILS, COLORS
-from model_dynamics import get_model, DAYS_TO_FIT
+from stats import get_stats, get_baseline
+from helpers import Constants
+
+
 # constants
-
-# SOILS = ['ORG', 'MIN', 'UNC']
-
+SOILS = Constants.soils
+MARKERS = Constants.markers
+COLORS = Constants.colors
 # pyplot parameters
 
 # pyplot.style.use('ggplot')
-
 
 pyplot.rc('legend',
           facecolor='inherit',
@@ -37,7 +37,6 @@ symbol_text_params = {'weight': 'bold',
                       'size': 26,
                       }
 
-MARKERS = ['h', '*', 'D']
 line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 
 major_locator = MultipleLocator(7)  # major ticks locations
@@ -74,18 +73,18 @@ def plot_dynamics(data, data_SE, data_SD, number, set_name, normalized=None):
     treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
 
     # create means axes and set parameters
-    means_axes = make_dynamics_axes(data, treatment_figure, last_day, major_locator, minor_locator,
-                                    x_label='', y_label=means_ylabel_text, axes_lineup=1)
+    means_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
+                                    x_label=xlabel_text, y_label=means_ylabel_text, axes_lineup=0)
 
     # create normalized axes and set parameters
-    normalized_axes = make_dynamics_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
-                                         x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
+    # normalized_axes = make_line_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
+    #                                      x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
 
     # plot_means
     means_lines = plot_lines(means_axes, data, data_SE=data_SE) # todo take out specific data points (MBC)
 
-    # plot normalized
-    normalized_lines = plot_lines(normalized_axes, normalized)
+    # # plot normalized
+    # normalized_lines = plot_lines(normalized_axes, normalized)
 
     # # plot model lines
     # model_lines = plot_model(normalized_axes, normalized, data_SD)
@@ -106,6 +105,7 @@ def plot_dynamics(data, data_SE, data_SD, number, set_name, normalized=None):
 
 
 def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_label='', y_label='', axes_lineup=0) -> Axes:
+
 
     position = (
                     111 if axes_lineup == 0 else
@@ -208,27 +208,40 @@ def plot_lines(axes, data, data_SE=None):
 
 def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.patches.FancyArrowPatch instead of annotate
 
-    MRE_time_points = [0, 7, 14 ] # days when MRE was applied
-    offset_head_x = 0.2 # offset of arrow head x coordinate from annotation point, given in data coordinates(=days)
+
+
+
+    MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
+
     arrow_angle = 0.4 # radians from a downwards line perpendicular to x axis
+    offset_head_x = 0.2 # x coordinate of arrow head offset from annotation point, given in data coordinates(=days)
     offset_base_x = 0.2 + math.sin(arrow_angle) # offset of arrow base
-    head_y = -0.02 # fraction of axes size
-    base_y = -0.1 # fraction of axes size
+    offset_head_y = 0.02 # fraction of axes size
+    offset_base_y = 0.1 # fraction of axes size
 
     arrow_properties = dict(
-                            arrowstyle='wedge',
-                            facecolor='r',
-                            mutation_scale=1.2,
+                            arrowstyle="wedge,tail_width=0.7",
+                            fc="0.6",
+                            ec="0.1",
+                            connectionstyle="arc3,rad=0.5"
                            )
 
-    for time_point in MRE_time_points:
+    for time_point in MRE_TIME_POINTS:
+
+      # axes.annotate(
+      #               s='',
+      #               xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
+      #               xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+      #               xycoords=('data', 'axes fraction'),
+      #               arrowprops=arrow_properties,
+      #               )
       axes.annotate(
                     s='',
-                    xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
-                    xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+                    xy=(time_point + offset_head_x, time_point + offset_head_y ), # arrow head coordinates
+                    xytext=(time_point + offset_base_x, time_point + offset_base_y), # arrow base coordinates
                     xycoords=('data', 'axes fraction'),
-                    arrowprops=arrow_properties,
-                    )
+                    arrowprops=(arrow_properties)
+                   )
 
 
 def plot_all_parameters(raw_data_sets: dict) -> Figure:
@@ -295,12 +308,12 @@ def plot_all_parameters(raw_data_sets: dict) -> Figure:
 
         growth_bar_heights = growth / baseline
 
-        labels = SOILS
+        labels = soils
 
         # plot baseline
         baseline_bars = {}
         baseline_bars = plot_bars(baseline_axes, x_location,
-                                        baseline_bar_heights, SOIL_WIDTH, SOILS , baseline_bar_errors)
+                                  baseline_bar_heights, SOIL_WIDTH, soils, baseline_bar_errors)
 
         # plot growth
         growth_bars = plot_bars(growth_axes, x_location, growth_bar_heights, SOIL_WIDTH, labels, )

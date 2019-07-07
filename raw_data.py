@@ -1,10 +1,17 @@
 """
-Import data sets from specfic tabs in an excel file and turn them into pandas DataFrames
+load data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
 from collections import namedtuple
 import argparse
 
 import pandas
+
+from helpers import Constants
+
+SOILS = Constants.soils
+LEVELS = Constants.level_labels
+TREATMENTS = Constants.treatment_labels
+
 
 ParsedArgs = namedtuple('ParsedArgs', ['sets', 'numbers', 'independent_sets', 'which'])
 def get_setup_arguments() -> ParsedArgs:
@@ -47,9 +54,9 @@ def get_raw_data(data_set_name):
     raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2], sheet_name=data_set_name, na_values=["-", " "])
 
     raw_data.rename_axis('days', inplace=True) # label for index
-    raw_data.columns.rename(["soil", "treatment", "replicate"], level=None, inplace=True)  # level labels
-    raw_data.columns.set_levels(['c', 't'], level='treatment', inplace=True) # treatment level categories
-    raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'], level='soil', inplace=True) # soil level categories
+    raw_data.columns.rename(LEVELS, level=None, inplace=True)  # level labels
+    raw_data.columns.set_levels(TREATMENTS, level='treatment', inplace=True) # treatment level categories
+    raw_data.columns.set_levels(SOILS, level='soil', inplace=True) # soil level categories
     raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
 
     if data_set_name == 'RESP':

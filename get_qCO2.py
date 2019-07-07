@@ -1,6 +1,6 @@
 import pandas
 
-from get_stats import get_stats
+from stats import get_stats
 
 def get_qCO2():
     input_file = "all_tests.xlsx"

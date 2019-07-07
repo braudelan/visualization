@@ -1,10 +1,10 @@
 from matplotlib import pyplot             # todo solve: running visualize.py with all data sets raises an error
 
-from get_raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from get_stats import get_stats, get_carbon_stats
+from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
+from stats import get_stats, get_carbon_stats
 from plot import plot_dynamics, plot_all_parameters, plot_c_to_n
-from model_dynamics import plot_model
-from helpers import get_week_ends, SOILS
+# from model_dynamics import plot_model
+from helpers import get_week_ends
 # from Ttest import get_daily_Ttest
 # from growth import get_weekly_growth, tabulate_growth
 
@@ -16,15 +16,15 @@ pyplot.rc('savefig', bbox='tight', pad_inches=1.5)
 INPUT_FILE = "all_tests.xlsx"
 OUTPUT_DIRECTORY = "incubation_figures"
 
-# setup arguments
+# setup
 setup_arguments = get_setup_arguments()
-SETS_NAMES = setup_arguments.sets
+DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 
 # SOILS = ['ORG', 'MIN', 'UNC']
 
 # plot dynamics of each soil parameter as a seperate graph
-for set_name, number in zip(SETS_NAMES, NUMBERS):
+for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
 
     # input data into DataFrame
     raw_data = get_raw_data(set_name)
@@ -34,26 +34,27 @@ for set_name, number in zip(SETS_NAMES, NUMBERS):
     # get statistics
     BasicStats = get_stats(raw_data)
 
-    means = BasicStats.means
-    means_SE = BasicStats.means_SE
-    MRE = BasicStats.MRE
-    MRE_SD = BasicStats.MRE_SD
-    MRE_SE = BasicStats.MRE_SE
-    control = BasicStats.control
-    control_SE = BasicStats.control_SE
+    # data to plot
     difference = BasicStats.difference
-    normalized = BasicStats.normalized_diff
+    # means = BasicStats.means
+    # means_SE = BasicStats.means_SE
+    # MRE = BasicStats.MRE
+    # MRE_SD = BasicStats.MRE_SD
+    # MRE_SE = BasicStats.MRE_SE
+    # control = BasicStats.control
+    # control_SE = BasicStats.control_SE
+    # normalized = BasicStats.normalized_diff
 
     microbial_c_to_n = get_carbon_stats()
 
-    # # plot dynamics
-    # treatment_figure = plot_dynamics(MRE, MRE_SE, MRE_SD, number, set_name, normalized=difference)
-    # treatment_figure.savefig("./%s/%s_model.png" % (OUTPUT_DIRECTORY, set_name))
-    # pyplot.cla()
+    # plot dynamics
+    treatment_figure = plot_dynamics(MRE, MRE_SE, MRE_SD, number, set_name, normalized=difference)
+    treatment_figure.savefig("./%s/%s_model.png" % (OUTPUT_DIRECTORY, set_name))
+    pyplot.cla()
 
-    if set_name == 'RESP':
-        model_figure = plot_model(difference)
-        model_figure.savefig('./%s/RESP_model_2_wks.png' % OUTPUT_DIRECTORY)
+    # if set_name == 'RESP':
+    #     model_figure = plot_model(difference)
+    #     model_figure.savefig('./%s/RESP_model_3_weeks.png' % OUTPUT_DIRECTORY)
 
     # # plot weekedns dynamics
     # treatment_figure = plot_dynamics(MRE.loc[week_ends, :], MRE_SE.loc[week_ends, :],
