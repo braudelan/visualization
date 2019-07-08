@@ -14,8 +14,7 @@ data_set_name = setup_arguments.sets[0]
 raw_data = get_raw_data(data_set_name)
 stats = get_stats(raw_data)
 
-# data
-data = stats.difference['ORG']
+
 
 # # model function
 # def rate(x, a, k):
