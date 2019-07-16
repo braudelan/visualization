@@ -1,5 +1,5 @@
 import re
-
+from typing import Dict, Any, Tuple
 
 import pandas
 import numpy
@@ -44,8 +44,7 @@ def delay_coefficient(t, delay):
 
     return coefficient
 
-fit_results = {}
-def fit_model(model_function, data) -> ModelResult:
+def fit_model(model_function, data) -> tuple(Model, dict):
 
     ''' setup a model and calculate fit.'''
 
@@ -72,6 +71,7 @@ def fit_model(model_function, data) -> ModelResult:
     for name in param_names:
         parameters.add(name, value=initial_values[name])
 
+    results = {}
     for soil in SOILS:
         # dependent variable
         y = data[soil].loc[DAYS_TO_FIT[0]:DAYS_TO_FIT[-1]].values
@@ -79,15 +79,20 @@ def fit_model(model_function, data) -> ModelResult:
         # fit model to data
         result = model.fit(y, parameters, t=t, c1=c1, c2=c2)
 
-        fit_results[soil] = result
+        results[soil] = result
 
-    return fit_results
+    return model, results
 
 
 def plot_model(model_function, data, data_SD=None):
 
-    # model results
-    model_results = fit_model(model_function, data)
+    fit_model_output: Tuple[Model, Dict[Any, Any]] = fit_model(model_function, data)
+
+    # the model(an instance of Model)
+    model = fit_model_output[0]
+
+    # dictionary of fit results for the 3 soils (soil names as keys)
+    fit_results = fit_model_output[1]
 
     # x values for measured and fitted points
     x_measured = DAYS_TO_FIT
@@ -127,20 +132,16 @@ def plot_model(model_function, data, data_SD=None):
     # plot measured and fitted points for each soil
     for soil in SOILS:
 
+        fit_result = fit_results[soil]
+
         y_measured = data[soil].loc[data.index.isin(DAYS_TO_FIT)]
-        fit_result = model_results[soil]
+        y_fit = fit_result.best_fit
+
         a = fit_result.best_values['a']
         k = fit_result.best_values['k']
 
-        # text for best fit values and fit statistics
-        chi_square = fit_result.chisqr
-        chi_square_text = r'$\chi ^2:$' + str(chi_square)
-        fit_report = fit_result.fit_report()
-        parameters_best_fit = re.findall(re.compile('(?:\s+)\d+\.\d+\s+\+/\-\s+\d+\.\d+'), fit_report)
-        a_value = parameters_best_fit[0]
-        k_value = parameters_best_fit[1]
-
-        parameters_text = soil + '\n' + chi_square_text + '\n a: ' + a_value + '\n k: ' + k_value
+        # text
+        parameters_text = soil + '\n a: ' + a + '\n k: ' + k
 
         fit_curve_color = color = (
                                    ORG_color if (soil == 'ORG') else
@@ -161,7 +162,7 @@ def plot_model(model_function, data, data_SD=None):
                          )
 
         axes.plot(x_measured, y_measured, 's',color=measured_color, marker=measured_marker, markersize=12, label=soil+' measured')
-        axes.plot(x_fit_curve , model_function(x_fit_curve, a, k, c1, c2), color=fit_curve_color, linewidth=3,
+        axes.plot(x_fit_curve , y_fit, color=fit_curve_color, linewidth=3,
                                                                 linestyle=(1,(3,2,3,2)), label=soil+' fit curve')
         # fit result text
         axes.text(0.06, 0.8 - indent, parameters_text, transform=axes.transAxes, fontsize=15)
@@ -176,5 +177,5 @@ def plot_model(model_function, data, data_SD=None):
 if __name__ == '__main__':
     results = fit_model(microbial_carbon, data_set)
     fit_figure = plot_model(microbial_carbon, data_set)
-    fit_figure.savefig('/home/elan/Desktop/model_dynamics_%s.png' %data_set_name)
+    fit_figure.savefig('./modeling/%s.png' %data_set_name)
     pyplot.clf()
