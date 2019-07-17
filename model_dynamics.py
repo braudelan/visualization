@@ -1,4 +1,5 @@
 import re
+from pdb import set_trace
 from typing import Dict, Any, Tuple
 
 import pandas
@@ -44,7 +45,7 @@ def delay_coefficient(t, delay):
 
     return coefficient
 
-def fit_model(model_function, data) -> tuple(Model, dict):
+def fit_model(model_function, data):
 
     ''' setup a model and calculate fit.'''
 
@@ -52,11 +53,11 @@ def fit_model(model_function, data) -> tuple(Model, dict):
     t = DAYS_TO_FIT
 
     # define additional independent variables
-    c1 = delay_coefficient(t, 7)
-    c2 = delay_coefficient(t, 14)
+    # c1 = delay_coefficient(t, 7)
+    # c2 = delay_coefficient(t, 14)
 
     # setup the model
-    model = Model(model_function, independent_vars=('t', 'c1', 'c2'))
+    model = Model(model_function, independent_vars=('t', ))
 
     # setup parameters
     parameters = Parameters()
@@ -77,22 +78,17 @@ def fit_model(model_function, data) -> tuple(Model, dict):
         y = data[soil].loc[DAYS_TO_FIT[0]:DAYS_TO_FIT[-1]].values
 
         # fit model to data
-        result = model.fit(y, parameters, t=t, c1=c1, c2=c2)
+        result = model.fit(y, parameters, t=t, nan_policy='omit')
 
         results[soil] = result
 
-    return model, results
+    return results
 
 
 def plot_model(model_function, data, data_SD=None):
 
-    fit_model_output: Tuple[Model, Dict[Any, Any]] = fit_model(model_function, data)
-
-    # the model(an instance of Model)
-    model = fit_model_output[0]
-
     # dictionary of fit results for the 3 soils (soil names as keys)
-    fit_results = fit_model_output[1]
+    fit_results = fit_model(model_function,data)
 
     # x values for measured and fitted points
     x_measured = DAYS_TO_FIT
@@ -132,18 +128,10 @@ def plot_model(model_function, data, data_SD=None):
     # plot measured and fitted points for each soil
     for soil in SOILS:
 
-        fit_result = fit_results[soil]
-
-        y_measured = data[soil].loc[data.index.isin(DAYS_TO_FIT)]
-        y_fit = fit_result.best_fit
-
-        a = fit_result.best_values['a']
-        k = fit_result.best_values['k']
-
         # text
-        parameters_text = soil + '\n a: ' + a + '\n k: ' + k
+        # parameters_text = soil + '\n a: ' + str(a) + '\n k: ' + str(k)
 
-        fit_curve_color = color = (
+        fit_color = (
                                    ORG_color if (soil == 'ORG') else
                                    MIN_color if (soil == 'MIN') else
                                    UNC_color
@@ -155,17 +143,41 @@ def plot_model(model_function, data, data_SD=None):
                           UNC_color
                          )
 
+
         measured_marker = (
                           ORG_marker if (soil == 'ORG') else
                           MIN_marker if (soil == 'MIN') else
                           UNC_marker
                          )
 
-        axes.plot(x_measured, y_measured, 's',color=measured_color, marker=measured_marker, markersize=12, label=soil+' measured')
-        axes.plot(x_fit_curve , y_fit, color=fit_curve_color, linewidth=3,
-                                                                linestyle=(1,(3,2,3,2)), label=soil+' fit curve')
-        # fit result text
-        axes.text(0.06, 0.8 - indent, parameters_text, transform=axes.transAxes, fontsize=15)
+
+        data_kws = {
+                    'color': measured_color,
+                    'marker': measured_marker,
+                    'markersize': 12,
+                   }
+
+        fit_kws = {
+                   'color': fit_color,
+                   'linewidth': 3,
+                  }
+
+        fit_result = fit_results[soil]
+        model = fit_result.model
+        params = fit_result.params
+
+        y_fit = model.eval(t = x_fit_curve, params=params)
+        # a = fit_result.best_values['a']
+        # k = fit_result.best_values['k']
+        #
+        fit_result.plot_fit(ax=axes, numpoints=480, data_kws=data_kws, fit_kws=fit_kws)
+        dely = fit_result.eval_uncertainty(sigma=1, t=x_fit_curve)
+        axes.fill_between(x_fit_curve, y_fit - dely, y_fit + dely, color="#ABABAB")
+        # axes.plot(x_measured, y_measured, 's',color=measured_color, marker=measured_marker, markersize=12, label=soil+' measured')
+        # axes.plot(x_fit_curve , y_fit, color=fit_color, linewidth=3,
+        #                                                         linestyle=(1,(3,2,3,2)), label=soil+' fit curve')
+        # # fit result text
+        # axes.text(0.06, 0.8 - indent, parameters_text, transform=axes.transAxes, fontsize=15)
 
         indent += 0.13
 
@@ -175,7 +187,8 @@ def plot_model(model_function, data, data_SD=None):
 
 
 if __name__ == '__main__':
-    results = fit_model(microbial_carbon, data_set)
-    fit_figure = plot_model(microbial_carbon, data_set)
+    function = respiration_rate if data_set_name == 'RESP' else microbial_carbon
+    results = fit_model(function, data_set)
+    fit_figure = plot_model(function, data_set)
     fit_figure.savefig('./modeling/%s.png' %data_set_name)
     pyplot.clf()
