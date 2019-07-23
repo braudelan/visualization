@@ -1,18 +1,31 @@
 
-from numpy import exp
-from lmfit import Model
+# from numpy import exp
+# from lmfit import Model
+#
+# from raw_data import get_setup_arguments
+# from raw_data import get_raw_data
+# from stats import get_stats
+# from switch_on_off import delay_factor
 
-from raw_data import get_setup_arguments
+from model_dynamics import fit_model
+from model_dynamics import refit_model
+from model_functions import biomass_carbon
 from raw_data import get_raw_data
 from stats import get_stats
-from switch_on_off import delay_factor
+raw = get_raw_data('MBC')
+stats = get_stats(raw)
+dif = stats.difference
+data = dif['ORG']
+result = fit_model(biomass_carbon, data)
 
 
-# setup
-setup_arguments = get_setup_arguments()
-data_set_name = setup_arguments.sets[0]
-raw_data = get_raw_data(data_set_name)
-stats = get_stats(raw_data)
+
+#
+# # setup
+# setup_arguments = get_setup_arguments()
+# data_set_name = setup_arguments.sets[0]
+# raw_data = get_raw_data(data_set_name)
+# stats = get_stats(raw_data)
 
 
 
