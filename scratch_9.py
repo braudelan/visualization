@@ -8,17 +8,29 @@
 # from switch_on_off import delay_factor
 
 from model_dynamics import fit_model
-from model_dynamics import refit_model
 from model_functions import biomass_carbon
 from raw_data import get_raw_data
 from stats import get_stats
+from helpers import Constants
+
+
+SOILS = Constants.soils
+
 raw = get_raw_data('MBC')
 stats = get_stats(raw)
 dif = stats.difference
-data = dif['ORG']
+
+data = dif['MIN']
+t = data.index.values
 result = fit_model(biomass_carbon, data)
+# refit = refit_model(result, 'MIN', 'k_g')
+# print(refit.fit_report())
 
-
+# for soil in SOILS:
+#     data = dif[soil]
+#     result = fit_model(biomass_carbon, data)
+#     refit = refit_model(result, soil, 'k_g')
+#     print(refit.fit_report())
 
 #
 # # setup
