@@ -1,7 +1,7 @@
 from matplotlib import pyplot             # todo solve: running visualize.py with all data sets raises an error
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import get_stats, get_carbon_stats
+from stats import get_normalized, get_stats, get_carbon_stats
 from plot import plot_dynamics, plot_all_parameters, plot_c_to_n
 # from model_dynamics import plot_model
 from helpers import get_week_ends
@@ -32,10 +32,10 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     week_ends = get_week_ends(raw_data)
 
     # get statistics
-    BasicStats = get_stats(raw_data)
+    # BasicStats = get_stats(raw_data, 't')
 
     # data to plot
-    difference = BasicStats.difference
+    normalized = get_normalized(raw_data)
     # means = BasicStats.means
     # means_SE = BasicStats.means_SE
     # MRE = BasicStats.MRE

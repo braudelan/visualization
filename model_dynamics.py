@@ -9,7 +9,7 @@ from lmfit.model import ModelResult
 
 from raw_data import get_setup_arguments
 from raw_data import get_raw_data
-from stats import get_stats
+from stats import get_stats, get_normalized
 from helpers import  Constants
 from model_functions import respiration_rate, biomass_carbon
 
@@ -31,22 +31,21 @@ data_set_name = setup_arguments.sets[0]
 
 # get data set
 raw_data = get_raw_data(data_set_name)
-stats = get_stats(raw_data)
-data_set = stats.difference # subtract control values
+stats = get_normalized(raw_data)
+data_set = stats.means # subtract average control values
+data_SD = stats.stdv
+
 # data_set = data_set.loc[data_set.index != 8]
 
 DAYS_TO_FIT = data_set.index.values
-
-def delay_coefficient(t, delay):
-    coefficient = numpy.zeros(len(t))
-    coefficient[numpy.where(t > delay)] = 1
-
-    return coefficient
 
 def assign_property(label, choices):
     '''assign plotting parameter based on soil name and choices'''
     property = choices[label]
     return property
+
+# def get_normalized_chi_square(fit_result: ModelResult):
+    # output_chi_square =
 
 
 def plot_model(ax, fit_result, data_kws, fit_kws):
@@ -64,22 +63,24 @@ def plot_model(ax, fit_result, data_kws, fit_kws):
     dely = fit_result.eval_uncertainty(sigma=1, t=X)
     ax.fill_between(X, y_fit - dely, y_fit + dely, color="#ABABAB")
 
-def fit_model(model_function, data):
+def fit_model(model_function, soil_data, soil_stdv):
 
     ''' setup a model and calculate fit.'''
 
     # independent time variable
     t = DAYS_TO_FIT
     # dependent variable (measured data)
-    y = data.values
+    y = soil_data.loc[DAYS_TO_FIT[0]:DAYS_TO_FIT[-1]].values
 
     # setup the model
     model = Model(model_function, independent_vars='t')
+    # model.set_param_hint('a_g', max=3000)
 
     # setup parameters
     parameters = Parameters()
     param_names = model.param_names
     initial_values = {
+        'a': 120,
         'a_g': 3000,
         'a_d': 3000,
         'k': 0.3,
@@ -89,14 +90,15 @@ def fit_model(model_function, data):
     for name in param_names:
         parameters.add(name, value=initial_values[name])
 
+
     # fit model to data
-    result = model.fit(y, parameters, t=t, nan_policy='omit')
-    # set_trace()
+    result = model.fit(y, parameters, t=t, weights=soil_stdv, nan_policy='omit')
+
     # refit the model with fixed variable
     FIXED_VAR = 'k_g'
     parameters = result.params
     parameters[FIXED_VAR].set(vary=False)
-    result.fit(data=y, t=t, params=parameters, nan_policy='omit')
+    result.fit(data=y, t=t, params=parameters, weights=soil_stdv, nan_policy='omit')
 
     return result
 
@@ -149,7 +151,7 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
             'linewidth': 3,
         }
 
-        fit_result = fit_model(model_function, data[soil])
+        fit_result = fit_model(model_function, data[soil], data_SD[soil])
         plot_model(axes, fit_result, data_kws, fit_kws)
         # axes.text(-0.3, 0.8)
 
@@ -158,7 +160,7 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
 
 
 if __name__ == '__main__':
-
     function = respiration_rate if data_set_name == 'RESP' else biomass_carbon
-    figure = make_figure(function, data_set)
-    figure.savefig('./modeling/%s' % data_set_name)
+    result = fit_model(function,data_set['MIN'], data_SD['MIN'])
+    figure = make_figure(function, data_set, data_SD)
+    figure.savefig('./modeling/%s_weighted' % data_set_name)

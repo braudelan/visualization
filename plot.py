@@ -294,8 +294,8 @@ def plot_all_parameters(raw_data_sets: dict) -> Figure:
         normalization_factor = baseline['UNC']
 
         # total growth data
-        MRE_means = get_stats(data_set).MRE
-        MRE_SD = get_stats(data_set).MRE_SD
+        MRE_means = get_stats(data_set, 't').MRE
+        MRE_SD = get_stats(data_set, 't').MRE_SD
         last_day_mean = MRE_means.iloc[-1]
         last_day_SD = MRE_SD.iloc[-1]
         growth = last_day_mean - baseline
