@@ -1,6 +1,7 @@
 from pdb import set_trace
 
 import numpy
+from numpy import ma
 from matplotlib import pyplot
 from matplotlib.ticker import MultipleLocator, NullLocator
 from matplotlib.axes import Axes
@@ -35,8 +36,6 @@ stats = get_normalized(raw_data)
 data_set = stats.means # subtract average control values
 data_SD = stats.stdv
 
-# data_set = data_set.loc[data_set.index != 8]
-
 DAYS_TO_FIT = data_set.index.values
 
 def assign_property(label, choices):
@@ -44,24 +43,38 @@ def assign_property(label, choices):
     property = choices[label]
     return property
 
-# def get_normalized_chi_square(fit_result: ModelResult):
-    # output_chi_square =
 
+def get_chi_square(fit_result):
 
-def plot_model(ax, fit_result, data_kws, fit_kws):
+    def exclude_nans(array):
+        where_nan = numpy.isnan(array)  # boolean array, True where NAN
+        has_nan = numpy.any(where_nan)
 
-    model = fit_result.model
-    parameters = fit_result.params
+        if has_nan:
+            excluded = ma.masked_array(array, where_nan)
 
-    # x values for measured and fitted points
-    X = numpy.arange(DAYS_TO_FIT[0], DAYS_TO_FIT[-1], 1 / 24)  # 24 time points for each day in time_range
-    y_fit = model.eval(t=X, params=parameters)
+            return excluded
 
+        else:
+            return array
 
-    fit_result.plot_fit(ax=ax, numpoints=480, data_kws=data_kws, fit_kws=fit_kws)
+    def no_zeros(array):
+        for i in array:
+            if i == 0:
+                i += 1 * 10 ** -6
 
-    dely = fit_result.eval_uncertainty(sigma=1, t=X)
-    ax.fill_between(X, y_fit - dely, y_fit + dely, color="#ABABAB")
+    y_fit = exclude_nans(fit_result.best_fit)
+    y_measured = exclude_nans(fit_result.data)
+    no_zeros(y_fit)
+    no_zeros(y_measured)
+
+    residuals = y_measured - y_fit
+    sqaured = residuals ** 2
+    normalized = sqaured / y_fit
+    normalized_chi_sqaure = normalized.sum()
+
+    return normalized_chi_sqaure
+
 
 def fit_model(model_function, soil_data, soil_stdv):
 
@@ -102,6 +115,23 @@ def fit_model(model_function, soil_data, soil_stdv):
 
     return result
 
+
+def plot_model(ax, fit_result, data_kws, fit_kws):
+
+    model = fit_result.model
+    parameters = fit_result.params
+
+    # x values for measured and fitted points
+    X = numpy.arange(DAYS_TO_FIT[0], DAYS_TO_FIT[-1], 1 / 24)  # 24 time points for each day in time_range
+    y_fit = model.eval(t=X, params=parameters)
+
+
+    fit_result.plot_fit(ax=ax, numpoints=480, data_kws=data_kws, fit_kws=fit_kws)
+
+    dely = fit_result.eval_uncertainty(sigma=1, t=X)
+    ax.fill_between(X, y_fit - dely, y_fit + dely, color="#ABABAB")
+
+
 def make_figure(model_function, data, data_SD=None): #todo add fit statistics text object
 
     # text for plot
@@ -120,17 +150,17 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
     # axes setup
     axes = figure.add_subplot(111)
 
-    # ticks
-    axes.xaxis.set_major_locator(major_locator)
-    axes.xaxis.set_minor_locator(minor_locator)
-    axes.tick_params(which='major', length=5, width=1.5, labelsize='large')
-    axes.tick_params(which='minor', length=4, width=1)
-    ## model function text
-    # axes.text(0.7, 0.6, fit_function_text, transform=axes.transAxes, fontdict=font_setup)
-
-    # labels
-    axes.set_xlabel(x_label, labelpad=30, fontsize=20)
-    axes.set_ylabel(y_label, labelpad=150, va='center', rotation=60, fontsize=20)
+    # # ticks
+    # axes.xaxis.set_major_locator(major_locator)
+    # axes.xaxis.set_minor_locator(minor_locator)
+    # axes.tick_params(which='major', length=5, width=1.5, labelsize='large')
+    # axes.tick_params(which='minor', length=4, width=1)
+    # ## model function text
+    # # axes.text(0.7, 0.6, fit_function_text, transform=axes.transAxes, fontdict=font_setup)
+    #
+    # # labels
+    # axes.set_xlabel(x_label, labelpad=30, fontsize=20)
+    # axes.set_ylabel(y_label, labelpad=150, va='center', rotation=60, fontsize=20)
 
     # indent = 0
     for soil in SOILS:
@@ -155,12 +185,26 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
         plot_model(axes, fit_result, data_kws, fit_kws)
         # axes.text(-0.3, 0.8)
 
+    axes.xaxis.set_major_locator(major_locator)
+    axes.xaxis.set_minor_locator(minor_locator)
+    axes.tick_params(which='major', length=5, width=1.5, labelsize='large')
+    axes.tick_params(which='minor', length=4, width=1)
+
+    # labels
+    axes.set_xlabel(x_label, labelpad=30, fontsize=40)
+    axes.set_ylabel(y_label, labelpad=150, va='center', rotation=60, fontsize=20)
+
     legend = axes.legend(loc='best', prop={'size': 20})
     return figure
 
 
 if __name__ == '__main__':
     function = respiration_rate if data_set_name == 'RESP' else biomass_carbon
-    result = fit_model(function,data_set['MIN'], data_SD['MIN'])
     figure = make_figure(function, data_set, data_SD)
     figure.savefig('./modeling/%s_weighted' % data_set_name)
+
+    # for soil in SOILS:
+    #     result = fit_model(function, data_set[soil], data_SD[soil])
+    #     chi_square = get_chi_square(result)
+    #
+    #     print(soil + ':' + str(chi_square))
