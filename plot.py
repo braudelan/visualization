@@ -9,9 +9,9 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import MultipleLocator, NullLocator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
-from pandas import Series
+# from scipy.optimize import curve_fit
+# from sklearn.metrics import r2_score
+# from pandas import Series
 
 from stats import get_stats, get_baseline
 from helpers import Constants
@@ -59,8 +59,6 @@ def make_figure(data, number, data_set_name):
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
                  r'(b) normalized to control' % (number, data_set_name, last_day)
 
-    xlabel_text = r'$incubation\ time\ \slash\ days$'
-
     # create and adjut figure
     figure = pyplot.figure(number, figsize=(20, 15))  # todo better name for figure
     figure.tight_layout()
@@ -87,7 +85,6 @@ def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_lab
     axes.xaxis.set_major_locator(major_locator)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
     axes.set_ylabel(y_label, labelpad=30) if bool(y_label) == True else None
-    axes.set_xlabel(x_label) if bool(x_label) == True else None
 
     if axes_lineup == 2 or axes_lineup == 0:
         MRE_notation_marks(axes)  # add arrows where MRE was applied
@@ -132,18 +129,6 @@ def make_lines(axes, data, stde=None):
 
         y_data = data[soil_label]
         y_error = stde[soil_label] if stde is not None else None
-        #
-        # color = (
-        #          COLORS[0] if (soil_label == 'ORG') else
-        #          COLORS[1] if (soil_label == 'MIN') else
-        #          COLORS[2]
-        #         )
-        #
-        # marker = (
-        #           MARKERS[0] if (soil_label == 'ORG') else
-        #           MARKERS[1] if (soil_label == 'MIN') else
-        #           MARKERS[2]
-        #          )
 
         # style = densly_dashed if treatment_label == 'c' else solid
 
@@ -174,50 +159,31 @@ def make_lines(axes, data, stde=None):
 def plot_dynamics(figure, data, stde, set_name, axes_lineup, stdv=None):
 
     last_day = data.index[-1]
+    is_normalized = True if axes_lineup == 2 else False # check if the data being plotted is normalized
 
-    # # figure text
-    #
-    # last_day = data.index[-1]
-    #
-    # title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
-    #              r'(b) normalized to control' % (number, set_name, last_day)
-    #
-    # xlabel_text = r'$incubation\ time\ \slash\ days$'
-    #
+    # text
+    xlabel_text = r'$incubation\ time\ \slash\ days$'
+    normalized = 'normalized' if is_normalized else ''
     if set_name == 'RESP':
-        ylabel_text = r'$mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
+        ylabel_text = r'$%s\ %s\ mg\ CO_{2}-C\ ' \
+                      r'\ast\ kg\ soil^{-1}\ \ast\ day^{-1} $' %(normalized, set_name)
     else:
-        ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' % set_name
-
-    # normalized_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' % set_name
-    #
-    #
-    # # create and adjut figure
-    # treatment_figure = pyplot.figure(number, figsize=(20,15)) # todo better name for figure
-    # treatment_figure.tight_layout()
-    # treatment_figure.subplots_adjust(hspace=0)
-    # treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
+        ylabel_text = r'$%s\ %s\ \slash\ mg' \
+                      r' \ast kg\ soil^{-1}$' %(normalized, set_name)
 
     # create means axes and set parameters
-    means_axes = make_line_axes(figure, last_day, major_locator, minor_locator,
+    axes = make_line_axes(figure, last_day, major_locator, minor_locator,
                                     x_label='', y_label=ylabel_text, axes_lineup=axes_lineup)
 
-    # create normalized axes and set parameters
-    # normalized_axes = make_line_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
-    #                                      x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
+    # shared x label for figure with two plots
+    if axes_lineup == 2 or axes_lineup == 0:
+        axes.set_xlabel(xlabel_text, labelpad=40)
 
-    # plot_means
-    means_lines = make_lines(means_axes, data, stde) # todo take out specific data points    (MBC)
+    # plot data on axes
+    lines = make_lines(axes, data, stde) # todo take out specific data points    (MBC)
 
-    # # plot normalized
-    # normalized_lines = plot_lines(normalized_axes, normalized)
-
-    # # plot model lines
-    # model_lines = plot_model(normalized_axes, normalized, data_SD)
-
-
-    # costumize legend
-    list_lines = list(means_lines.items())  # item of the from e.g.  'ORG': <ErrorbarContainer object of 3 artists>
+    # customize legend
+    list_lines = list(lines.items())  #e.g.'ORG': <ErrorbarContainer object of 3 artists>
     lables = []
     handles = []
     for line in list_lines:
@@ -227,21 +193,16 @@ def plot_dynamics(figure, data, stde, set_name, axes_lineup, stdv=None):
         handles.append(handel)
     figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
 
-    # return treatment_figure
 
-
-def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.patches.FancyArrowPatch instead of annotate
-
-
-
+def MRE_notation_marks(axes):
 
     MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
 
-    arrow_angle = 0.6 # radians from a downwards line perpendicular to x axis
+    arrow_angle = 0.7 # radians from a downwards line perpendicular to x axis
     offset_head_x = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
     offset_base_x = offset_head_x + math.sin(arrow_angle) # offset of arrow base
     head_y = -0.03 # fraction of axes size
-    base_y = head_y -0.1 # fraction of axes size
+    base_y = head_y -0.07 # fraction of axes size
 
     arrow_properties = dict(
                             arrowstyle="wedge,tail_width=0.7",

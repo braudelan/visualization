@@ -1,5 +1,3 @@
-from pdb import set_trace
-
 import numpy
 from numpy import ma
 from matplotlib import pyplot
