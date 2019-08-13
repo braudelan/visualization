@@ -11,8 +11,6 @@ STATS_NAMES = [
     'means',
     'stde',
     'stdv',
-    # 'difference',
-    # 'normalized_diff'
 ]
 
 BasicStats = namedtuple('BasicStats', STATS_NAMES)
@@ -56,19 +54,22 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     )
 
 def get_normalized(raw_data):
-    '''normalize a given data set to control data and calculate basic statistics.'''
+    '''normalize a given data set to average control data and calculate basic statistics.'''
 
     raw_t = raw_data.loc[:, ('t', SOILS)] # MRE treatment
     raw_c = raw_data.loc[:, ('c', SOILS)] # control
-    copy_of_mean_c = pandas.DataFrame().reindex_like(raw_t)
-    control_means = get_stats(raw_c, 'c').means
 
-    for row in raw_t.index:
-        for column in raw_t.columns:
+    control_means = get_stats(raw_c, 'c').means # shape ->(10,3)
+
+    # empty dataframe with the same shape and indexes as raw_t
+    control_means_shaped = pandas.DataFrame().reindex_like(raw_t)
+
+    for row in control_means_shaped.index:
+        for column in control_means_shaped.columns:
             soil = column[1]
-            copy_of_mean_c.loc[row, column] = control_means.loc[row, soil]
+            control_means_shaped.loc[row, column] = control_means.loc[row, soil]
 
-    difference = raw_t - copy_of_mean_c
+    difference = raw_t - control_means_shaped
     stats = get_stats(difference, 't')
 
     return stats

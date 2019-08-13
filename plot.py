@@ -25,10 +25,13 @@ COLORS = Constants.colors
 
 # pyplot.style.use('ggplot')
 
-pyplot.rc('legend',
+pyplot.rc(
+          'legend',
           facecolor='inherit',
           framealpha=0,
-          markerscale=2)
+          markerscale=2
+  )
+
 pyplot.rc('font', size=19) # control text size when not defined locally
 pyplot.rc('lines', linewidth=5)
 # pyplot.rc('marker', size=5)
@@ -42,71 +45,34 @@ line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
 major_locator = MultipleLocator(7)  # major ticks locations
 minor_locator = MultipleLocator(1)  # minor ticks locations
 
+
 # todo adjust plot_dynamics for plotting a single axes (e.g. control)
 # todo for MRE_&_normalized work on legend and x_label
 # todo work on MRE_notation_marks()
 # todo change rcparams for marker size to stand
-def plot_dynamics(data, data_SE, data_SD, number, set_name, normalized=None):
 
+def make_figure(data, number, data_set_name):
 
     # figure text
-
     last_day = data.index[-1]
 
     title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
-                 r'(b) normalized to control' % (number, set_name, last_day)
+                 r'(b) normalized to control' % (number, data_set_name, last_day)
 
     xlabel_text = r'$incubation\ time\ \slash\ days$'
 
-    if set_name == 'RESP':
-        means_ylabel_text = r'$mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
-    else:
-        means_ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' % set_name
-
-    normalized_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' % set_name
-
-
     # create and adjut figure
-    treatment_figure = pyplot.figure(number, figsize=(20,15)) # todo better name for figure
-    treatment_figure.tight_layout()
-    treatment_figure.subplots_adjust(hspace=0)
-    treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
+    figure = pyplot.figure(number, figsize=(20, 15))  # todo better name for figure
+    figure.tight_layout()
+    figure.subplots_adjust(hspace=0)
+    figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
 
-    # create means axes and set parameters
-    means_axes = make_line_axes(treatment_figure, last_day, major_locator, minor_locator,
-                                    x_label=xlabel_text, y_label=means_ylabel_text, axes_lineup=0)
-
-    # create normalized axes and set parameters
-    # normalized_axes = make_line_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
-    #                                      x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
-
-    # plot_means
-    means_lines = plot_lines(means_axes, data, data_SE=data_SE) # todo take out specific data points (MBC)
-
-    # # plot normalized
-    # normalized_lines = plot_lines(normalized_axes, normalized)
-
-    # # plot model lines
-    # model_lines = plot_model(normalized_axes, normalized, data_SD)
-
-
-    # costumize legend
-    list_lines = list(means_lines.items())  # item of the from e.g.  'ORG': <ErrorbarContainer object of 3 artists>
-    lables = []
-    handles = []
-    for line in list_lines:
-        label = line[0]
-        handel = line[1]
-        lables.append(label)
-        handles.append(handel)
-    treatment_figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
-
-    return treatment_figure
+    return figure
 
 
 def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_label='', y_label='', axes_lineup=0) -> Axes:
 
-
+    # allocate position of axes in figure (0=single axes, 1=first out of two, else=second out of two)
     position = (
                     111 if axes_lineup == 0 else
                     211 if axes_lineup == 1 else
@@ -130,21 +96,22 @@ def make_line_axes(figure: Figure, last_day, major_locator, minor_locator, x_lab
 
     return axes
 
-def plot_lines(axes, data, data_SE=None):
+
+def make_lines(axes, data, stde=None):
 
 
     """
-    plot a dataframe columns onto pyplot axes.
+    plot dataframe columns onto pyplot axes.
 
     each column is plotted using a seperate command with specific
     properties assigned to it (color, marker, linestyle, etc.).
 
     :parameter
     data(DataFrame):
-            time series data.
-            must have the time points as the [0] indexed column.
+            time series.
+            must have the time series index as the [0] indexed column.
     stnd_error(DataFrame):
-            standard error of data.
+            standard error of data with same shape as data.
     axes():
             the axes where data will be plotted.
     :returns
@@ -153,57 +120,114 @@ def plot_lines(axes, data, data_SE=None):
         values = pyplot line objects.
 
     """
+
+    # turn index 'days' into first column
     data.reset_index(inplace=True)
 
     x_data = data['days']
-    y_data_labels = data.columns[1:]
+    y_data_labels = data.columns[1:] # exclude 'days' column
 
     lines = {}
-    for label in y_data_labels:
+    for soil_label in y_data_labels:
 
-
-
-        soil_label = label
-
-        y_data = data[label]
-        y_error = data_SE[label] if data_SE is not None else None
-
-        color = (
-                 COLORS[0] if (soil_label == 'ORG') else
-                 COLORS[1] if (soil_label == 'MIN') else
-                 COLORS[2]
-                )
-
-        marker = (
-                  MARKERS[0] if (soil_label == 'ORG') else
-                  MARKERS[1] if (soil_label == 'MIN') else
-                  MARKERS[2]
-                 )
+        y_data = data[soil_label]
+        y_error = stde[soil_label] if stde is not None else None
+        #
+        # color = (
+        #          COLORS[0] if (soil_label == 'ORG') else
+        #          COLORS[1] if (soil_label == 'MIN') else
+        #          COLORS[2]
+        #         )
+        #
+        # marker = (
+        #           MARKERS[0] if (soil_label == 'ORG') else
+        #           MARKERS[1] if (soil_label == 'MIN') else
+        #           MARKERS[2]
+        #          )
 
         # style = densly_dashed if treatment_label == 'c' else solid
 
-        if data_SE is not None:
+        if stde is not None:
             line = axes.errorbar(
                                x_data,
                                y_data,
                                yerr=y_error,
-                               label=label,
-                               color=color,
-                               marker=marker,
+                               label=soil_label,
+                               color=COLORS[soil_label],
+                               marker=MARKERS[soil_label],
                                )  # todo add merkers? conflict with error bars
         else:
             line = axes.plot(
                            x_data,
                            y_data,
-                           label=label,
-                           color=color,
-                           marker=marker
+                           label=soil_label,
+                           color=COLORS[soil_label],
+                           marker=MARKERS[soil_label]
                           )  # todo add merkers? conflict with error bars
 
 
-        lines[label] = line
+        lines[soil_label] = line
 
     return lines
+
+
+def plot_dynamics(figure, data, stde, set_name, axes_lineup, stdv=None):
+
+    last_day = data.index[-1]
+
+    # # figure text
+    #
+    # last_day = data.index[-1]
+    #
+    # title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
+    #              r'(b) normalized to control' % (number, set_name, last_day)
+    #
+    # xlabel_text = r'$incubation\ time\ \slash\ days$'
+    #
+    if set_name == 'RESP':
+        ylabel_text = r'$mg\ CO_{2}-C\ \ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
+    else:
+        ylabel_text = r'$%s\ \slash\ mg \ast kg\ soil^{-1}$' % set_name
+
+    # normalized_ylabel_text = r'$%s\ normalized\ \slash\ percent\ of\ control$' % set_name
+    #
+    #
+    # # create and adjut figure
+    # treatment_figure = pyplot.figure(number, figsize=(20,15)) # todo better name for figure
+    # treatment_figure.tight_layout()
+    # treatment_figure.subplots_adjust(hspace=0)
+    # treatment_figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
+
+    # create means axes and set parameters
+    means_axes = make_line_axes(figure, last_day, major_locator, minor_locator,
+                                    x_label='', y_label=ylabel_text, axes_lineup=axes_lineup)
+
+    # create normalized axes and set parameters
+    # normalized_axes = make_line_axes(normalized, treatment_figure, last_day, major_locator, minor_locator,
+    #                                      x_label=xlabel_text, y_label=normalized_ylabel_text, axes_lineup=2)
+
+    # plot_means
+    means_lines = make_lines(means_axes, data, stde) # todo take out specific data points    (MBC)
+
+    # # plot normalized
+    # normalized_lines = plot_lines(normalized_axes, normalized)
+
+    # # plot model lines
+    # model_lines = plot_model(normalized_axes, normalized, data_SD)
+
+
+    # costumize legend
+    list_lines = list(means_lines.items())  # item of the from e.g.  'ORG': <ErrorbarContainer object of 3 artists>
+    lables = []
+    handles = []
+    for line in list_lines:
+        label = line[0]
+        handel = line[1]
+        lables.append(label)
+        handles.append(handel)
+    figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
+
+    # return treatment_figure
 
 
 def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.patches.FancyArrowPatch instead of annotate
@@ -213,17 +237,17 @@ def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.pat
 
     MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
 
-    arrow_angle = 0.4 # radians from a downwards line perpendicular to x axis
-    offset_head_x = 0.2 # x coordinate of arrow head offset from annotation point, given in data coordinates(=days)
-    offset_base_x = 0.2 + math.sin(arrow_angle) # offset of arrow base
-    offset_head_y = 0.02 # fraction of axes size
-    offset_base_y = 0.1 # fraction of axes size
+    arrow_angle = 0.6 # radians from a downwards line perpendicular to x axis
+    offset_head_x = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
+    offset_base_x = offset_head_x + math.sin(arrow_angle) # offset of arrow base
+    head_y = -0.03 # fraction of axes size
+    base_y = head_y -0.1 # fraction of axes size
 
     arrow_properties = dict(
                             arrowstyle="wedge,tail_width=0.7",
                             fc="0.6",
                             ec="0.1",
-                            connectionstyle="arc3,rad=0.5"
+                            # connectionstyle="arc3,rad=0.5"
                            )
 
     for time_point in MRE_TIME_POINTS:
@@ -237,9 +261,10 @@ def MRE_notation_marks(axes):  # todo work on notation marks. use matplotlib.pat
       #               )
       axes.annotate(
                     s='',
-                    xy=(time_point + offset_head_x, time_point + offset_head_y ), # arrow head coordinates
-                    xytext=(time_point + offset_base_x, time_point + offset_base_y), # arrow base coordinates
-                    xycoords=('data', 'axes fraction'),
+                    xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
+                    xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+                    xycoords=('data','axes fraction'),
+                    textcoords=('data', 'axes fraction'),
                     arrowprops=(arrow_properties)
                    )
 
@@ -308,12 +333,12 @@ def plot_all_parameters(raw_data_sets: dict) -> Figure:
 
         growth_bar_heights = growth / baseline
 
-        labels = soils
+        labels = SOILS
 
         # plot baseline
         baseline_bars = {}
         baseline_bars = plot_bars(baseline_axes, x_location,
-                                  baseline_bar_heights, SOIL_WIDTH, soils, baseline_bar_errors)
+                                  baseline_bar_heights, SOIL_WIDTH, labels, baseline_bar_errors)
 
         # plot growth
         growth_bars = plot_bars(growth_axes, x_location, growth_bar_heights, SOIL_WIDTH, labels, )

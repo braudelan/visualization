@@ -2,7 +2,7 @@ from matplotlib import pyplot             # todo solve: running visualize.py wit
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_normalized, get_stats, get_carbon_stats
-from plot import plot_dynamics, plot_all_parameters, plot_c_to_n
+from plot import make_figure, plot_dynamics, plot_all_parameters, plot_c_to_n
 # from model_dynamics import plot_model
 from helpers import get_week_ends
 # from Ttest import get_daily_Ttest
@@ -10,11 +10,12 @@ from helpers import get_week_ends
 
 
 # set pyplot parameters
-pyplot.rc('savefig', bbox='tight', pad_inches=1.5)
+pyplot.rc('savefig',  pad_inches=1.5)
 
 # input & output locations
 INPUT_FILE = "all_tests.xlsx"
-OUTPUT_DIRECTORY = "incubation_figures"
+OUTPUT_DIRECTORY = '/home/elan/Dropbox/research/figures'
+
 
 # setup
 setup_arguments = get_setup_arguments()
@@ -29,13 +30,22 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     # input data into DataFrame
     raw_data = get_raw_data(set_name)
 
-    week_ends = get_week_ends(raw_data)
+    # week_ends = get_week_ends(raw_data)
 
     # get statistics
-    # BasicStats = get_stats(raw_data, 't')
+    stats = get_stats(raw_data, 't')
+    normalized_stats = get_normalized(raw_data)
 
     # data to plot
-    normalized = get_normalized(raw_data)
+
+    means = stats.means
+    stde = stats.stde
+    stdv = stats.stdv
+
+    norm_means = normalized_stats.means
+    norm_stde = normalized_stats.stde
+    norm_stdv = normalized_stats.stdv
+
     # means = BasicStats.means
     # means_SE = BasicStats.means_SE
     # MRE = BasicStats.MRE
@@ -45,11 +55,15 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     # control_SE = BasicStats.control_SE
     # normalized = BasicStats.normalized_diff
 
-    microbial_c_to_n = get_carbon_stats()
+    # microbial_c_to_n = get_carbon_stats()
 
     # plot dynamics
-    treatment_figure = plot_dynamics(MRE, MRE_SE, MRE_SD, number, set_name, normalized=difference)
-    treatment_figure.savefig("./%s/%s_model.png" % (OUTPUT_DIRECTORY, set_name))
+    dynamics_figure = make_figure(raw_data, number, set_name)
+
+    plot_dynamics(dynamics_figure, means, stde, set_name, axes_lineup=1)
+    plot_dynamics(dynamics_figure, norm_means, norm_stde, set_name, axes_lineup=2)
+
+    dynamics_figure.savefig("%s/%s_normalized.png" % (OUTPUT_DIRECTORY, set_name))
     pyplot.cla()
 
     # if set_name == 'RESP':
