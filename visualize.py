@@ -2,7 +2,7 @@ from matplotlib import pyplot             # todo solve: running visualize.py wit
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_normalized, get_stats, get_carbon_stats
-from plot import make_figure, plot_dynamics, plot_baseline, plot_c_to_n
+from plot import make_figure, plot_dynamics, plot_baseline, plot_control_composite
 # from model_dynamics import plot_model
 from helpers import get_week_ends
 # from Ttest import get_daily_Ttest
@@ -42,19 +42,24 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     norm_stde = normalized_stats.stde
     norm_stdv = normalized_stats.stdv
 
-    # plot dynamics
-    dynamics_figure = make_figure(raw_data, number, set_name)
+    # # plot dynamics
+    # dynamics_figure = make_figure(raw_data, number, set_name)
+    #
+    # plot_dynamics(dynamics_figure, means, stde, set_name, axes_lineup=1)
+    # plot_dynamics(dynamics_figure, norm_means, norm_stde, set_name, axes_lineup=2)
+    #
+    # dynamics_figure.savefig("%s/%s_normalized.png" % (OUTPUT_DIRECTORY, set_name))
+    # pyplot.cla()
 
-    plot_dynamics(dynamics_figure, means, stde, set_name, axes_lineup=1)
-    plot_dynamics(dynamics_figure, norm_means, norm_stde, set_name, axes_lineup=2)
-
-    dynamics_figure.savefig("%s/%s_normalized.png" % (OUTPUT_DIRECTORY, set_name))
-    pyplot.cla()
+raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
 
 # plot baseline
-raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
 soil_properties_figure = plot_baseline(raw_data_sets)
-soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY)
+soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
+
+# plot composite image of control dynamics
+control_composite_figure = plot_control_composite(raw_data_sets)
+control_composite_figure.savefig('%/control.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
 
 # # plot C to N ratio
 # c_to_n = get_carbon_stats()

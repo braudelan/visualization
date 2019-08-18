@@ -182,7 +182,8 @@ def make_lines(axes: Axes, data, stde=None):
     return lines
 
 
-def plot_dynamics(figure: Figure, data, stde, set_name, axes_lineup):
+def plot_dynamics(figure: Figure, data,
+                  stde, set_name, axes_lineup):
 
     last_day = data.index[-1]
     is_normalized = True if axes_lineup == 2 else False # check if the data being plotted is normalized
@@ -212,7 +213,8 @@ def plot_dynamics(figure: Figure, data, stde, set_name, axes_lineup):
     if axes_lineup == 1:
         axes.get_xaxis().set_visible(False)
 
-    axes.set_ylabel(ylabel_text, labelpad=50, rotation=ylabel_rotation)
+    axes.set_ylabel(ylabel_text, labelpad=50,
+                    rotation=ylabel_rotation)
 
     # customize legend
     list_lines = list(lines.items())  #e.g.'ORG': <ErrorbarContainer object of 3 artists>
@@ -225,83 +227,41 @@ def plot_dynamics(figure: Figure, data, stde, set_name, axes_lineup):
         handles.append(handel)
     figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
 
+def plot_control_composite(raw_data_sets):
 
-def plot_baseline(raw_data_sets: dict) -> Figure: #todo x_ticks labels, x_label, unclip y_label
-    """plot baseline values of multiple data sets.
+    # get the data
+    raw_data_names = raw_data_sets.keys()
+    raw_data = raw_data_sets.values()
+    zipped = zip(raw_data_names, raw_data)
 
-    this function takes only the control replicates from every data set(=category or analysis)
-    and produces the average for every soil over day 0 and every week end.
-    all replicates from all sampling days are pooled together representing replicates of the same sample
-    and the mean and std error are calculated accordingly.
-    means and std errors are divided by the mean of UNC soil to normalize the results.
+    control_data_sets = {}
+    for name, data in zipped:
+        stats = get_stats(data, 'c')
+        means = stats.means
+        control_data_sets[name] = means
 
-    """
+    # arrays to iterate over
+    control_data_names = control_data_sets.keys()
+    control_data = control_data_sets.values()
+    control_zipped = zip(control_data_names, control_data)
 
-    # data parameters
-    CATEGORIES = raw_data_sets.keys()
-    N = len(raw_data_sets)
-    X_LOCATIONS = numpy.arange(N)
-    CATEGORIES_DATA = raw_data_sets.values()
+    # make figure
+    n_data_sets = len(raw_data_sets)
+    is_even = True if n_data_sets % 2 == 0 else False
+    n_rows = 4 #n_data_sets / 2 #if is_even else 3
+    n_columns = 4 #n_rows #if is_even else 3
 
-    # plot parameters
-    CATEGORY_WIDTH = 0.5
-    SOIL_WIDTH = CATEGORY_WIDTH / 2
+    figure, axes = pyplot.subplots(n_rows, n_columns)
 
-    # labels
-    baseline_y_label = r'$mean\ baseline\ value\ \slash$'\
-                       + '\n' + r'$\%\ UNC$'
-    x_label = 'soil properties'
+    for name, data in control_zipped:
+        for n in range(n_data_sets):
+            for soil in SOILS:
+                x = data.index
+                y = data.loc[:,soil]
+                axes[n].plot(x, y)
 
-    # figure
-    basline_figure = pyplot.figure(figsize=(15,10))
+    return figure
 
-    basline_figure.subplots_adjust(hspace=0)
-
-    # baseline_axes
-    baseline_axes = make_bar_axes(basline_figure,
-                                  X_LOCATIONS, SOIL_WIDTH,
-                                  baseline_y_label)
-
-    bars = {}
-    for x_location, data_set, category_name in zip(X_LOCATIONS, #todo turn into a function
-                                                   CATEGORIES_DATA,
-                                                   CATEGORIES):
-        # baseline data
-        baseline_statistics = get_baseline(data_set)
-        BASELINE = baseline_statistics[0]
-        BASELINE_STDE = baseline_statistics[2]
-
-        NORMALIZATION_FACTOR = BASELINE['UNC']
-
-        # bar plot input
-        baseline_bar_heights = BASELINE / NORMALIZATION_FACTOR
-        baseline_bar_errors = BASELINE_STDE / NORMALIZATION_FACTOR
-
-        # growth_bar_heights = growth / baseline
-
-        labels = SOILS
-
-        # plot baseline
-        baseline_bars = plot_bars(baseline_axes, x_location,
-                                  baseline_bar_heights, SOIL_WIDTH, labels, baseline_bar_errors)
-
-        bars[category_name] = baseline_bars
-        # bars[category_name + '_growth'] = growth_bars
-
-    legend_handles = bars['MBC'].values()
-    legend_labels = bars['MBC'].keys()
-    basline_figure.legend(legend_handles, legend_labels, loc='center right')
-
-    ## remove rectangle patch of UNC
-    # baseline_category_names = [ key for key in bars.keys() if 'baseline' in key]
-    # for category in baseline_category_names:
-    #     for soil in bars[category].keys():
-    #         if soil == 'UNC':
-    #             bar = bars[category][soil]
-    #             bar_rectangle = bar.patchs
-    #             bar_rectangle.clear()
-
-    return basline_figure
 
 def make_bar_axes(figure: Figure, x_locations, soil_width, y_label,
                                                 x_label=None, categories=None) -> Axes:
@@ -323,7 +283,7 @@ def make_bar_axes(figure: Figure, x_locations, soil_width, y_label,
 
     return axes
 
-def plot_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
+def make_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
 
     bars = {}
     i = 0
@@ -353,6 +313,86 @@ def plot_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
     return bars
 
 
+def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead of 'UNC' bars, x_label
+    """plot baseline values of multiple data sets.
+
+    this function takes only the control replicates from every data set(=category or analysis)
+    and produces the average for every soil over day 0 and every week end.
+    all replicates from all sampling days are pooled together representing replicates of the same sample
+    and the mean and std error are calculated accordingly.
+    means and std errors are divided by the mean of UNC soil to normalize the results.
+
+    """
+
+    # data parameters
+    CATEGORIES = raw_data_sets.keys()
+    N = len(raw_data_sets)
+    X_LOCATIONS = numpy.arange(N)
+    CATEGORIES_DATA = raw_data_sets.values()
+
+    # plot parameters
+    CATEGORY_WIDTH = 0.5
+    SOIL_WIDTH = CATEGORY_WIDTH / 2
+
+    # labels
+    baseline_y_label = r'$mean\ baseline\ value\ \slash$'\
+                       + '\n' + r'$\%\ of\ UNC$'
+    x_label = 'soil properties'
+
+    # figure
+    basline_figure = pyplot.figure(figsize=(15,10))
+
+    basline_figure.subplots_adjust(hspace=0)
+
+    # baseline_axes
+    baseline_axes = make_bar_axes(basline_figure,
+                                  X_LOCATIONS, SOIL_WIDTH,
+                                  baseline_y_label,
+                                  categories=CATEGORIES
+                                  )
+
+    bars = {}
+    for x_location, data_set, category_name in zip(X_LOCATIONS, #todo turn into a function
+                                                   CATEGORIES_DATA,
+                                                   CATEGORIES):
+        # baseline data
+        baseline_statistics = get_baseline(data_set)
+        BASELINE = baseline_statistics[0]
+        BASELINE_STDE = baseline_statistics[2]
+
+        NORMALIZATION_FACTOR = BASELINE['UNC']
+
+        # bar plot input
+        baseline_bar_heights = BASELINE / NORMALIZATION_FACTOR
+        baseline_bar_errors = BASELINE_STDE / NORMALIZATION_FACTOR
+
+        # growth_bar_heights = growth / baseline
+
+        labels = SOILS
+
+        # plot baseline
+        baseline_bars = make_bars(baseline_axes, x_location,
+                                  baseline_bar_heights, SOIL_WIDTH, labels, baseline_bar_errors)
+
+        bars[category_name] = baseline_bars
+        # bars[category_name + '_growth'] = growth_bars
+
+    # legend
+    legend_handles = bars['MBC'].values()
+    legend_labels = bars['MBC'].keys()
+    basline_figure.legend(legend_handles, legend_labels, loc='center right')
+
+    # remove rectangle patch of UNC
+    for category in CATEGORIES:
+        for soil in SOILS:
+            if soil == 'UNC':
+                bar = bars[category][soil]
+                bar_rectangle = bar.patches
+                bar_rectangle.clear()
+
+    return basline_figure
+
+
 def plot_total_increase(raw_data_sets: dict) -> Figure:
 
     for data_set_name, data_set in raw_data_sets.items():
@@ -370,9 +410,6 @@ def plot_total_increase(raw_data_sets: dict) -> Figure:
         # total increase
         baseline_increase = last_day_means - baseline
         normalized = baseline_increase / baseline
-
-
-
 
 
 def plot_c_to_n(data):
