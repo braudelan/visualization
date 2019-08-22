@@ -53,13 +53,13 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
 
 raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
 
-# plot baseline
-soil_properties_figure = plot_baseline(raw_data_sets)
-soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
+# # plot baseline
+# soil_properties_figure = plot_baseline(raw_data_sets)
+# soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
 
 # plot composite image of control dynamics
 control_composite_figure = plot_control_composite(raw_data_sets)
-control_composite_figure.savefig('%/control.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
+control_composite_figure.savefig('%s/control.png' % OUTPUT_DIRECTORY)
 
 # # plot C to N ratio
 # c_to_n = get_carbon_stats()

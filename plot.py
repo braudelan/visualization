@@ -229,36 +229,62 @@ def plot_dynamics(figure: Figure, data,
 
 def plot_control_composite(raw_data_sets):
 
+    def configure_axes(axes: Axes):
+        axes.margins(x=0.1, y=0.1)
+        axes.xaxis.set_minor_locator(MINOR_LOCATOR)
+        axes.xaxis.set_major_locator(MAJOR_LOCATOR)
+        data_name = axes.get_label()
+        axes.text(27, 0.8, data_name)
+        axes.set_xlabel('incubation time / days', labelpad=20)
+        axes.set_ylabel('precent of highest value', labelpad=20)
+
     # get the data
-    raw_data_names = raw_data_sets.keys()
+    data_names = raw_data_sets.keys()
     raw_data = raw_data_sets.values()
-    zipped = zip(raw_data_names, raw_data)
+    zipped = zip(data_names, raw_data)
 
     control_data_sets = {}
     for name, data in zipped:
         stats = get_stats(data, 'c')
         means = stats.means
-        control_data_sets[name] = means
+        max = means.max().max()
+        means = (means / max) * 100
+        control_data_sets[name] = (means)
 
     # arrays to iterate over
-    control_data_names = control_data_sets.keys()
     control_data = control_data_sets.values()
-    control_zipped = zip(control_data_names, control_data)
+    control_zipped = zip(data_names, control_data)
 
-    # make figure
-    n_data_sets = len(raw_data_sets)
-    is_even = True if n_data_sets % 2 == 0 else False
-    n_rows = 4 #n_data_sets / 2 #if is_even else 3
-    n_columns = 4 #n_rows #if is_even else 3
+    # n_data_sets = len(raw_data_sets)
+    # is_even = True if n_data_sets % 2 == 0 else False
+    # divisor = 2 if is_even else 3
 
-    figure, axes = pyplot.subplots(n_rows, n_columns)
+    # subplots rows & columns
+    n_rows = int(4)#int(n_data_sets / divisor )
+    n_columns = int(2)#int(n_rows / 2)
 
+    # make figure and subplots
+    figure, axes = pyplot.subplots(n_rows, n_columns,
+                                   sharex=True, sharey=True, figsize=(15,20),
+                                   gridspec_kw={'hspace': 0, 'wspace': 0}
+                                   )
+
+    axes = axes.flatten()
+
+    # plot
+    i = 0
     for name, data in control_zipped:
-        for n in range(n_data_sets):
-            for soil in SOILS:
-                x = data.index
-                y = data.loc[:,soil]
-                axes[n].plot(x, y)
+
+        x = data.index.values
+        for soil in SOILS:
+            y = data.loc[:,soil].values
+            axes[i].errorbar(x, y)
+            axes[i].set_label(name)
+        i += 1
+
+    # configure axes
+    for ax in axes:
+        configure_axes(ax)
 
     return figure
 
