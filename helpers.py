@@ -4,10 +4,13 @@ from pandas import DataFrame
 class Constants:
 
     soils = ['ORG', 'MIN', 'UNC']
-    color_choices = ('xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod')
-    colors =  dict(zip(soils, color_choices))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
-    marker_choices = ('*', 'o', 'd')
-    markers =  dict(zip(soils, marker_choices))
+    color_options = ('xkcd:black', 'xkcd:grey', 'xkcd:light grey')
+    colors =  dict(zip(soils, color_options))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
+    marker_options = ('*', 'o', 'd')
+    markers =  dict(zip(soils, marker_options))
+    data_format_labels = ('control', 'normalized', 'treatment')
+    line_style_options = (':', '-.', '-')
+    line_styles = dict(zip(data_format_labels, line_style_options))
     treatment_labels = ['c', 't']
     level_labels = ["soil", "treatment", "replicate"]
 

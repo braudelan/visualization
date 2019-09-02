@@ -17,9 +17,9 @@ from helpers import Constants
 SOILS = Constants.soils
 MARKERS = Constants.markers
 COLORS = Constants.colors
+LINE_STYLES = Constants.line_styles
 
 # pyplot configuration
-
 pyplot.rc(
           'legend',
           facecolor='inherit',
@@ -29,8 +29,8 @@ pyplot.rc(
 
 pyplot.rc('font', size=15) # control text size when not defined locally
 pyplot.rc('lines', linewidth=3)
-# pyplot.rc('marker', size=5)
-# pyplot.style.use('ggplot')
+
+pyplot.style.use('seaborn-talk')
 
 symbol_text_params = {'weight': 'bold',
                       'size': 26,
@@ -94,15 +94,15 @@ def make_figure(data, number, data_set_name):
     return figure
 
 
-def make_line_axes(figure: Figure, data, label, axes_lineup=0,) -> Axes:
-    '''add an axes with basic configuration to a given figure.'''
+def make_axes(figure: Figure, data, label, axes_lineup='single', ) -> Axes:
+    '''create and configure axes'''
 
     last_day = data.index[-1]
     max_value = data.max().max() # highest value measured in any of the soils
     percent_extra_space = 0.2
     upper_ylim = max_value + max_value * percent_extra_space
 
-    # allocate position of axes in figure (0=single axes, 1=first out of two, else=second out of two)
+    # allocate position of axes in figure
     position = (
                     111 if axes_lineup == 'single' else
                     311 if axes_lineup == 'top' else
@@ -113,16 +113,17 @@ def make_line_axes(figure: Figure, data, label, axes_lineup=0,) -> Axes:
 
     axes: Axes = figure.add_subplot(position)
 
-    axes.set_xlim(-0.5, last_day + 1)
-    axes.set_ylim(0, upper_ylim )
+    # axes.set_xlim(-0.5, last_day + 1)
+    # axes.set_ylim(-50, upper_ylim )
     axes.xaxis.set_minor_locator(MINOR_LOCATOR)
     axes.xaxis.set_major_locator(MAJOR_LOCATOR)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
+    axes.margins(x=0.03, y=0.1)
 
     return axes
 
 
-def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
+def plot_lines(axes: Axes, data, label, stde=None, axes_lineup='single'):
 
 
     """
@@ -134,7 +135,6 @@ def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
     :parameter
     data(DataFrame):
             time series.
-            must have the time series index as the [0] indexed column.
     stnd_error(DataFrame):
             standard error of data with same shape as data.
     axes():
@@ -150,61 +150,38 @@ def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
     data.reset_index(inplace=True)
 
     x_data = data['days']
-    y_data_labels = data.columns[1:] # exclude 'days' column
+
     lines = {}
     for soil in SOILS:
 
         y_data = data[soil]
         y_error = stde[soil] if stde is not None else None
 
-        style = densly_dashed if label == 'control' else solid
-
-        if stde is not None and axes_lineup != 'top':
-            line = axes.errorbar(
-                               x_data,
-                               y_data,
-                               ls=style,
-                               yerr=y_error,
-                               label=soil,
-                               color=COLORS[soil],
-                               marker=MARKERS[soil],
-            )
-        elif axes_lineup == 'top':
-            line = axes.errorbar(
-                                x_data,
-                                y_data,
-                                ls='none',
-                               # yerr=y_error,
-                                label=soil,
-                                ecolor=COLORS[soil],
-                                marker='o'#MARKERS[soil],
-            )
-        else:
-            line = axes.plot(
+        line = axes.errorbar(
                            x_data,
                            y_data,
+                           ls=LINE_STYLES[label],
+                           yerr=y_error,
                            label=soil,
                            color=COLORS[soil],
-                           marker=MARKERS[soil]
-                          )  # todo add merkers? conflict with error bars
-
+                           marker=MARKERS[soil],
+        )
 
         lines[soil] = line
-
-    if axes_lineup == 'top':
-        for soil in SOILS:
-            lines[soil].lines[0].set_color('none')
+    #
+    # if axes_lineup == 'top':
+    #     for soil in SOILS:
+    #         lines[soil].lines[0].set_color('none')
 
     return lines
 
 
-def plot_dynamics(figure: Figure, data,
-                  stde, set_name, label, axes_lineup='bottom'):
+def draw_labels(figure: Figure, axes: Axes,
+                    set_name, axes_lineup='bottom'):
 
-    last_day = data.index[-1]
     is_normalized = True if axes_lineup == 'bottom' else False # check if the data being plotted is normalized
 
-    # text
+    # text and text parameters
     xlabel_text = r'$incubation\ time\ \slash\ days$'
     normalized = 'normalized' if is_normalized else ''
     if set_name == 'RESP':
@@ -216,23 +193,18 @@ def plot_dynamics(figure: Figure, data,
 
     ylabel_rotation = 65 if set_name == 'RESP' else 45
 
-    # create axes
-    axes = make_line_axes(figure, data, axes_lineup=axes_lineup, label=label)
-
-    # plot data on axes
-    lines = plot_lines(axes, data, label, stde, axes_lineup=axes_lineup) # todo take out specific data points    (MBC)
-
-    # customize axes
+    # x label, MRE notation, remove x axis from top and middle axes
     if axes_lineup == 'bottom':
         axes.set_xlabel(xlabel_text, labelpad=40) # x label
         MRE_notation_marks(axes)  # add arrows where MRE was applied
     if axes_lineup == 'top' or axes_lineup == 'middle':
         axes.get_xaxis().set_visible(False)
 
+    # y label
     axes.set_ylabel(ylabel_text, labelpad=50,
                     rotation=ylabel_rotation)
 
-    # customize legend
+    # legend
     axes.get_lines()
     handles = axes.get_lines()
     labels = SOILS
