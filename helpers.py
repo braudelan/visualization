@@ -6,8 +6,8 @@ class Constants:
     soils = ['ORG', 'MIN', 'UNC']
     color_choices = ('xkcd:crimson', 'xkcd:aquamarine', 'xkcd:goldenrod')
     colors =  dict(zip(soils, color_choices))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
-    markers_choices = ('*', 'o', 'd')
-    markers =  dict(zip(soils, markers_choices))
+    marker_choices = ('*', 'o', 'd')
+    markers =  dict(zip(soils, marker_choices))
     treatment_labels = ['c', 't']
     level_labels = ["soil", "treatment", "replicate"]
 

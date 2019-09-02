@@ -28,9 +28,9 @@ pyplot.rc(
   )
 
 pyplot.rc('font', size=15) # control text size when not defined locally
-pyplot.rc('lines', linewidth=5)
+pyplot.rc('lines', linewidth=3)
 # pyplot.rc('marker', size=5)
-# pyplot.style.use('ggplot')'
+# pyplot.style.use('ggplot')
 
 symbol_text_params = {'weight': 'bold',
                       'size': 26,
@@ -94,7 +94,7 @@ def make_figure(data, number, data_set_name):
     return figure
 
 
-def make_line_axes(figure: Figure, data, axes_lineup=0) -> Axes:
+def make_line_axes(figure: Figure, data, label, axes_lineup=0,) -> Axes:
     '''add an axes with basic configuration to a given figure.'''
 
     last_day = data.index[-1]
@@ -104,15 +104,17 @@ def make_line_axes(figure: Figure, data, axes_lineup=0) -> Axes:
 
     # allocate position of axes in figure (0=single axes, 1=first out of two, else=second out of two)
     position = (
-                    111 if axes_lineup == 0 else
-                    211 if axes_lineup == 1 else
-                    212
+                    111 if axes_lineup == 'single' else
+                    311 if axes_lineup == 'top' else
+                    312 if axes_lineup == 'middle' else
+                    313
+
                     )
 
     axes: Axes = figure.add_subplot(position)
 
-    axes.set_xlim(0, last_day)
-    axes.set_ylim(0, upper_ylim)
+    axes.set_xlim(-0.5, last_day + 1)
+    axes.set_ylim(0, upper_ylim )
     axes.xaxis.set_minor_locator(MINOR_LOCATOR)
     axes.xaxis.set_major_locator(MAJOR_LOCATOR)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
@@ -120,7 +122,7 @@ def make_line_axes(figure: Figure, data, axes_lineup=0) -> Axes:
     return axes
 
 
-def make_lines(axes: Axes, data, stde=None):
+def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
 
 
     """
@@ -149,44 +151,58 @@ def make_lines(axes: Axes, data, stde=None):
 
     x_data = data['days']
     y_data_labels = data.columns[1:] # exclude 'days' column
-
     lines = {}
-    for soil_label in y_data_labels:
+    for soil in SOILS:
 
-        y_data = data[soil_label]
-        y_error = stde[soil_label] if stde is not None else None
+        y_data = data[soil]
+        y_error = stde[soil] if stde is not None else None
 
-        # style = densly_dashed if treatment_label == 'c' else solid
+        style = densly_dashed if label == 'control' else solid
 
-        if stde is not None:
+        if stde is not None and axes_lineup != 'top':
             line = axes.errorbar(
                                x_data,
                                y_data,
+                               ls=style,
                                yerr=y_error,
-                               label=soil_label,
-                               color=COLORS[soil_label],
-                               marker=MARKERS[soil_label],
-                               )  # todo add merkers? conflict with error bars
+                               label=soil,
+                               color=COLORS[soil],
+                               marker=MARKERS[soil],
+            )
+        elif axes_lineup == 'top':
+            line = axes.errorbar(
+                                x_data,
+                                y_data,
+                                ls='none',
+                               # yerr=y_error,
+                                label=soil,
+                                ecolor=COLORS[soil],
+                                marker='o'#MARKERS[soil],
+            )
         else:
             line = axes.plot(
                            x_data,
                            y_data,
-                           label=soil_label,
-                           color=COLORS[soil_label],
-                           marker=MARKERS[soil_label]
+                           label=soil,
+                           color=COLORS[soil],
+                           marker=MARKERS[soil]
                           )  # todo add merkers? conflict with error bars
 
 
-        lines[soil_label] = line
+        lines[soil] = line
+
+    if axes_lineup == 'top':
+        for soil in SOILS:
+            lines[soil].lines[0].set_color('none')
 
     return lines
 
 
 def plot_dynamics(figure: Figure, data,
-                  stde, set_name, axes_lineup):
+                  stde, set_name, label, axes_lineup='bottom'):
 
     last_day = data.index[-1]
-    is_normalized = True if axes_lineup == 2 else False # check if the data being plotted is normalized
+    is_normalized = True if axes_lineup == 'bottom' else False # check if the data being plotted is normalized
 
     # text
     xlabel_text = r'$incubation\ time\ \slash\ days$'
@@ -201,31 +217,27 @@ def plot_dynamics(figure: Figure, data,
     ylabel_rotation = 65 if set_name == 'RESP' else 45
 
     # create axes
-    axes = make_line_axes(figure, data, axes_lineup=axes_lineup)
+    axes = make_line_axes(figure, data, axes_lineup=axes_lineup, label=label)
 
     # plot data on axes
-    lines = make_lines(axes, data, stde) # todo take out specific data points    (MBC)
+    lines = plot_lines(axes, data, label, stde, axes_lineup=axes_lineup) # todo take out specific data points    (MBC)
 
     # customize axes
-    if axes_lineup == 2 or axes_lineup == 0:
+    if axes_lineup == 'bottom':
         axes.set_xlabel(xlabel_text, labelpad=40) # x label
         MRE_notation_marks(axes)  # add arrows where MRE was applied
-    if axes_lineup == 1:
+    if axes_lineup == 'top' or axes_lineup == 'middle':
         axes.get_xaxis().set_visible(False)
 
     axes.set_ylabel(ylabel_text, labelpad=50,
                     rotation=ylabel_rotation)
 
     # customize legend
-    list_lines = list(lines.items())  #e.g.'ORG': <ErrorbarContainer object of 3 artists>
-    lables = []
-    handles = []
-    for line in list_lines:
-        label = line[0]
-        handel = line[1]
-        lables.append(label)
-        handles.append(handel)
-    figure.legend(handles, lables, loc='center right')  # todo remove error bars from legend objects.
+    axes.get_lines()
+    handles = axes.get_lines()
+    labels = SOILS
+    figure.legend(handles, labels, 'center right')
+
 
 def plot_control_composite(raw_data_sets):
 
@@ -243,21 +255,23 @@ def plot_control_composite(raw_data_sets):
     raw_data = raw_data_sets.values()
     zipped = zip(data_names, raw_data)
 
-    control_data_sets = {}
+    control_means = {}
+    control_stde = {}
     for name, data in zipped:
         stats = get_stats(data, 'c')
         means = stats.means
-        max = means.max().max()
+        max = means.max().max() # highest value measured for all 3 soils
         means = (means / max) * 100
-        control_data_sets[name] = (means)
+        stde = stats.stde
+        max_stde = stde.max().max()
+        stde = (stde / max) * 100
+        control_means[name] = means
+        control_stde[name] = stde
 
     # arrays to iterate over
-    control_data = control_data_sets.values()
-    control_zipped = zip(data_names, control_data)
-
-    # n_data_sets = len(raw_data_sets)
-    # is_even = True if n_data_sets % 2 == 0 else False
-    # divisor = 2 if is_even else 3
+    control_data = control_means.values()
+    control_data_stde = control_stde.values()
+    control_zipped = zip(data_names, control_data, control_data_stde)
 
     # subplots rows & columns
     n_rows = int(4)#int(n_data_sets / divisor )
@@ -266,25 +280,31 @@ def plot_control_composite(raw_data_sets):
     # make figure and subplots
     figure, axes = pyplot.subplots(n_rows, n_columns,
                                    sharex=True, sharey=True, figsize=(15,20),
-                                   gridspec_kw={'hspace': 0, 'wspace': 0}
+                                   gridspec_kw={'hspace': 0, 'wspace': 0},
                                    )
-
     axes = axes.flatten()
 
     # plot
     i = 0
-    for name, data in control_zipped:
-
+    for name, data, error in control_zipped:
         x = data.index.values
         for soil in SOILS:
-            y = data.loc[:,soil].values
-            axes[i].errorbar(x, y)
+            # pdb.set_trace()
+            y = data[soil].values
+            err = error[soil].values
+            axes[i].errorbar(x, y, yerr=err)
             axes[i].set_label(name)
+
         i += 1
 
     # configure axes
     for ax in axes:
         configure_axes(ax)
+
+    # legend
+    handles = axes[0].get_lines()
+    labels = SOILS
+    figure.legend(handles, labels, 'center right')
 
     return figure
 
