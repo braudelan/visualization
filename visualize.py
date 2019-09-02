@@ -25,7 +25,7 @@ setup_arguments = get_setup_arguments()
 DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 
-# plot dynamics of each soil parameter as a seperate graph
+# plot dynamics of each soil parameter as a seperate figure
 for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
 
     # input data into DataFrame
@@ -59,28 +59,27 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     # plot dynamics
     dynamics_figure = make_figure(raw_data, number, set_name)
 
-    wknds_axes = make_axes(dynamics_figure, wknds_treatment,
-                                'wknds', axes_lineup='top')
-    means_axes = make_axes(dynamics_figure, treatment_means,
-                                'means', axes_lineup='middle')
-    normalized_axes = make_axes(dynamics_figure, norm_means,
-                                     'normalized_means', axes_lineup='bottom')
+    wknds_axes = make_axes(dynamics_figure, axes_position='top of 3')
+    means_axes = make_axes(dynamics_figure, axes_position='middle')
+    normalized_axes = make_axes(dynamics_figure, axes_position='bottom of 3')
+
     wknds_treatment_lines = plot_lines(wknds_axes, wknds_treatment,
-                                                    'treatment', wknds_treatment_stde, axes_lineup='top')
+                                                    'treatment', wknds_treatment_stde)
     wknds_normalized_lines = plot_lines(wknds_axes, wknds_normalized,
-                                             'normalized', wknds_normalized_stde, axes_lineup='top')
+                                             'normalized', wknds_normalized_stde)
     treatment_lines = plot_lines(means_axes, treatment_means,
-                                             'treatment', treatment_stde, axes_lineup='middle')
+                                             'treatment', treatment_stde)
     control_lines = plot_lines(means_axes, control_means,
-                                             'control', control_stde, axes_lineup='middle')
+                                             'control', control_stde)
     normalized_lines = plot_lines(normalized_axes, norm_means,
-                                             'normalized', norm_stde, axes_lineup='bottom')
+                                             'normalized', norm_stde)
+
     draw_labels(dynamics_figure, wknds_axes,
-                            set_name, axes_lineup='top')
+                            set_name, axes_position='top of 3')
     draw_labels(dynamics_figure, means_axes,
-                            set_name, axes_lineup='middle')
+                            set_name, axes_position='middle')
     draw_labels(dynamics_figure, normalized_axes,
-                            set_name, axes_lineup='bottom')
+                            set_name, axes_position='bottom of 3')
 
     dynamics_figure.savefig("%s/%s_dynamics.png" % (OUTPUT_DIRECTORY, set_name))
     pyplot.cla()
@@ -90,7 +89,7 @@ raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
 # # plot baseline
 # soil_properties_figure = plot_baseline(raw_data_sets)
 # soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
-
+#
 # # plot composite image of control dynamics
 # control_composite_figure = plot_control_composite(raw_data_sets)
 # control_composite_figure.savefig('%s/control.png' % OUTPUT_DIRECTORY)
@@ -100,14 +99,6 @@ raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
 # carbon_figure = plot_c_to_n(c_to_n)
 # carbon_figure.savefig('./%s/C_to_N.png' %OUTPUT_DIRECTORY)
 
-# MRE = MRE.loc[get_week_ends(MRE)] if set_name == 'RESP' else MRE
-# MRE_SE = MRE_SE.loc[get_week_ends(MRE_SE)] if set_name == 'RESP' else MRE_SE
-# normalized = normalized.loc[get_week_ends(normalized)] if set_name == 'RESP' else normalized
-
-# # plot control
-#     control_means_fig = plot_control(means, means_SE, set_name, number)
-#     control_means_fig.savefig('./%s/control_%s.png' %(OUTPUT_DIRECTORY,set_name))
-#     pyplot.cla()
 
 # # plot ttest table
 #     daily_ttest = get_daily_Ttest(raw_data)

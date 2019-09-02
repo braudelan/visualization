@@ -4,7 +4,7 @@ from pandas import DataFrame
 class Constants:
 
     soils = ['ORG', 'MIN', 'UNC']
-    color_options = ('xkcd:black', 'xkcd:grey', 'xkcd:light grey')
+    color_options = ('darkred', 'royalblue', 'dimgrey')
     colors =  dict(zip(soils, color_options))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
     marker_options = ('*', 'o', 'd')
     markers =  dict(zip(soils, marker_options))
