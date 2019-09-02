@@ -113,8 +113,6 @@ def make_axes(figure: Figure, data, label, axes_lineup='single', ) -> Axes:
 
     axes: Axes = figure.add_subplot(position)
 
-    # axes.set_xlim(-0.5, last_day + 1)
-    # axes.set_ylim(-50, upper_ylim )
     axes.xaxis.set_minor_locator(MINOR_LOCATOR)
     axes.xaxis.set_major_locator(MAJOR_LOCATOR)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
