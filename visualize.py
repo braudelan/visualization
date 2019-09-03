@@ -3,7 +3,7 @@ from matplotlib import pyplot             # todo solve: running visualize.py wit
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_normalized, get_stats, get_carbon_stats
 from plot import make_figure, make_line_axes, plot_dynamics, plot_baseline, plot_control_composite
-from helpers import get_week_ends
+from helpers import get_week_ends, Constants
 # from model_dynamics import plot_model
 # from Ttest import get_daily_Ttest
 # from growth import get_weekly_growth, tabulate_growth
@@ -13,8 +13,8 @@ from helpers import get_week_ends
 pyplot.rc('savefig',  pad_inches=1.5)
 
 # input & output locations
-INPUT_FILE = "all_tests.xlsx"
-OUTPUT_DIRECTORY = '/home/elan/Dropbox/research/figures'
+INPUT_FILE = Constants.input_file_name
+OUTPUT_DIRECTORY = Constants.output_folder
 
 
 # setup

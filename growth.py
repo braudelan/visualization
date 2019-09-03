@@ -1,48 +1,47 @@
 import pandas
 from matplotlib import pyplot
 
-from helpers import get_week_ends
+from helpers import get_week_ends, Constants
 
 
-SOILS = ['ORG', 'MIN', 'UNC']
+SOILS = Constants.soils
 
-def get_weekly_growth(means, SE):
+def get_weekly_growth(data, stde):
 
-    SOILS = ['ORG', 'MIN', 'UNC']
-
-    week_ends = get_week_ends(means)  # list day 0 and end of every week
-    week_end_means = means.loc[week_ends, :]
-    week_end_SE = SE.loc[week_ends, :]
-    week_labels = ['1st', '2nd', '3rd', '4th'] if len(week_end_means.index) == 5 else ['1st', '2nd', '3rd']
-    week_end_days = week_end_means.index
+    week_ends = get_week_ends(data)  # list day 0 and end of every week
+    week_end_data = data.loc[week_ends, :]
+    week_end_stde = stde.loc[week_ends, :]
+    week_labels = ['1st', '2nd', '3rd', '4th'] if len(week_end_data.index) == 5 else ['1st', '2nd', '3rd']
+    week_end_days = week_end_data.index
+    last_day = week_end_days[-1]
 
     weekly_growth = pandas.DataFrame(index=SOILS)
 
-    for day, label in zip(week_end_days, week_labels):
+    for day, week in zip(week_end_days, week_labels):
 
-        growth = week_end_means.loc[day + 7] - week_end_means.loc[day]
-        growth
-        weekly_growth[label] = growth
+        growth = week_end_data.loc[day + 7] - week_end_data.loc[day]
+        weekly_growth[week] = growth
 
-    # weekly_growth['total'] = weekly_growth.sum(axis=1)
+    total_growth = week_end_data.loc[last_day] - week_end_data.loc[0]
+    weekly_growth['total'] = total_growth
 
     return weekly_growth
 
 
 
-def tabulate_growth(weekly_growth, test, number):
+def tabulate_growth(weekly_growth, data_set_name, number):
 
 # variabels
-    args = (number, test)
-
-    row_labels = []
-    for soil in ('COM', 'MIN', 'UNC'):
-        control_label   = soil + r'$_{c}$'
-        treatment_label = soil + r'$_{t}$'
-        row_labels.append(control_label)
-        row_labels.append(treatment_label)
-
-    growth_columns = ['1st week', '2nd week', '3rd week', '4th week']
+    args = (number, data_set_name)
+    #
+    # row_labels = []
+    # for soil in SOILS:
+    #     control_label   = soil + r'$_{c}$'
+    #     treatment_label = soil + r'$_{t}$'
+    #     row_labels.append(control_label)
+    #     row_labels.append(treatment_label)
+    #
+    # growth_columns = ['1st week', '2nd week', '3rd week', '4th week']
 
 
 # pyplot parameters
@@ -66,9 +65,9 @@ def tabulate_growth(weekly_growth, test, number):
 # plot table
     growth_table = pyplot.table(cellText=weekly_growth.values,
                                 loc='center',
-                                colLabels=growth_columns,
-                                rowLabels=row_labels,
-                                # cellLoc='center',
+                                # colLabels=growth_columns,
+                                # rowLabels=row_labels,
+                                # # cellLoc='center',
                                 # colWidths=[0.07, 0.1, 0.1, 0.1, 0.1],
                                 )
 

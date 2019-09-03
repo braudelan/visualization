@@ -10,6 +10,8 @@ class Constants:
     markers =  dict(zip(soils, marker_choices))
     treatment_labels = ['c', 't']
     level_labels = ["soil", "treatment", "replicate"]
+    input_file_name = "all_tests.xlsx"
+    output_folder = '/home/elan/Dropbox/research/figures'
 
 def get_week_ends(dataframe):
 
