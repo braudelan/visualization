@@ -17,8 +17,10 @@ from helpers import Constants
 SOILS = Constants.soils
 MARKERS = Constants.markers
 COLORS = Constants.colors
+LINE_STYLES = Constants.line_styles
 
-# pyplot configuration
+MAJOR_LOCATOR = MultipleLocator(7)  # major ticks locations
+MINOR_LOCATOR = MultipleLocator(1)  # minor ticks locations
 
 pyplot.rc(
           'legend',
@@ -29,17 +31,10 @@ pyplot.rc(
 
 pyplot.rc('font', size=15) # control text size when not defined locally
 pyplot.rc('lines', linewidth=3)
-# pyplot.rc('marker', size=5)
-# pyplot.style.use('ggplot')
 
-symbol_text_params = {'weight': 'bold',
-                      'size': 26,
-                      }
+# palette = pyplot.get_cmap('tab10')
+pyplot.style.use('seaborn-talk')
 
-line_styles = densly_dashed, solid = ((0, (2, 1)), (0, ()))
-
-MAJOR_LOCATOR = MultipleLocator(7)  # major ticks locations
-MINOR_LOCATOR = MultipleLocator(1)  # minor ticks locations
 
 
 def MRE_notation_marks(axes: Axes):
@@ -94,35 +89,31 @@ def make_figure(data, number, data_set_name):
     return figure
 
 
-def make_line_axes(figure: Figure, data, label, axes_lineup=0,) -> Axes:
-    '''add an axes with basic configuration to a given figure.'''
+def make_axes(figure: Figure, axes_position='single', ) -> Axes:
+    '''create and configure axes'''
 
-    last_day = data.index[-1]
-    max_value = data.max().max() # highest value measured in any of the soils
-    percent_extra_space = 0.2
-    upper_ylim = max_value + max_value * percent_extra_space
-
-    # allocate position of axes in figure (0=single axes, 1=first out of two, else=second out of two)
+    # allocate position of axes in figure
     position = (
-                    111 if axes_lineup == 'single' else
-                    311 if axes_lineup == 'top' else
-                    312 if axes_lineup == 'middle' else
-                    313
-
-                    )
-
+                    111 if axes_position == 'single' else
+                    211 if axes_position == 'top of 2' else
+                    311 if axes_position == 'top of 3' else
+                    312 if axes_position == 'middle' else
+                    313 if axes_position == 'bottom of 3' else
+                    212
+            )
+    # intialize axes
     axes: Axes = figure.add_subplot(position)
 
-    axes.set_xlim(-0.5, last_day + 1)
-    axes.set_ylim(0, upper_ylim )
+    # axes parameters
     axes.xaxis.set_minor_locator(MINOR_LOCATOR)
     axes.xaxis.set_major_locator(MAJOR_LOCATOR)
     axes.tick_params(axis='x', which='minor', width=1, length=3)
+    axes.margins(x=0.03, y=0.1)
 
     return axes
 
 
-def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
+def plot_lines(axes: Axes, data, label, stde=None):
 
 
     """
@@ -134,7 +125,6 @@ def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
     :parameter
     data(DataFrame):
             time series.
-            must have the time series index as the [0] indexed column.
     stnd_error(DataFrame):
             standard error of data with same shape as data.
     axes():
@@ -150,89 +140,75 @@ def plot_lines(axes: Axes, data, label, stde=None, axes_lineup=0):
     data.reset_index(inplace=True)
 
     x_data = data['days']
-    y_data_labels = data.columns[1:] # exclude 'days' column
-    lines = {}
-    for soil in SOILS:
 
+    lines = {}
+    i=0
+    for soil in SOILS:
+        i += 1
         y_data = data[soil]
         y_error = stde[soil] if stde is not None else None
 
-        style = densly_dashed if label == 'control' else solid
-
-        if stde is not None and axes_lineup != 'top':
-            line = axes.errorbar(
-                               x_data,
-                               y_data,
-                               ls=style,
-                               yerr=y_error,
-                               label=soil,
-                               color=COLORS[soil],
-                               marker=MARKERS[soil],
-            )
-        elif axes_lineup == 'top':
-            line = axes.errorbar(
-                                x_data,
-                                y_data,
-                                ls='none',
-                               # yerr=y_error,
-                                label=soil,
-                                ecolor=COLORS[soil],
-                                marker='o'#MARKERS[soil],
-            )
-        else:
-            line = axes.plot(
+        line = axes.errorbar(
                            x_data,
                            y_data,
+                           ls=LINE_STYLES[label],
+                           yerr=y_error,
                            label=soil,
                            color=COLORS[soil],
-                           marker=MARKERS[soil]
-                          )  # todo add merkers? conflict with error bars
-
+                           marker=MARKERS[soil],
+        )
 
         lines[soil] = line
 
-    if axes_lineup == 'top':
-        for soil in SOILS:
-            lines[soil].lines[0].set_color('none')
+    # if axes_position == 'top':
+    #     for soil in SOILS:
+    #         lines[soil].lines[0].set_color('none')
 
     return lines
 
 
-def plot_dynamics(figure: Figure, data,
-                  stde, set_name, label, axes_lineup='bottom'):
+def draw_labels(figure: Figure, axes: Axes,
+                    set_name, axes_position='bottom'):
 
-    last_day = data.index[-1]
-    is_normalized = True if axes_lineup == 'bottom' else False # check if the data being plotted is normalized
+    ##is_normalized = True if axes_position == 'bottom' else False # check if the data being plotted is normalized
 
-    # text
+    # text and text parameters
     xlabel_text = r'$incubation\ time\ \slash\ days$'
-    normalized = 'normalized' if is_normalized else ''
-    if set_name == 'RESP':
-        ylabel_text = r'$%s\ %s\ \slash$' '\n' r'$mg\ CO_{2}-C\ $'  \
-                      r'$\ast\ kg\ soil^{-1}\ \ast\ day^{-1} $' %(normalized, set_name)
-    else:
-        ylabel_text = r'$%s\ %s\ \slash$' '\n' \
-                      r'$mg\ \ast kg\ soil^{-1}$' %(normalized, set_name)
+    ylabel_RESP = r'$mg\ CO_{2}-C\ $'  \
+                      r'$\ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
+    ylabel_default = r'$mg\ \ast kg\ soil^{-1}$'
+    ylabel_text = ylabel_RESP if set_name == 'RESP' else ylabel_default
 
-    ylabel_rotation = 65 if set_name == 'RESP' else 45
+    ylabel_rotation = 90
 
-    # create axes
-    axes = make_line_axes(figure, data, axes_lineup=axes_lineup, label=label)
+    is_bottom = True if ('bottom' in axes_position or
+                           axes_position == 'single') else False
 
-    # plot data on axes
-    lines = plot_lines(axes, data, label, stde, axes_lineup=axes_lineup) # todo take out specific data points    (MBC)
+    # draw_ylabel = True if (axes_position == 'middle' or
+    #                        axes_position == 'single') else False
 
-    # customize axes
-    if axes_lineup == 'bottom':
-        axes.set_xlabel(xlabel_text, labelpad=40) # x label
+    remove_x_axis = True if ('top'in axes_position or
+                           axes_position == 'middle') else False
+
+    # MRE notation,
+    if is_bottom:
+        # axes.set_xlabel(xlabel_text, labelpad=40) # x label
         MRE_notation_marks(axes)  # add arrows where MRE was applied
-    if axes_lineup == 'top' or axes_lineup == 'middle':
+    # # y label
+    # if draw_ylabel:
+    #     axes.set_ylabel(ylabel_text, labelpad=40,
+    #                     rotation=ylabel_rotation)
+
+    # remove x axis from top and middle axes
+    if not is_bottom:
         axes.get_xaxis().set_visible(False)
 
-    axes.set_ylabel(ylabel_text, labelpad=50,
-                    rotation=ylabel_rotation)
+    # x label
+    figure.text(0.5, 0.03, xlabel_text, ha='center')
+    # y label
+    figure.text(0.05, 0.5, ylabel_text, va='center', rotation='vertical')
 
-    # customize legend
+    # legend
     axes.get_lines()
     handles = axes.get_lines()
     labels = SOILS
@@ -247,8 +223,7 @@ def plot_control_composite(raw_data_sets):
         axes.xaxis.set_major_locator(MAJOR_LOCATOR)
         data_name = axes.get_label()
         axes.text(27, 0.8, data_name)
-        axes.set_xlabel('incubation time / days', labelpad=20)
-        axes.set_ylabel('precent of highest value', labelpad=20)
+        axes.label_outer()
 
     # get the data
     data_names = raw_data_sets.keys()
@@ -258,13 +233,14 @@ def plot_control_composite(raw_data_sets):
     control_means = {}
     control_stde = {}
     for name, data in zipped:
+
         stats = get_stats(data, 'c')
         means = stats.means
         max = means.max().max() # highest value measured for all 3 soils
         means = (means / max) * 100
         stde = stats.stde
-        max_stde = stde.max().max()
         stde = (stde / max) * 100
+
         control_means[name] = means
         control_stde[name] = stde
 
@@ -274,22 +250,22 @@ def plot_control_composite(raw_data_sets):
     control_zipped = zip(data_names, control_data, control_data_stde)
 
     # subplots rows & columns
-    n_rows = int(4)#int(n_data_sets / divisor )
-    n_columns = int(2)#int(n_rows / 2)
+    n_rows = int(4)
+    n_columns = int(2)
 
     # make figure and subplots
     figure, axes = pyplot.subplots(n_rows, n_columns,
                                    sharex=True, sharey=True, figsize=(15,20),
-                                   gridspec_kw={'hspace': 0, 'wspace': 0},
-                                   )
-    axes = axes.flatten()
+                                   gridspec_kw={'hspace': 0, 'wspace': 0},)
+    figure.text(0.5, 0.05, 'incubation time / days', ha='center')
+    figure.text(0.05, 0.5, 'precent of highest value', va='center', rotation='vertical')
 
     # plot
     i = 0
     for name, data, error in control_zipped:
         x = data.index.values
         for soil in SOILS:
-            # pdb.set_trace()
+            axes = axes.flatten()
             y = data[soil].values
             err = error[soil].values
             axes[i].errorbar(x, y, yerr=err)
@@ -313,8 +289,8 @@ def make_bar_axes(figure: Figure, x_locations, soil_width, y_label,
                                                 x_label=None, categories=None) -> Axes:
 
     # position = (
-    #             111 if axes_lineup == 0 else
-    #             211 if axes_lineup == 1 else
+    #             111 if axes_position == 0 else
+    #             211 if axes_position == 1 else
     #             212
     #            )
 
