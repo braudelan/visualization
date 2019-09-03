@@ -2,7 +2,7 @@ from matplotlib import pyplot             # todo solve: running visualize.py wit
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_normalized, get_stats, get_carbon_stats
-from plot import make_figure, make_line_axes, plot_dynamics, plot_baseline, plot_control_composite
+from plot import make_figure, make_axes, plot_lines, draw_labels, plot_baseline, plot_control_composite
 from helpers import get_week_ends
 # from model_dynamics import plot_model
 # from Ttest import get_daily_Ttest
@@ -57,27 +57,27 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     # plot dynamics
     dynamics_figure = make_figure(raw_data, number, set_name)
 
-    wknds_axes = make_axes(dynamics_figure, axes_position='top of 3')
-    means_axes = make_axes(dynamics_figure, axes_position='middle')
-    normalized_axes = make_axes(dynamics_figure, axes_position='bottom of 3')
-
-    wknds_treatment_lines = plot_lines(wknds_axes, wknds_treatment,
-                                                    'treatment', wknds_treatment_stde)
-    wknds_normalized_lines = plot_lines(wknds_axes, wknds_normalized,
-                                             'normalized', wknds_normalized_stde)
+    # wknds_axes = make_axes(dynamics_figure, axes_position='top of 3')
+    means_axes = make_axes(dynamics_figure, axes_position='single')
+    # normalized_axes = make_axes(dynamics_figure, axes_position='bottom of 3')
+    #
+    # wknds_treatment_lines = plot_lines(wknds_axes, wknds_treatment,
+    #                                                 'treatment', wknds_treatment_stde)
+    # wknds_normalized_lines = plot_lines(wknds_axes, wknds_normalized,
+    #                                          'normalized', wknds_normalized_stde)
     treatment_lines = plot_lines(means_axes, treatment_means,
                                              'treatment', treatment_stde)
     control_lines = plot_lines(means_axes, control_means,
                                              'control', control_stde)
-    normalized_lines = plot_lines(normalized_axes, norm_means,
-                                             'normalized', norm_stde)
+    # normalized_lines = plot_lines(normalized_axes, norm_means,
+    #                                          'normalized', norm_stde)
 
-    draw_labels(dynamics_figure, wknds_axes,
-                            set_name, axes_position='top of 3')
+    # draw_labels(dynamics_figure, wknds_axes,
+    #                         set_name, axes_position='top of 3')
     draw_labels(dynamics_figure, means_axes,
-                            set_name, axes_position='middle')
-    draw_labels(dynamics_figure, normalized_axes,
-                            set_name, axes_position='bottom of 3')
+                            set_name, axes_position='single')
+    # draw_labels(dynamics_figure, normalized_axes,
+    #                         set_name, axes_position='bottom of 3')
 
     dynamics_figure.savefig("%s/%s_dynamics.png" % (OUTPUT_DIRECTORY, set_name))
     pyplot.cla()

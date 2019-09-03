@@ -31,8 +31,8 @@ data_set_name = setup_arguments.sets[0]
 # get data set
 raw_data = get_raw_data(data_set_name)
 stats = get_normalized(raw_data)
-data_set = stats.means # subtract average control values
-data_SD = stats.stdv
+data_set = stats.means
+data_stde = stats.stde
 
 DAYS_TO_FIT = data_set.index.values
 
