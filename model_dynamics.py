@@ -17,10 +17,9 @@ from model_functions import respiration_rate, biomass_carbon
 SOILS = Constants.soils
 COLORS = Constants.colors
 MARKERS = Constants.markers
+OUTPUT_FOLDER = Constants.output_folder
 
 # plotting parameters
-ORG_color, MIN_color, UNC_color = COLORS
-ORG_marker, MIN_marker, UNC_marker = MARKERS
 major_locator = MultipleLocator(7)  # major ticks locations
 minor_locator = MultipleLocator(1)  # minor ticks locations
 
@@ -35,11 +34,6 @@ data_set = stats.means
 data_stde = stats.stde
 
 DAYS_TO_FIT = data_set.index.values
-
-def assign_property(label, choices):
-    '''assign plotting parameter based on soil name and choices'''
-    property = choices[label]
-    return property
 
 
 def get_chi_square(fit_result):
@@ -148,25 +142,16 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
     # axes setup
     axes = figure.add_subplot(111)
 
-    # # ticks
-    # axes.xaxis.set_major_locator(major_locator)
-    # axes.xaxis.set_minor_locator(minor_locator)
-    # axes.tick_params(which='major', length=5, width=1.5, labelsize='large')
-    # axes.tick_params(which='minor', length=4, width=1)
-    # ## model function text
-    # # axes.text(0.7, 0.6, fit_function_text, transform=axes.transAxes, fontdict=font_setup)
-    #
-    # # labels
-    # axes.set_xlabel(x_label, labelpad=30, fontsize=20)
-    # axes.set_ylabel(y_label, labelpad=150, va='center', rotation=60, fontsize=20)
+    # model function text
+
 
     # indent = 0
     for soil in SOILS:
 
         # plotting parameters
-        fit_color = assign_property(soil, COLORS)
-        data_color = assign_property(soil, COLORS)
-        data_marker = assign_property(soil, MARKERS)
+        fit_color = COLORS[soil]
+        data_color = COLORS[soil]
+        data_marker = MARKERS[soil]
 
         data_kws = {
             'color': data_color,
@@ -181,7 +166,7 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
 
         fit_result = fit_model(model_function, data[soil], data_SD[soil])
         plot_model(axes, fit_result, data_kws, fit_kws)
-        # axes.text(-0.3, 0.8)
+        # axes.text(0.7, 0.6, transform=axes.transAxes)
 
     axes.xaxis.set_major_locator(major_locator)
     axes.xaxis.set_minor_locator(minor_locator)
@@ -198,8 +183,8 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
 
 if __name__ == '__main__':
     function = respiration_rate if data_set_name == 'RESP' else biomass_carbon
-    figure = make_figure(function, data_set, data_SD)
-    figure.savefig('./modeling/%s_weighted' % data_set_name)
+    figure = make_figure(function, data_set, data_stde)
+    figure.savefig('%s/%s_model_weighted' %(OUTPUT_FOLDER, data_set_name))
 
     # for soil in SOILS:
     #     result = fit_model(function, data_set[soil], data_SD[soil])
