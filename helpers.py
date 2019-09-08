@@ -52,18 +52,19 @@ def delay_factor(x, delay):
 def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
     """replace nan values with the mean of remaining replicates."""
 
+    SOILS = Constants.soils
     if len(raw_data.index) >5:
         week_ends = get_week_ends(raw_data)
         raw_data = raw_data.loc[week_ends, :]
 
-    data = raw_data.loc[:, (treatment, Constants.soils)]
+    data = raw_data.loc[:, (treatment, SOILS)]
     data = data.reset_index(col_level=1, col_fill='')
     data.columns = data.columns.droplevel('treatment')
 
-    for soil in Constants.soils:
+    for soil in SOILS:
         soil_data = data[soil].values
 
-        for i in range(len(soil_data)-1):
+        for i in range(len(soil_data)):
             array = soil_data[i]
             where_nan = numpy.isnan(array)
             has_nan = numpy.any(where_nan)

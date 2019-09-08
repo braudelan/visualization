@@ -53,7 +53,7 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
         # normalized_diff=normalized_diff
     )
 
-def get_normalized(raw_data):
+def normalize_raw_data(raw_data):
     '''normalize a given data set to average control data and calculate basic statistics.'''
 
     raw_t = raw_data.loc[:, ('t', SOILS)] # MRE treatment
@@ -69,10 +69,9 @@ def get_normalized(raw_data):
             soil = column[1]
             control_means_shaped.loc[row, column] = control_means.loc[row, soil]
 
-    difference = raw_t - control_means_shaped
-    stats = get_stats(difference, 't')
+    normalized = raw_t - control_means_shaped
 
-    return stats
+    return normalized
 
 
 def get_baseline(raw_data):

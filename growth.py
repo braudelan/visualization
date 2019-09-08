@@ -1,8 +1,9 @@
 import pandas
 from matplotlib import pyplot
+from matplotlib.axes import Axes
 
 from helpers import get_week_ends, Constants
-h
+
 
 SOILS = Constants.soils
 
@@ -52,22 +53,20 @@ def tabulate_growth(weekly_growth, data_set_name, number):
     title_text = r'$\bf{Table %s.}$  weekly change in %s across 4 weeks of incubation' %args
 
 # create and adjust figure
-    table_figure = pyplot.figure(number)
+    table_figure = pyplot.figure(number, figsize=(10,15))
     table_figure.tight_layout()
-    table_figure.subplots_adjust(top=0.3)
+    # table_figure.subplots_adjust(top=0.3)
 
 # add and adjust subplot
-    axes = table_figure.add_subplot(111)
+    axes: Axes = table_figure.add_subplot(111)
     axes.axis('off')
     axes.axis('tight')
     axes.set_title(title_text, pad=0.2, fontsize=20, position=(0.42, 1.1))
 
 # plot table
-    growth_table = pyplot.table(cellText=weekly_growth.values,
+    growth_table = axes.table(cellText=weekly_growth.values,
                                 loc='center',
-                                # colLabels=growth_columns,
-                                # rowLabels=row_labels,
-                                # # cellLoc='center',
+                                cellLoc='center',
                                 # colWidths=[0.07, 0.1, 0.1, 0.1, 0.1],
                                 )
 
@@ -75,7 +74,7 @@ def tabulate_growth(weekly_growth, data_set_name, number):
         if cell[0] == 0 or cell[1] == -1:
             growth_table._cells[cell].set_text_props(weight='bold')
 
-    growth_table.scale(2, 3)
+    # growth_table.scale(2, 3)
 
 
     return table_figure

@@ -1,3 +1,4 @@
+import pdb
 import numpy
 from numpy import ma
 from matplotlib import pyplot
@@ -8,7 +9,7 @@ from lmfit.model import ModelResult
 
 from raw_data import get_setup_arguments
 from raw_data import get_raw_data
-from stats import get_stats, get_normalized
+from stats import get_stats, normalize_raw_data
 from helpers import  Constants
 from model_functions import respiration_rate, biomass_carbon
 
@@ -23,18 +24,26 @@ OUTPUT_FOLDER = Constants.output_folder
 major_locator = MultipleLocator(7)  # major ticks locations
 minor_locator = MultipleLocator(1)  # minor ticks locations
 
-# which data sets to load
+# which data set to load
 setup_arguments = get_setup_arguments()
 data_set_name = setup_arguments.sets[0]
 
 # get data set
 raw_data = get_raw_data(data_set_name)
-stats = get_normalized(raw_data)
+stats = normalize_raw_data(raw_data)
 data_set = stats.means
 data_stde = stats.stde
 
 DAYS_TO_FIT = data_set.index.values
 
+# position chi square text
+text_height = 0.02
+x_location = 0.7
+y_ORG = 0.7
+y_MIN = y_ORG - text_height
+y_UNC = y_MIN - text_height
+locations = ((x_location, y_ORG), (x_location, y_MIN), (x_location, y_UNC))
+CHI_SQUARE_LOCATION = dict(zip(SOILS, locations))
 
 def get_chi_square(fit_result):
 
@@ -97,34 +106,49 @@ def fit_model(model_function, soil_data, soil_stdv):
 
 
     # fit model to data
-    result = model.fit(y, parameters, t=t, weights=soil_stdv, nan_policy='omit')
+    fit_result = model.fit(y, parameters, t=t, weights=soil_stdv, nan_policy='omit')
 
     # refit the model with fixed variable
-    FIXED_VAR = 'k_g'
-    parameters = result.params
-    parameters[FIXED_VAR].set(vary=False)
-    result.fit(data=y, t=t, params=parameters, weights=soil_stdv, nan_policy='omit')
+    # FIXED_VAR = 'k_g'
+    # parameters = fit_result.params
+    # parameters[FIXED_VAR].set(vary=False)
+    # fit_result.fit(data=y, t=t, params=parameters, weights=soil_stdv, nan_policy='omit')
 
-    return result
+    return fit_result
 
 
-def plot_model(ax, fit_result, data_kws, fit_kws):
+def plot_model(axes: Axes, soil, fit_result: ModelResult):
+
+
+    data_kws = {
+        'color': COLORS[soil],
+        'marker': MARKERS[soil],
+        'markersize': 12,
+    }
+
+    fit_kws = {
+        'color': COLORS[soil],
+        'linewidth': 3,
+    }
 
     model = fit_result.model
     parameters = fit_result.params
 
-    # x values for measured and fitted points
     X = numpy.arange(DAYS_TO_FIT[0], DAYS_TO_FIT[-1], 1 / 24)  # 24 time points for each day in time_range
     y_fit = model.eval(t=X, params=parameters)
 
-
-    fit_result.plot_fit(ax=ax, numpoints=480, data_kws=data_kws, fit_kws=fit_kws)
+    lines = fit_result.plot_fit(ax=axes, numpoints=480, data_kws=data_kws, fit_kws=fit_kws)
 
     dely = fit_result.eval_uncertainty(sigma=1, t=X)
-    ax.fill_between(X, y_fit - dely, y_fit + dely, color="#ABABAB")
+    axes.fill_between(X, y_fit - dely, y_fit + dely, color="#ABABAB")
+
+    reduced_chi_square = get_chi_square(fit_result)
+    x = CHI_SQUARE_LOCATION[soil][0]
+    y = CHI_SQUARE_LOCATION[soil][1]
+    axes.text(x, y, str(reduced_chi_square), transform=axes.transAxes)
 
 
-def make_figure(model_function, data, data_SD=None): #todo add fit statistics text object
+def make_figure_and_axes(): #todo add fit statistics text object
 
     # text for plot
     font_setup = {'size': 20,
@@ -140,33 +164,7 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
     # figure.suptitle(figure_title, fontsize=28)
 
     # axes setup
-    axes = figure.add_subplot(111)
-
-    # model function text
-
-
-    # indent = 0
-    for soil in SOILS:
-
-        # plotting parameters
-        fit_color = COLORS[soil]
-        data_color = COLORS[soil]
-        data_marker = MARKERS[soil]
-
-        data_kws = {
-            'color': data_color,
-            'marker': data_marker,
-            'markersize': 12,
-        }
-
-        fit_kws = {
-            'color': fit_color,
-            'linewidth': 3,
-        }
-
-        fit_result = fit_model(model_function, data[soil], data_SD[soil])
-        plot_model(axes, fit_result, data_kws, fit_kws)
-        # axes.text(0.7, 0.6, transform=axes.transAxes)
+    axes: Axes = figure.add_subplot(111)
 
     axes.xaxis.set_major_locator(major_locator)
     axes.xaxis.set_minor_locator(minor_locator)
@@ -177,13 +175,24 @@ def make_figure(model_function, data, data_SD=None): #todo add fit statistics te
     axes.set_xlabel(x_label, labelpad=30, fontsize=40)
     axes.set_ylabel(y_label, labelpad=150, va='center', rotation=60, fontsize=20)
 
-    legend = axes.legend(loc='best', prop={'size': 20})
-    return figure
+    # legend = axes.legend(loc='best', prop={'size': 20})
+
+    return figure, axes
 
 
 if __name__ == '__main__':
     function = respiration_rate if data_set_name == 'RESP' else biomass_carbon
-    figure = make_figure(function, data_set, data_stde)
+    figure, axes = make_figure_and_axes()
+    for soil in SOILS:
+        data = data_set[soil]
+        stde = data_stde[soil]
+        fit_result = fit_model(function, data, stde)
+        plot_model(axes, soil, fit_result)
+
+    handles = axes.get_lines()
+
+    labels = SOILS + SOILS
+    legend = axes.legend(handles=handles, labels=labels, loc='best', prop={'size': 20})
     figure.savefig('%s/%s_model_weighted' %(OUTPUT_FOLDER, data_set_name))
 
     # for soil in SOILS:
