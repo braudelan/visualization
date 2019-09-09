@@ -16,6 +16,7 @@ class Constants:
     input_file_name = "all_tests.xlsx"
     output_folder = '/home/elan/Dropbox/research/figures'
 
+
 def get_week_ends(dataframe):
 
     every_7th = dataframe.index.isin([0, 7, 14, 21, 28])
@@ -48,14 +49,13 @@ def delay_factor(x, delay):
     return partialSums
 
 
-
 def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
     """replace nan values with the mean of remaining replicates."""
 
     SOILS = Constants.soils
-    if len(raw_data.index) >5:
-        week_ends = get_week_ends(raw_data)
-        raw_data = raw_data.loc[week_ends, :]
+    # if len(raw_data.index) >5:
+    #     week_ends = get_week_ends(raw_data)
+    #     raw_data = raw_data.loc[week_ends, :]
 
     data = raw_data.loc[:, (treatment, SOILS)]
     data = data.reset_index(col_level=1, col_fill='')

@@ -1,54 +1,54 @@
+import pdb
 from pandas import DataFrame
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
+from scipy.stats import ttest_ind
 
 from raw_data import get_setup_arguments, get_raw_data
 from stats import get_stats, normalize_raw_data
 from growth import get_weekly_growth, tabulate_growth
 from helpers import Constants, replace_nan
 
-OUTPUT_FOLDER =Constants.output_folder
-
+OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
 setup_args = get_setup_arguments()
 
-data_sets_names = setup_args.sets[0]
-#
-# for number, name in enumerate(data_sets_names):
-#
-#     raw = get_raw_data(name)
-#     stats = get_stats(raw, 't')
-#     normelized_stats = get_normalized(raw)
-#     normalized_means = normelized_stats.means
-#     normalized_stde = normelized_stats.stde
-#     weekly_growth_norm = get_weekly_growth(normalized_means, normalized_stde)
-#
-#     growth_table = tabulate_growth(weekly_growth_norm, name, number)
-#     growth_table.savefig('%s/%s_weekly_growth.png' %(OUTPUT_FOLDER, name))
+data_sets_names = setup_args.sets
 
-raw: DataFrame = get_raw_data(data_sets_names)
-norm_raw = normalize_raw_data(raw)
-norm_raw = replace_nan(norm_raw, 't')
-norm_raw.set_index('days', inplace=True)
-#
-# stats = get_stats(raw, 't')
-# norm_stats = get_stats(norm_raw, 't')
-#
-# means = stats.means
-# stde = stats.stde
-#
-# norm_means = norm_stats.means
-# norm_stde = norm_stats.stde
+for name in data_sets_names:
 
-days = norm_raw.index
+    raw: DataFrame = get_raw_data(name)
+    norm_raw = normalize_raw_data(raw)
+    norm_raw = replace_nan(norm_raw, 't')
+    norm_raw.set_index('days', inplace=True)
 
-for day in days:
+    days = norm_raw.index
 
-    data = norm_raw.loc[day]
-    data = data.droplevel(1)
+    for day in days:
 
-    id = data.index
-    response_var = data.values
+        # organize the data
+        data = norm_raw.loc[day]
+        data = data.droplevel(1)
+        id = data.index
+        response_var = data.values
 
-    multi_comparisons = pairwise_tukeyhsd(response_var, id)
+        # multiple comparisons objects
+        multiple_comparisons = MultiComparison(response_var, id)
+        pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')
+        pairwise_tukey = pairwise_tukeyhsd(response_var, id)
 
-    print(str(day), str(multi_comparisons._results_table))
+        # multiple comparisons results
+        tukey_result = str(pairwise_tukey._results_table)
+        holm_result = str(pairwise_holm[0])
+
+        # open the file
+        file_path = OUTPUT_PATH + name + '_significance.txt'
+        mode_string = 'w+' if day == 0 else 'a'
+        open_file = open(file_path, mode_string)
+
+        # write results into file
+        tukey_table_width = tukey_result.find('\n')
+        day_title = '\n\nday ' + str(day) + ':\n\n'
+        open_file.write(day_title + tukey_result)
+
+
+        # print(str(day), str(multi_comparisons._results_table))
 
