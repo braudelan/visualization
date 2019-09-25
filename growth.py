@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from helpers import get_week_ends, Constants
 
 
-SOILS = Constants.soils
+SOILS = Constants.groups
 
 def get_weekly_growth(data, stde):
 

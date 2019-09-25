@@ -14,7 +14,7 @@ from stats import get_stats, get_baseline
 from helpers import Constants
 
 
-SOILS = Constants.soils
+SOILS = Constants.groups
 MARKERS = Constants.markers
 COLORS = Constants.colors
 LINE_STYLES = Constants.line_styles

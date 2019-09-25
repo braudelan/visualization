@@ -3,11 +3,11 @@ from pandas import DataFrame
 
 class Constants:
 
-    soils = ['ORG', 'MIN', 'UNC']
+    groups = ['ORG', 'MIN', 'UNC']
     color_options = ('darkred', 'royalblue', 'dimgrey')
-    colors =  dict(zip(soils, color_options))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
+    colors =  dict(zip(groups, color_options))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
     marker_options = ('*', 'o', 'd')
-    markers =  dict(zip(soils, marker_options))
+    markers =  dict(zip(groups, marker_options))
     data_format_labels = ('control', 'normalized', 'treatment')
     line_style_options = (':', '-.', '-')
     line_styles = dict(zip(data_format_labels, line_style_options))
@@ -52,7 +52,7 @@ def delay_factor(x, delay):
 def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
     """replace nan values with the mean of remaining replicates."""
 
-    SOILS = Constants.soils
+    SOILS = Constants.groups
     # if len(raw_data.index) >5:
     #     week_ends = get_week_ends(raw_data)
     #     raw_data = raw_data.loc[week_ends, :]

@@ -8,7 +8,7 @@ import pandas
 
 from helpers import Constants
 
-SOILS = Constants.soils
+SOILS = Constants.groups
 LEVELS = Constants.level_labels
 TREATMENTS = Constants.treatment_labels
 

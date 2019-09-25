@@ -6,7 +6,7 @@ from pandas import DataFrame
 from raw_data import get_multi_sets
 from helpers import get_week_ends, Constants
 
-SOILS = Constants.soils
+SOILS = Constants.groups
 STATS_NAMES = [
     'means',
     'stde',
@@ -14,6 +14,7 @@ STATS_NAMES = [
 ]
 
 BasicStats = namedtuple('BasicStats', STATS_NAMES)
+BaselineStats = namedtuple('BaselineStats', STATS_NAMES)
 
 def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     '''
@@ -53,8 +54,8 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
         # normalized_diff=normalized_diff
     )
 
-def normalize_raw_data(raw_data):
-    '''normalize a given data set to average control data and calculate basic statistics.'''
+def normalize_to_control(raw_data):
+    '''subtracts the average of 4(or less) control replicates from each treatment replicate.'''
 
     raw_t = raw_data.loc[:, ('t', SOILS)] # MRE treatment
     raw_c = raw_data.loc[:, ('c', SOILS)] # control
@@ -73,13 +74,46 @@ def normalize_raw_data(raw_data):
 
     return normalized
 
+def normalize_to_baseline(raw_data):
+    '''represent the means of each soil as a percentage of corresponding baseline value '''
+
+    # get baseline
+    baseline_stats = get_baseline(raw_data)
+    baseline_means = baseline_stats.means
+    baseline_stdv = baseline_stats.stdv
+
+    # get treatment means
+    treatment_stats = get_stats(raw_data, 't')
+    treatment_means: DataFrame = treatment_stats.means
+    treatment_stdv = treatment_stats.stdv
+
+    index = treatment_means.index
+    columns = treatment_means.columns
+    normalized = DataFrame(index=index, columns=columns)
+
+    for soil in SOILS:
+        treatment_data = treatment_means[soil]
+        baseline = baseline_means[soil]
+        percent_of_baseline = treatment_data / baseline * 100
+
+        normalized[soil] = percent_of_baseline
+
+    return normalized
+
+
+
+
+
+
+
+
 
 def get_baseline(raw_data):
     """
     for each soil, get the mean value of control samples across the entire time line.
 
     week day samplings between MRE applications are excluded from calculations
-     (to avoid local fluctuations as a result of water additions).
+     to avoid local fluctuations as a result of water additions.
     """
 
     week_ends_control = raw_data.loc[get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
@@ -90,7 +124,11 @@ def get_baseline(raw_data):
     stdv = control_stacked.std()
     stde = control_stacked.sem()
 
-    return means, stdv, stde
+    return BasicStats(
+        means=means,
+        stde=stde,
+        stdv=stdv,
+    )
 
 
 def get_carbon_stats():

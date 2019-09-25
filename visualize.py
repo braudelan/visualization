@@ -1,8 +1,8 @@
 from matplotlib import pyplot             # todo solve: running visualize.py with all data sets raises an error
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import normalize_raw_data, get_stats, get_carbon_stats
-from plot import make_figure, make_axes, plot_lines, draw_labels, plot_baseline, plot_control_composite
+from stats import normalize_to_control, get_stats
+from plot import make_figure, make_axes, plot_lines, draw_labels
 from helpers import get_week_ends
 # from model_dynamics import plot_model
 # from Ttest import get_daily_Ttest
@@ -16,19 +16,19 @@ pyplot.rc('savefig',  pad_inches=1.5)
 INPUT_FILE = "all_tests.xlsx"
 OUTPUT_DIRECTORY = '/home/elan/Dropbox/research/figures'
 
-
 # setup
 setup_arguments = get_setup_arguments()
 
 DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
+RAW_DATA_SETS = get_multi_sets(DATA_SETS_NAMES)
 
 # plot dynamics of each soil parameter as a seperate graph
 for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
 
     # input data into DataFrame
     raw_data = get_raw_data(set_name)
-    normalized_raw = normalize_raw_data(raw_data)
+    normalized_raw = normalize_to_control(raw_data)
 
     # get basic statistics
     treatment_stats = get_stats(raw_data, 't')
@@ -42,30 +42,13 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     control_stde = control_stats.stde
     norm_means = normalized_stats.means
     norm_stde = normalized_stats.stde
-    wknds_treatment = treatment_means.loc[
-        get_week_ends(treatment_means)]
-    wknds_treatment_stde = treatment_stde.loc[
-        get_week_ends(treatment_stde)]
-    wknds_control = control_means.loc[
-        get_week_ends(treatment_means)]
-    wknds_control_stde = control_stde.loc[
-        get_week_ends(treatment_stde)]
-    wknds_normalized = norm_means.loc[
-        get_week_ends(norm_means)]
-    wknds_normalized_stde = norm_stde.loc[
-        get_week_ends(norm_stde)]
 
     # plot dynamics
     dynamics_figure = make_figure(raw_data, number, set_name)
 
-    # wknds_axes = make_axes(dynamics_figure, axes_position='top of 3')
     means_axes = make_axes(dynamics_figure, axes_position='single')
-    # normalized_axes = make_axes(dynamics_figure, axes_position='bottom of 3')
-    #
-    # wknds_treatment_lines = plot_lines(wknds_axes, wknds_treatment,
-    #                                                 'treatment', wknds_treatment_stde)
-    # wknds_normalized_lines = plot_lines(wknds_axes, wknds_normalized,
-    #                                          'normalized', wknds_normalized_stde)
+    # normalized_axes = make_axes(dynamics_figure, axes_position='bottom of 2')
+
     treatment_lines = plot_lines(means_axes, treatment_means,
                                              'treatment', treatment_stde)
     control_lines = plot_lines(means_axes, control_means,
@@ -78,12 +61,12 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     draw_labels(dynamics_figure, means_axes,
                             set_name, axes_position='single')
     # draw_labels(dynamics_figure, normalized_axes,
-    #                         set_name, axes_position='bottom of 3')
+    #                         set_name, axes_position='bottom of 2')
 
     dynamics_figure.savefig("%s/%s_dynamics.png" % (OUTPUT_DIRECTORY, set_name))
     pyplot.cla()
 
-raw_data_sets = get_multi_sets(DATA_SETS_NAMES)
+
 
 # # plot baseline
 # soil_properties_figure = plot_baseline(raw_data_sets)
