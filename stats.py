@@ -13,8 +13,7 @@ STATS_NAMES = [
     'stdv',
 ]
 
-BasicStats = namedtuple('BasicStats', STATS_NAMES)
-BaselineStats = namedtuple('BaselineStats', STATS_NAMES)
+Stats = namedtuple('Stats', STATS_NAMES)
 
 def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     '''
@@ -46,7 +45,7 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     # difference = MRE - control   # treatment - control
     # normalized_diff = difference / control * 100  # difference normalized to control (percent)
 
-    return BasicStats(
+    return Stats(
         means=means,
         stde=stde,
         stdv=stdv,
@@ -77,35 +76,87 @@ def normalize_to_control(raw_data):
 def normalize_to_baseline(raw_data):
     '''represent the means of each soil as a percentage of corresponding baseline value '''
 
-    # get baseline
+    # get baseline stats
     baseline_stats = get_baseline(raw_data)
     baseline_means = baseline_stats.means
-    baseline_stdv = baseline_stats.stdv
+    baseline_stde = baseline_stats.stde
 
-    # get treatment means
+    # get treatment stats
     treatment_stats = get_stats(raw_data, 't')
     treatment_means: DataFrame = treatment_stats.means
-    treatment_stdv = treatment_stats.stdv
+    treatment_stde = treatment_stats.stde
 
+    # setup empty dataframes for normalized stats
     index = treatment_means.index
     columns = treatment_means.columns
     normalized = DataFrame(index=index, columns=columns)
+    normalized_stde = DataFrame(index=index, columns=columns)
 
     for soil in SOILS:
+
         treatment_data = treatment_means[soil]
+        treatment_error = treatment_stde[soil]
+        treatment_relative_error = treatment_error / treatment_data #relative stnd error
+
         baseline = baseline_means[soil]
-        percent_of_baseline = treatment_data / baseline * 100
+        baseline_error = baseline_stde[soil]
+        baseline_relative_error = baseline_error / baseline
 
-        normalized[soil] = percent_of_baseline
+        divided_by_baseline = treatment_data / baseline #data normalized to baseline
+        normalized_relative_error = treatment_relative_error + baseline_relative_error
+        normalized_error = normalized_relative_error * divided_by_baseline
+        normalized[soil] = divided_by_baseline * 100
+        normalized_stde[soil] = normalized_error * 100
 
-    return normalized
+    return Stats(
+        means=normalized,
+        stde=normalized_stde,
+        stdv=None
+    )
 
 
+def normalize_to_initial(raw_data):
+    '''represent the means of each soil as a percentage of corresponding initial value '''
 
+    # get initial values
+    stats = get_stats(raw_data, 'c')
+    means = stats.means
+    stde = stats.stde
+    initial_values = means.loc[0] #means of day 0
+    initial_values_stde = stde.loc[0]
 
+    # get treatment stats
+    treatment_stats = get_stats(raw_data, 't')
+    treatment_means: DataFrame = treatment_stats.means
+    treatment_stde = treatment_stats.stde
 
+    # setup empty dataframes for normalized stats
+    index = treatment_means.index
+    columns = treatment_means.columns
+    normalized = DataFrame(index=index, columns=columns)
+    normalized_stde = DataFrame(index=index, columns=columns)
 
+    for soil in SOILS:
 
+        treatment_data = treatment_means[soil]
+        treatment_error = treatment_stde[soil]
+        treatment_relative_error = treatment_error / treatment_data #relative stnd error
+
+        initial = initial_values[soil]
+        initial_error = initial_values_stde[soil]
+        initial_relative_error = initial_error / initial
+
+        divided_by_initial = treatment_data / initial #data normalized to initial
+        normalized_relative_error = treatment_relative_error + initial_relative_error
+        normalized_error = normalized_relative_error * divided_by_initial
+        normalized[soil] = divided_by_initial * 100
+        normalized_stde[soil] = normalized_error * 100
+
+    return Stats(
+        means=normalized,
+        stde=normalized_stde,
+        stdv=None
+    )
 
 
 def get_baseline(raw_data):
@@ -124,7 +175,7 @@ def get_baseline(raw_data):
     stdv = control_stacked.std()
     stde = control_stacked.sem()
 
-    return BasicStats(
+    return Stats(
         means=means,
         stde=stde,
         stdv=stdv,
@@ -155,6 +206,6 @@ def get_carbon_stats():
     # soil_available_C = MBC + HWES_C + DOC
     # available_C_control = available_C.xs(key='c', level=0, axis=1)
     # available_C_MRE = available_C.xs(key='t', level=0, axis=1)
-    # available_C_difference = available_C_MRE- available_C_control # todo plot available_c and available_C_difference
+    # available_C_difference = available_C_MRE- available_C_control
 
     return C_to_N_ratio

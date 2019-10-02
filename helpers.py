@@ -5,7 +5,7 @@ class Constants:
 
     groups = ['ORG', 'MIN', 'UNC']
     color_options = ('darkred', 'royalblue', 'dimgrey')
-    colors =  dict(zip(groups, color_options))                             #  todo colors (https://python-graph-gallery.com/line-chart/)
+    colors =  dict(zip(groups, color_options))
     marker_options = ('*', 'o', 'd')
     markers =  dict(zip(groups, marker_options))
     data_format_labels = ('control', 'normalized', 'treatment')

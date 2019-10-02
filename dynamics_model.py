@@ -149,8 +149,7 @@ def plot_model(axes: Axes, soil, fit_result: ModelResult):
     axes.text(x, y, str(reduced_chi_square), transform=axes.transAxes)
 
 
-def make_figure_and_axes(): #todo add fit statistics text object
-
+def make_figure_and_axes():
     # text for plot
     font_setup = {'size': 20,
                  }

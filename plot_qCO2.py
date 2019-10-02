@@ -93,4 +93,3 @@ xtick_label_rotate = pyplot.xticks(rotation=45)
 figure_4.savefig("./misc_figures/qCO2.png", bbox_inches='tight', pad_inches=2)
 pyplot.clf()
 
-# todo work on title

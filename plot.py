@@ -81,7 +81,7 @@ def make_figure(data, number, data_set_name):
                  r'(b) normalized to control' % (number, data_set_name, last_day)
 
     # create and adjut figure
-    figure = pyplot.figure(number, figsize=(20, 15))  # todo better name for figure
+    figure = pyplot.figure(number, figsize=(20, 15))
     figure.tight_layout()
     figure.subplots_adjust(hspace=0)
     figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
@@ -122,13 +122,17 @@ def plot_lines(axes: Axes, data, label, stde=None):
     each column is plotted using a seperate command with specific
     properties assigned to it (color, marker, linestyle, etc.).
 
+
     :parameter
+    axes():
+            the axes where data will be plotted.
     data(DataFrame):
             time series.
     stnd_error(DataFrame):
             standard error of data with same shape as data.
-    axes():
-            the axes where data will be plotted.
+    label(string):
+            a string designating what kind of data is being ploted. for purpose of assigning
+            a line style. can be one of 'control', 'treatment' or 'normalized'
     :returns
     lines(dict):
         keys = names of data columns.
@@ -379,8 +383,8 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
                                                    CATEGORIES):
         # baseline data
         baseline_statistics = get_baseline(data_set)
-        BASELINE = baseline_statistics[0]
-        BASELINE_STDE = baseline_statistics[2]
+        BASELINE = baseline_statistics.means
+        BASELINE_STDE = baseline_statistics.stde
 
         NORMALIZATION_FACTOR = BASELINE['UNC']
 
