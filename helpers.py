@@ -8,9 +8,9 @@ class Constants:
     colors =  dict(zip(groups, color_options))
     marker_options = ('*', 'o', 'd')
     markers =  dict(zip(groups, marker_options))
-    data_format_labels = ('control', 'normalized', 'treatment')
-    line_style_options = (':', '-.', '-')
-    line_styles = dict(zip(data_format_labels, line_style_options))
+    line_style_labels = ('solid', 'broken', 'dotted')
+    line_style_options = ('-', '-.', ':')
+    line_styles = dict(zip(line_style_labels, line_style_options))
     treatment_labels = ['c', 't']
     level_labels = ["soil", "treatment", "replicate"]
     input_file_name = "all_tests.xlsx"

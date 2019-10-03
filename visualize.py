@@ -23,16 +23,17 @@ DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 RAW_DATA_SETS = get_multi_sets(DATA_SETS_NAMES)
 
+i=1
 # plot dynamics of each soil parameter as a seperate graph
-for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
+for set_name in DATA_SETS_NAMES:
 
     # input data into DataFrame
     raw_data = get_raw_data(set_name)
-    normalized_raw = normalize_to_control(raw_data)
 
     # get basic statistics
     treatment_stats = get_stats(raw_data, 't')
     control_stats = get_stats(raw_data, 'c')
+    normalized_to_control = normalize_to_control(raw_data)
     normalized_to_baseline = normalize_to_baseline(raw_data)
     normalized_to_initial = normalize_to_initial(raw_data)
 
@@ -41,36 +42,52 @@ for set_name, number in zip(DATA_SETS_NAMES, NUMBERS):
     treatment_stde = treatment_stats.stde
     control_means = control_stats.means
     control_stde = control_stats.stde
-    norm_to_baseline_means = normalized_to_baseline.means
-    norm_to_baseline_stde = normalized_to_baseline.stde
-    norm_to_initial_means = normalized_to_initial.means
-    norm_to_initial_stde = normalized_to_initial.stde
+    normalized_control_means = normalized_to_control.means
+    normalized_control_stde = normalized_to_control.stde
+    normalized_baseline_means = normalized_to_baseline.means
+    normalized_baseline_stde = normalized_to_baseline.stde
+    normalized_initial_means = normalized_to_initial.means
+    normalized_initial_stde = normalized_to_initial.stde
 
-    # plot dynamics
-    dynamics_figure = make_figure(raw_data, number, set_name)
+    # plot
+    dynamics_figure = make_figure(raw_data, i, set_name)
 
     # means_axes = make_axes(dynamics_figure, axes_position='single')
-    normalized_axes = make_axes(dynamics_figure, axes_position='single')
+    normalized_control_axes = make_axes(dynamics_figure, axes_position='top of 3')
+    normalized_baseline_axes = make_axes(dynamics_figure, axes_position='middle')
+    normalized_initial_axes = make_axes(dynamics_figure, axes_position='bottom of 3')
+
+    subplots = [normalized_control_axes,normalized_baseline_axes, normalized_initial_axes]
+    titles = ['control', 'baseline', 'intitial value']
+
+    for axes, title in zip(subplots, titles):
+        title_position = (0.9, 0.8)
+        axes.set_title(title, position=title_position)
+
+
 
     # treatment_lines = plot_lines(means_axes, treatment_means,
     #                                          'treatment', treatment_stde)
     # control_lines = plot_lines(means_axes, control_means,
-    #                                          'control', control_stde)
-    normalized_to_baseline_lines = plot_lines(normalized_axes, norm_to_baseline_means,
-                                             'normalized', norm_to_baseline_stde)
-    normalized_to_initial_lines = plot_lines(normalized_axes, norm_to_initial_means,
-                                             'treatment', norm_to_initial_stde)
+    # #                                          'control', control_stde)
+    normalized_to_control_lines = plot_lines(normalized_control_axes, normalized_control_means,
+                                              stde=normalized_control_stde)
+    normalized_to_baseline_lines = plot_lines(normalized_baseline_axes, normalized_baseline_means,
+                                              stde=normalized_baseline_stde)
+    normalized_to_initial_lines = plot_lines(normalized_initial_axes, normalized_initial_means,
+                                              stde=normalized_initial_stde)
 
-    # draw_labels(dynamics_figure, wknds_axes,
-    #                         set_name, axes_position='top of 3')
-    # draw_labels(dynamics_figure, means_axes,
-    #                         set_name, axes_position='single')
-    draw_labels(dynamics_figure, normalized_axes,
-                            set_name, axes_position='single')
+    draw_labels(dynamics_figure, normalized_control_axes,
+                            set_name, axes_position='top')
+    draw_labels(dynamics_figure, normalized_baseline_axes,
+                set_name, axes_position='middle')
+    draw_labels(dynamics_figure, normalized_initial_axes,
+                set_name, axes_position='bottom of 3')
 
     dynamics_figure.savefig("%s/%s_dynamics_normalized.png" % (OUTPUT_DIRECTORY, set_name))
     pyplot.cla()
 
+    i += 1
 
 
 # # plot baseline

@@ -69,9 +69,16 @@ def normalize_to_control(raw_data):
             soil = column[1]
             control_means_shaped.loc[row, column] = control_means.loc[row, soil]
 
-    normalized = raw_t - control_means_shaped
+    normalized = raw_t / control_means_shaped * 100
+    normalized = get_stats(normalized, 't')
+    normalized_means = normalized.means
+    normalized_stde = normalized.stde
 
-    return normalized
+    return Stats(
+        means=normalized_means,
+        stde=normalized_stde,
+        stdv=None
+    )
 
 def normalize_to_baseline(raw_data):
     '''represent the means of each soil as a percentage of corresponding baseline value '''

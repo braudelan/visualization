@@ -89,7 +89,7 @@ def make_figure(data, number, data_set_name):
     return figure
 
 
-def make_axes(figure: Figure, axes_position='single', ) -> Axes:
+def make_axes(figure: Figure, axes_position='single') -> Axes:
     '''create and configure axes'''
 
     # allocate position of axes in figure
@@ -113,7 +113,7 @@ def make_axes(figure: Figure, axes_position='single', ) -> Axes:
     return axes
 
 
-def plot_lines(axes: Axes, data, label, stde=None):
+def plot_lines(axes: Axes, data, linestyle='solid', stde=None):
 
 
     """
@@ -155,7 +155,7 @@ def plot_lines(axes: Axes, data, label, stde=None):
         line = axes.errorbar(
                            x_data,
                            y_data,
-                           ls=LINE_STYLES[label],
+                           ls=LINE_STYLES[linestyle],
                            yerr=y_error,
                            label=soil,
                            color=COLORS[soil],
