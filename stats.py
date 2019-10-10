@@ -196,23 +196,41 @@ def get_carbon_stats():
     statistics = {}
     for set in sets_names:
         raw = dataframes[set]
-        stats = get_stats(raw)
-        means = stats.means
-        stde = stats.stde
-        data_set_stats = {'means': means, 'means_stde': stde}
-        statistics[set] = data_set_stats
+        treatment_stats = get_stats(raw, 't')
+        control_stats = get_stats(raw, 'c')
+        normalized_to_control = normalize_to_control(raw)
 
-    MBC = statistics['MBC']['means']
-    MBN = statistics['MBN']['means']
-    HWES = statistics['HWS']['means']
-    RESP = statistics['RESP']['means']
-    DOC = statistics['DOC']['means']
-    HWES_C = HWES / 4  # 40% C in glucose
-    C_to_N_ratio = MBC / MBN
-    C_to_N_ratio = C_to_N_ratio.loc[get_week_ends(C_to_N_ratio)]
-    # soil_available_C = MBC + HWES_C + DOC
-    # available_C_control = available_C.xs(key='c', level=0, axis=1)
-    # available_C_MRE = available_C.xs(key='t', level=0, axis=1)
-    # available_C_difference = available_C_MRE- available_C_control
+        stats = {'treatment': treatment_stats,
+                 'control': control_stats,
+                 'normalized': normalized_to_control}
+        statistics[set] = stats
 
-    return C_to_N_ratio
+    MBC = statistics['MBC']
+    DOC = statistics['DOC']
+    HWS = statistics['HWS']
+
+    raw_TOC = dataframes['TOC']
+    raw_TOC_control = raw_TOC.loc[:,'c']
+    exclude_day14 = raw_TOC_control.drop(index=14)
+    stacked = exclude_day14.stack()
+    TOC_means = stacked.mean()
+    TOC_stde = stacked.sem()
+
+    MBC_treatment = MBC['treatment']
+    MBC_treatment_means = MBC_treatment.means
+    MBC_treatment_stde = MBC_treatment.stde
+
+    MBC_normalized = MBC['normalized']
+    MBC_normalized_means = MBC_normalized.means
+    MBC_normalized_stde = MBC_normalized.stde
+
+    DOC_treatment = DOC['treatment']
+    DOC_treatment_means = DOC_treatment.means
+    DOC_treatment_stde = DOC_treatment.stde
+
+    HWS_treatment = HWS['treatment']
+    HWS_treatment_means = HWS_treatment.means
+    HWS_treatment_stde = HWS_treatment.stde
+
+    # divide
+    return statistics
