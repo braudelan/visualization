@@ -1,4 +1,5 @@
 ''' calculate and return different statistics from raw data.'''
+import pdb
 
 from collections import namedtuple
 import pandas
@@ -191,9 +192,22 @@ def get_baseline(raw_data):
 
 def get_carbon_stats():
     '''calculate '''
+
+    # which data sets to get
     sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWS', 'TOC']
+    # get the raw data
     dataframes = get_multi_sets(sets_names)
-    statistics = {}
+
+    # get baseline value for TOC
+    raw_TOC = dataframes['TOC']
+    raw_TOC_control = raw_TOC.loc[:, 'c']
+    exclude_day14 = raw_TOC_control.drop(index=14)
+    stacked = exclude_day14.stack()
+    TOC_means = stacked.mean() * 1000
+    TOC_stde = stacked.sem() * 1000
+    TOC_relative_stde = TOC_stde / TOC_means
+
+    normalized_to_TOC = {}
     for set in sets_names:
         raw = dataframes[set]
         treatment_stats = get_stats(raw, 't')
@@ -203,34 +217,53 @@ def get_carbon_stats():
         stats = {'treatment': treatment_stats,
                  'control': control_stats,
                  'normalized': normalized_to_control}
-        statistics[set] = stats
+        pdb.set_trace()
+        for category in stats.keys():
+            category_stats = stats[category]
+            means = category_stats.means
+            stde = category_stats.stde
+            relative_stde = stde / means
 
-    MBC = statistics['MBC']
-    DOC = statistics['DOC']
-    HWS = statistics['HWS']
+            divided_by_TOC = means / TOC_means
+            percent_of_TOC = divided_by_TOC * 100
+            relative_stde_of_quotient = ( TOC_relative_stde**2 + relative_stde**2)**0.5 * 100 # multiplied by 100 for percentage
 
-    raw_TOC = dataframes['TOC']
-    raw_TOC_control = raw_TOC.loc[:,'c']
-    exclude_day14 = raw_TOC_control.drop(index=14)
-    stacked = exclude_day14.stack()
-    TOC_means = stacked.mean()
-    TOC_stde = stacked.sem()
+            normalized_to_TOC[set][category]['means'] = percent_of_TOC
+            normalized_to_TOC[set][category]['stde'] = relative_stde_of_quotient
 
-    MBC_treatment = MBC['treatment']
-    MBC_treatment_means = MBC_treatment.means
-    MBC_treatment_stde = MBC_treatment.stde
-
-    MBC_normalized = MBC['normalized']
-    MBC_normalized_means = MBC_normalized.means
-    MBC_normalized_stde = MBC_normalized.stde
-
-    DOC_treatment = DOC['treatment']
-    DOC_treatment_means = DOC_treatment.means
-    DOC_treatment_stde = DOC_treatment.stde
-
-    HWS_treatment = HWS['treatment']
-    HWS_treatment_means = HWS_treatment.means
-    HWS_treatment_stde = HWS_treatment.stde
-
-    # divide
-    return statistics
+    return normalized_to_TOC
+    # # a dict with stats for treatment\control\normalized
+    # MBC = statistics['MBC']
+    # DOC = statistics['DOC']
+    # HWS = statistics['HWS']
+    #
+    # # get baseline value for TOC
+    # raw_TOC = dataframes['TOC']
+    # raw_TOC_control = raw_TOC.loc[:,'c']
+    # exclude_day14 = raw_TOC_control.drop(index=14)
+    # stacked = exclude_day14.stack()
+    # TOC_means = stacked.mean()
+    # TOC_stde = stacked.sem()
+    #
+    # for set in sets_names:
+    #
+    # MBC_treatment = MBC['treatment']
+    # MBC_treatment_means = MBC_treatment.means
+    # MBC_treatment_stde = MBC_treatment.stde
+    #
+    # MBC_normalized = MBC['normalized']
+    # MBC_normalized_means = MBC_normalized.means
+    # MBC_normalized_stde = MBC_normalized.stde
+    #
+    # DOC_treatment = DOC['treatment']
+    # DOC_treatment_means = DOC_treatment.means
+    # DOC_treatment_stde = DOC_treatment.stde
+    #
+    # HWS_treatment = HWS['treatment']
+    # HWS_treatment_means = HWS_treatment.means
+    # HWS_treatment_stde = HWS_treatment.stde
+    #
+    # # divide by TOC
+    # divided = {}
+    # for
+    # return statistics
