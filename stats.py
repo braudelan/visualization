@@ -4,7 +4,7 @@ import pdb
 from collections import namedtuple
 import pandas
 from pandas import DataFrame
-from raw_data import get_multi_sets
+from raw_data import get_multi_sets, get_raw_data
 from helpers import get_week_ends, Constants
 
 SOILS = Constants.groups
@@ -190,16 +190,11 @@ def get_baseline(raw_data):
     )
 
 
-def get_carbon_stats():
-    '''calculate '''
-
-    # which data sets to get
-    sets_names = ['MBC', 'MBN', 'RESP', 'DOC', 'HWS', 'TOC']
-    # get the raw data
-    dataframes = get_multi_sets(sets_names)
+def normalize_to_TOC(raw)-> dict:
+    '''normalize a given carbon fraction to TOC '''
 
     # get baseline value for TOC
-    raw_TOC = dataframes['TOC']
+    raw_TOC = get_raw_data('TOC')
     raw_TOC_control = raw_TOC.loc[:, 'c']
     exclude_day14 = raw_TOC_control.drop(index=14)
     stacked = exclude_day14.stack()
@@ -207,63 +202,61 @@ def get_carbon_stats():
     TOC_stde = stacked.sem() * 1000
     TOC_relative_stde = TOC_stde / TOC_means
 
-    normalized_to_TOC = {}
-    for set in sets_names:
-        raw = dataframes[set]
-        treatment_stats = get_stats(raw, 't')
-        control_stats = get_stats(raw, 'c')
-        normalized_to_control = normalize_to_control(raw)
+    # get carbon fraction statistics
+    treatment_stats = get_stats(raw, 't')
+    control_stats = get_stats(raw, 'c')
+    normalized_to_control = normalize_to_control(raw)
 
-        stats = {'treatment': treatment_stats,
-                 'control': control_stats,
-                 'normalized': normalized_to_control}
-        pdb.set_trace()
-        for category in stats.keys():
-            category_stats = stats[category]
-            means = category_stats.means
-            stde = category_stats.stde
-            relative_stde = stde / means
+    catrgories = {'treatment': treatment_stats,
+                  'control': control_stats,
+                  'normalized': normalized_to_control
+                  }
+    TOC_normalized_by_category = {}
+    for category in catrgories.keys():
+        category_stats = catrgories[category]
+        means = category_stats.means
+        stde = category_stats.stde
+        relative_stde = stde / means
 
-            divided_by_TOC = means / TOC_means
-            percent_of_TOC = divided_by_TOC * 100
-            relative_stde_of_quotient = ( TOC_relative_stde**2 + relative_stde**2)**0.5 * 100 # multiplied by 100 for percentage
+        divided_by_TOC = means.copy()
+        relative_stde_of_quotient = relative_stde.copy()
+        for soil in SOILS:
+            soil_means = means[soil]
+            TOC_soil_mean = TOC_means[soil]
+            divided_by_TOC[soil] = soil_means / TOC_soil_mean
+            soil_stde = relative_stde[soil]
+            TOC_soil_relative_stde = TOC_relative_stde[soil]
+            relative_stde_of_quotient[soil] = (soil_stde ** 2
+                                               + TOC_soil_relative_stde ** 2) ** 0.5
 
-            normalized_to_TOC[set][category]['means'] = percent_of_TOC
-            normalized_to_TOC[set][category]['stde'] = relative_stde_of_quotient
+        percent_of_TOC = divided_by_TOC * 100
+        percent_stde = relative_stde_of_quotient * 100
 
-    return normalized_to_TOC
-    # # a dict with stats for treatment\control\normalized
-    # MBC = statistics['MBC']
-    # DOC = statistics['DOC']
-    # HWS = statistics['HWS']
-    #
-    # # get baseline value for TOC
-    # raw_TOC = dataframes['TOC']
-    # raw_TOC_control = raw_TOC.loc[:,'c']
-    # exclude_day14 = raw_TOC_control.drop(index=14)
-    # stacked = exclude_day14.stack()
-    # TOC_means = stacked.mean()
-    # TOC_stde = stacked.sem()
-    #
-    # for set in sets_names:
-    #
-    # MBC_treatment = MBC['treatment']
-    # MBC_treatment_means = MBC_treatment.means
-    # MBC_treatment_stde = MBC_treatment.stde
-    #
-    # MBC_normalized = MBC['normalized']
-    # MBC_normalized_means = MBC_normalized.means
-    # MBC_normalized_stde = MBC_normalized.stde
-    #
-    # DOC_treatment = DOC['treatment']
-    # DOC_treatment_means = DOC_treatment.means
-    # DOC_treatment_stde = DOC_treatment.stde
-    #
-    # HWS_treatment = HWS['treatment']
-    # HWS_treatment_means = HWS_treatment.means
-    # HWS_treatment_stde = HWS_treatment.stde
-    #
-    # # divide by TOC
-    # divided = {}
-    # for
-    # return statistics
+        stats = Stats(means=percent_of_TOC,
+              stde=percent_stde,
+              stdv=None)
+        TOC_normalized_by_category[category] = stats
+
+    return TOC_normalized_by_category
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
