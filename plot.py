@@ -164,10 +164,6 @@ def plot_lines(axes: Axes, data, linestyle='solid', stde=None):
 
         lines[soil] = line
 
-    # if axes_position == 'top':
-    #     for soil in SOILS:
-    #         lines[soil].lines[0].set_color('none')
-
     return lines
 
 
@@ -187,21 +183,9 @@ def draw_labels(figure: Figure, axes: Axes,
 
     is_bottom = True if ('bottom' in axes_position or
                            axes_position == 'single') else False
-
-    # draw_ylabel = True if (axes_position == 'middle' or
-    #                        axes_position == 'single') else False
-
-    remove_x_axis = True if ('top'in axes_position or
-                           axes_position == 'middle') else False
-
     # MRE notation,
     if is_bottom:
-        # axes.set_xlabel(xlabel_text, labelpad=40) # x label
         MRE_notation_marks(axes)  # add arrows where MRE was applied
-    # # y label
-    # if draw_ylabel:
-    #     axes.set_ylabel(ylabel_text, labelpad=40,
-    #                     rotation=ylabel_rotation)
 
     # remove x axis from top and middle axes
     if not is_bottom:
