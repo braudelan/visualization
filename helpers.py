@@ -1,3 +1,4 @@
+import pdb
 import numpy
 from pandas import DataFrame
 
@@ -66,12 +67,15 @@ def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
 
         for i in range(len(soil_data)):
             array = soil_data[i]
-            where_nan = numpy.isnan(array)
-            has_nan = numpy.any(where_nan)
-            if has_nan:
+            where_none = numpy.isnan(array)
+            all_none = numpy.all(where_none)
+            has_none = numpy.any(where_none)
+            # pdb.set_trace()
+            if has_none and not all_none:
                 mean = array[numpy.isfinite(array)].mean()
-                array[where_nan] = mean
-
+                array[where_none] = mean
+            elif all_none:
+                data[soil]
         data[soil] = soil_data
 
     return data

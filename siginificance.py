@@ -12,22 +12,19 @@ setup_args = get_setup_arguments()
 
 SOILS = Constants.groups
 
-def significance_between_soils(data_set_name):
+def significance_between_soils(raw_data):
 
-    raw_data: DataFrame = get_raw_data(data_set_name)
-    normalized_raw = normalize_to_control(raw_data)
-    normalized_raw = replace_nan(normalized_raw, 't')
-    normalized_raw.set_index('days', inplace=True)
 
-    days = normalized_raw.index
-
+    data = replace_nan(raw_data, 't')
+    data.set_index('days', inplace=True)
+    days = data.index
     index = Constants.groups
     columns = days
     significance = DataFrame(index=index, columns=columns)
 
     data = {}
     for day in days:
-        daily_data = normalized_raw.loc[day]
+        daily_data = data.loc[day]
         daily_data = daily_data.droplevel(1)
 
         for soil in SOILS:
