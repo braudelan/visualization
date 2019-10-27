@@ -1,6 +1,5 @@
 import pdb
-import pandas
-from pandas import DataFrame
+from pandas import DataFrame, MultiIndex
 from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
 from scipy.stats import ttest_ind
 
@@ -21,17 +20,21 @@ def significance_between_soils(raw_data):
     days = data.index
 
     # create empty datarame to store results
-    # index_levels = [['MIN', 'MIN', 'ORG'], ['ORG', 'UNC', 'UNC']]
-    # multiindex = pandas.MultiIndex(index_levels,
-    #                                 names=['group1', 'group2'])
-    index = ['MIN-ORG', 'MIN-UNC', 'ORG-UNC']
-    columns_levels = [days, ['pval', 'pval_corr', 'reject']]
-    columns_multiindex = pandas.MultiIndex(levels=columns_levels, codes=[0,0]
-                                    names=['days', 'ttest_stats'])
-    significance = DataFrame(index=index, columns=columns_multiindex)
+    # multiindexs
+    columns_level_0 = days
+    columns_level_1 = ['pval', 'pval_corr', 'reject']
+    columns_index_levels = [columns_level_0, columns_level_1]
+    columns_index_names = ['days', 'ttest_stats']
+    columns_multiindex = MultiIndex.from_product(columns_index_levels,
+                                                        names=columns_index_names)
+    index_levels = [['MIN', 'MIN', 'ORG'], ['ORG', 'UNC', 'UNC']]
+    index_names = ['soil_1', 'soil_2']
+    multiindex = MultiIndex.from_arrays(index_levels, names=index_names)
+    significance = DataFrame(index=multiindex, columns=columns_multiindex)
 
-    index = Constants.groups
-    columns = days
+    pair_1 = significance.index[0]
+    pair_2 = significance.index[1]
+    pair_3 = significance.index[2]
 
     # pdb.set_trace()
 
@@ -50,10 +53,15 @@ def significance_between_soils(raw_data):
             # multiple comparisons objects
             multiple_comparisons = MultiComparison(result, id)
             pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')
+
+            # insert ttest results into dataframe
             significance_matrix = DataFrame(pairwise_holm[2])
-            ttest_stats = significance_matrix.loc[:, 'pval':]
-            daily_significance = significance.loc[:, day]
-            daily_significance = ttest_stats.values
+            ttest_stats = significance_matrix.loc[:, 'pval':].values
+            significance.loc[:, (day, columns_level_1)] = ttest_stats
+
+            # significance notation table
+            # pair_1_result = significance.loc[pair_1, (0, 'reject')]
+
 
     return significance
 
