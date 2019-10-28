@@ -2,6 +2,7 @@ import pdb
 import numpy
 from pandas import DataFrame
 
+
 class Constants:
 
     groups = ['ORG', 'MIN', 'UNC']
@@ -75,11 +76,19 @@ def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
                 mean = array[numpy.isfinite(array)].mean()
                 array[where_none] = mean
             elif all_none:
-                data[soil]
+                soil_data = numpy.delete(soil_data, i, 0)
+
         data[soil] = soil_data
 
     return data
 
+def propagate_stde(function_result, error_1, error_2):
+    '''calculate the stnd error of a function of 2 variables.'''
+
+    relative_error = (error_1**2 + error_2**2)**0.5
+    propagated_error = relative_error * function_result
+
+    return  propagated_error
 
 
 

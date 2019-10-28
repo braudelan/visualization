@@ -72,14 +72,15 @@ def MRE_notation_marks(axes: Axes):
                    )
 
 
-def make_figure(data, number, data_set_name):
+def make_figure(data=None, number=None, data_set_name=None):
 
-    # figure text
-    last_day = data.index[-1]
 
-    title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
-                 r'(b) normalized to control' % (number, data_set_name, last_day)
+    # last_day = data.index[-1]
 
+    # title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
+    #              r'(b) normalized to control' % (number, data_set_name, last_day)
+
+    title_text = data_set_name
     # create and adjut figure
     figure = pyplot.figure(number, figsize=(20, 15))
     figure.tight_layout()
@@ -219,22 +220,28 @@ def plot_control_composite(raw_data_sets):
     zipped = zip(data_names, raw_data)
 
     control_means = {}
-    control_stde = {}
+    stde = {}
     for name, data in zipped:
 
-        stats = get_stats(data, 'c')
-        means = stats.means
-        max = means.max().max() # highest value measured for all 3 soils
-        means = (means / max) * 100
-        stde = stats.stde
-        stde = (stde / max) * 100
+        treatment_stats = get_stats(data, 't')
+        treatment_means = treatment_stats.means
+        treatment_stde = treatment_stats.stde
+        treatment_relative_stde = treatment_stde / treatment_means
 
-        control_means[name] = means
-        control_stde[name] = stde
+        control_stats = get_stats(data, 'c')
+        control_means = control_stats.means
+        # max = control_means.max().max() # highest value measured for all 3 soils
+        control_means_normalized = (control_means / treatment_means) * 100
+        control_stde = control_stats.stde
+        control_relative_stde = control_stde / control_means
+        control_stde_normalized = (control_relative_stde**2 + treatment_relative_stde**2)**0.5
+
+        control_means[name] = control_means_normalized * 100
+        stde[name] = control_stde_normalized * 100
 
     # arrays to iterate over
     control_data = control_means.values()
-    control_data_stde = control_stde.values()
+    control_data_stde = stde.values()
     control_zipped = zip(data_names, control_data, control_data_stde)
 
     # subplots rows & columns
@@ -245,8 +252,8 @@ def plot_control_composite(raw_data_sets):
     figure, axes = pyplot.subplots(n_rows, n_columns,
                                    sharex=True, sharey=True, figsize=(15,20),
                                    gridspec_kw={'hspace': 0, 'wspace': 0},)
-    figure.text(0.5, 0.05, 'incubation time / days', ha='center')
-    figure.text(0.05, 0.5, 'precent of highest value', va='center', rotation='vertical')
+    figure.text(0.5, 0.05, r'$incubation\ time\ \/\ days$', ha='center')
+    figure.text(0.05, 0.5, r'$%\ of treatment mean$', va='center', rotation=0.45)
 
     # plot
     i = 0
@@ -422,7 +429,7 @@ def plot_total_increase(raw_data_sets: dict) -> Figure:
         normalized = baseline_increase / baseline
 
 
-def plot_c_to_n(data):
+def plot_C_N(data):
 
     carbon_figure = pyplot.figure(figsize=(15,10))
 

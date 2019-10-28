@@ -5,7 +5,7 @@ from collections import namedtuple
 import pandas
 from pandas import DataFrame
 from raw_data import get_multi_sets, get_raw_data
-from helpers import get_week_ends, Constants
+from helpers import Constants, get_week_ends, propagate_stde
 
 SOILS = Constants.groups
 STATS_NAMES = [
@@ -54,17 +54,25 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
         # normalized_diff=normalized_diff
     )
 
+
 def normalize_to_control(raw_data):
-    '''subtracts the average of 4(or less) control replicates from each treatment replicate.'''
+    '''normalize raw data of treatment samples to corresponding control samples.
+
+    each treatment replicate is normalized to the average of 4 (or less) corresponding
+     control replicates.
+
+    '''
 
     raw_t = raw_data.loc[:, ('t', SOILS)] # MRE treatment
     raw_c = raw_data.loc[:, ('c', SOILS)] # control
 
     control_means = get_stats(raw_c, 'c').means # shape ->(10,3)
 
-    # empty dataframe with the same shape and indexes as raw_t
-    control_means_shaped = pandas.DataFrame().reindex_like(raw_t)
 
+    # empty dataframe with the same shape and indexes as raw_t
+    control_means_shaped = pandas.DataFrame().reindex_like(raw_t) # shape ->(10,12)
+
+    # fill above shaped empty dataframe with the mean value for every set of replicates
     for row in control_means_shaped.index:
         for column in control_means_shaped.columns:
             soil = column[1]
@@ -72,14 +80,16 @@ def normalize_to_control(raw_data):
 
     normalized = raw_t / control_means_shaped * 100
     normalized = get_stats(normalized, 't')
-    normalized_means = normalized.means
-    normalized_stde = normalized.stde
+    replace_negative = lambda x: None if (x < 0) else x
+    normalized_means = normalized.means.applymap(replace_negative)
+    normalized_stde = normalized.stde.applymap(replace_negative)
 
     return Stats(
         means=normalized_means,
         stde=normalized_stde,
         stdv=None
     )
+
 
 def normalize_to_baseline(raw_data):
     '''represent the means of each soil as a percentage of corresponding baseline value '''
@@ -104,16 +114,17 @@ def normalize_to_baseline(raw_data):
 
         treatment_data = treatment_means[soil]
         treatment_error = treatment_stde[soil]
-        treatment_relative_error = treatment_error / treatment_data #relative stnd error
+        treatment_relative_error = treatment_error / treatment_data  #relative stnd error
 
         baseline = baseline_means[soil]
         baseline_error = baseline_stde[soil]
-        baseline_relative_error = baseline_error / baseline
+        baseline_relative_error = baseline_error / baseline #relative stnd error
 
         divided_by_baseline = treatment_data / baseline #data normalized to baseline
-        normalized_relative_error = (treatment_relative_error**2 + baseline_relative_error**2)**0.5
+        normalized_relative_error = (treatment_relative_error**2 +
+                                     baseline_relative_error**2)**0.5 # formula for stnd error of a quotient
         normalized[soil] = divided_by_baseline * 100
-        normalized_stde[soil] = normalized_relative_error * 100
+        normalized_stde[soil] = normalized_relative_error * divided_by_baseline * 100
 
     return Stats(
         means=normalized,
@@ -154,9 +165,10 @@ def normalize_to_initial(raw_data):
         initial_relative_error = initial_error / initial
 
         divided_by_initial = treatment_data / initial #data normalized to initial
-        normalized_relative_error = (treatment_relative_error**2 + initial_relative_error**2)**0.5
+        normalized_relative_error = (treatment_relative_error**2 +
+                                     initial_relative_error**2)**0.5
         normalized[soil] = divided_by_initial * 100
-        normalized_stde[soil] = normalized_relative_error * 100
+        normalized_stde[soil] = normalized_relative_error * divided_by_initial * 100
 
     return Stats(
         means=normalized,
@@ -237,7 +249,25 @@ def normalize_to_TOC(raw)-> dict:
 
     return TOC_normalized_by_category
 
+def get_C_N_ratio(MBC_stats, MBN_stats):
+    '''calculate microbial carbon-to-nitrogen ratio.'''
 
+    MBC_means = MBC_stats.means
+    week_ends = get_week_ends(MBC_means)
+    MBC_means = MBC_means.loc[week_ends]
+    MBC_stde = MBC_stats.stde.loc[week_ends]
+    MBC_relative_stde = MBC_stde / MBC_means
+
+    MBN_means = MBN_stats.means
+    MBN_stde = MBN_stats.stde
+    MBN_relative_stde = MBN_stde / MBN_means
+
+    C_to_N = MBC_means / MBN_means
+    C_to_N_stde = propagate_stde(C_to_N, MBC_relative_stde, MBN_relative_stde)
+
+    return Stats(means=C_to_N,
+                 stde=C_to_N_stde,
+                 stdv=None)
 
 
 
