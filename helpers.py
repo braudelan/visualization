@@ -2,7 +2,6 @@ import pdb
 import numpy
 from pandas import DataFrame
 
-
 class Constants:
 
     groups = ['ORG', 'MIN', 'UNC']
@@ -51,45 +50,20 @@ def delay_factor(x, delay):
     return partialSums
 
 
-def replace_nan(raw_data: DataFrame, treatment: str) -> DataFrame:
-    """replace nan values with the mean of remaining replicates."""
+def replace_None(raw_data):
 
+    TREATMENTS = Constants.treatment_labels
     SOILS = Constants.groups
-    # if len(raw_data.index) >5:
-    #     week_ends = get_week_ends(raw_data)
-    #     raw_data = raw_data.loc[week_ends, :]
+    DAYS = raw_data.index
 
-    data = raw_data.loc[:, (treatment, SOILS)]
-    data = data.reset_index(col_level=1, col_fill='')
-    data.columns = data.columns.droplevel('treatment')
+    for treatment in TREATMENTS:
+        for soil in SOILS:
+            for day in DAYS:
+                daily_data = raw_data.loc[day, (treatment, soil)]
+                daily_mean = daily_data.mean()
+                daily_data.fillna(daily_mean, inplace=True)
 
-    for soil in SOILS:
-        soil_data = data[soil].values
-
-        for i in range(len(soil_data)):
-            array = soil_data[i]
-            where_none = numpy.isnan(array)
-            all_none = numpy.all(where_none)
-            has_none = numpy.any(where_none)
-            # pdb.set_trace()
-            if has_none and not all_none:
-                mean = array[numpy.isfinite(array)].mean()
-                array[where_none] = mean
-            elif all_none:
-                soil_data = numpy.delete(soil_data, i, 0)
-
-        data[soil] = soil_data
-
-    return data
-
-def propagate_stde(function_result, error_1, error_2):
-    '''calculate the stnd error of a function of 2 variables.'''
-
-    relative_error = (error_1**2 + error_2**2)**0.5
-    propagated_error = relative_error * function_result
-
-    return  propagated_error
-
+    return raw_data
 
 
 # def get_round(dataframe):
