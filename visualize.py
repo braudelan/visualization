@@ -159,6 +159,8 @@ def visualize_significance(set_name):
 
     raw_data = get_raw_data(set_name)
     significance = significance_between_soils(raw_data, 't')
+    significance_notations = significance[0]
+    significance_values = significance[1]
 
     css = """
     <style type=\"text/css\">
@@ -187,8 +189,10 @@ def visualize_significance(set_name):
     }
     </style>
     """
-    output_file = OUTPUT_DIRECTORY_PATH + set_name
-    DataFrame_to_image(significance, css, outputfile=output_file)
+    notations_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_letters'
+    values_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_p_values'
+    DataFrame_to_image(significance_notations, css, outputfile=notations_output_file)
+    DataFrame_to_image(significance_values, css, outputfile=values_output_file)
 
 for set in DATA_SETS_NAMES:
     visualize_significance(set)
