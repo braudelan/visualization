@@ -91,7 +91,7 @@ def make_figure(data=None, number=None, data_set_name=None):
 
 
 def make_axes(figure: Figure,
-              axes_position='single') -> Axes:
+                axes_position='single') -> Axes:
     '''create and configure axes'''
 
     # allocate position of axes in figure

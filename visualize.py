@@ -5,11 +5,12 @@ from stats import get_stats, normalize_to_control, normalize_to_baseline,\
     normalize_to_initial, normalize_to_TOC, get_C_N_ratio
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
-from helpers import get_week_ends
+from significance import significance_between_soils
+from helpers import get_week_ends, DataFrame_to_image
+
 # from model_dynamics import plot_model
 # from Ttest import get_daily_Ttest
 # from growth import get_weekly_growth, tabulate_growth
-
 
 # set pyplot parameters
 pyplot.rc('savefig',  pad_inches=1.5)
@@ -17,7 +18,7 @@ pyplot.rc('savefig',  pad_inches=1.5)
 # input & output locations
 INPUT_FILE = "all_tests.xlsx"
 FIGURES_DIRECTORY_PATH = '/home/elan/Dropbox/research/figures'
-SPECIFIED_DIRECTORY_PATH = '/microbial_C_to_N'
+SPECIFIED_DIRECTORY_PATH = '/significance/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
 FILE_PREFIX = '_'
 
@@ -105,13 +106,16 @@ i=1
 
 # # plot baseline
 # soil_properties_figure = plot_baseline(raw_data_sets)
-# soil_properties_figure.savefig('%s/baseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
+# soil_properties_figure.savefig('%sbaseline.png' % OUTPUT_DIRECTORY, bbox_inches='tight')
 
 # # plot composite image of control dynamics
 # control_composite_figure = plot_control_composite(RAW_DATA_SETS)
-# control_composite_figure.savefig('%s/control.png' % OUTPUT_DIRECTORY_PATH)
+# control_composite_figure.savefig('%scontrol.png' % OUTPUT_DIRECTORY_PATH)
 
 # # plot C to N ratio
+
+
+# visualize microbial C_to_N
 def visualize_C_N(label: str, treatment: str=None,
                   normalization=None):
 
@@ -139,16 +143,55 @@ def visualize_C_N(label: str, treatment: str=None,
     plot_lines(axes,C_to_N, stde=C_to_N_stde)
     figure.savefig('%s/%s_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
 
-
 normalization_functions = [
                             normalize_to_control,
-                            # normalize_to_baseline,
-                            # normalize_to_initial
+                            normalize_to_baseline,
+                            normalize_to_initial
                        ]
-labels = ['control']#,'baseline', 'initial'] #'control'
+labels = ['control','baseline', 'initial'] #'control'
 
-for function, label in zip(normalization_functions, labels):
-    visualize_C_N(label, normalization=function)
+# for function, label in zip(normalization_functions, labels):
+#     visualize_C_N(label, normalization=function)
+
+
+# draw and save significance tables
+def visualize_significance(set_name):
+
+    raw_data = get_raw_data(set_name)
+    significance = significance_between_soils(raw_data, 't')
+
+    css = """
+    <style type=\"text/css\">
+    table {
+    color: #333;
+    font-family: Helvetica, Arial, sans-serif;
+    width: 640px;
+    border-collapse:
+    collapse; 
+    border-spacing: 0;
+    }
+    td, th {
+    border: 1px solid transparent; /* No more visible border */
+    height: 30px;
+    }
+    th {
+    background: #DFDFDF; /* Darken header a bit */
+    font-weight: bold;
+    }
+    td {
+    background: #FAFAFA;
+    text-align: center;
+    }
+    table tr:nth-child(odd) td{
+    background-color: white;
+    }
+    </style>
+    """
+    output_file = OUTPUT_DIRECTORY_PATH + set_name
+    DataFrame_to_image(significance, css, outputfile=output_file)
+
+for set in DATA_SETS_NAMES:
+    visualize_significance(set)
 
 
 # # plot ttest table
