@@ -143,24 +143,7 @@ def visualize_C_N(label: str, treatment: str=None,
     plot_lines(axes,C_to_N, stde=C_to_N_stde)
     figure.savefig('%s/%s_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
 
-normalization_functions = [
-                            normalize_to_control,
-                            normalize_to_baseline,
-                            normalize_to_initial
-                       ]
-labels = ['control','baseline', 'initial'] #'control'
-
-# for function, label in zip(normalization_functions, labels):
-#     visualize_C_N(label, normalization=function)
-
-
-# draw and save significance tables
-def visualize_significance(set_name):
-
-    raw_data = get_raw_data(set_name)
-    significance = significance_between_soils(raw_data, 't')
-    significance_notations = significance[0]
-    significance_values = significance[1]
+def visualize_significance(set_name, notations, p_values):
 
     css = """
     <style type=\"text/css\">
@@ -191,11 +174,29 @@ def visualize_significance(set_name):
     """
     notations_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_letters'
     values_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_p_values'
-    DataFrame_to_image(significance_notations, css, outputfile=notations_output_file)
-    DataFrame_to_image(significance_values, css, outputfile=values_output_file)
+    DataFrame_to_image(notations, css, outputfile=notations_output_file)
+    DataFrame_to_image(p_values, css, outputfile=values_output_file)
 
-for set in DATA_SETS_NAMES:
-    visualize_significance(set)
+
+# normalization_functions = [
+#                             normalize_to_control,
+#                             normalize_to_baseline,
+#                             normalize_to_initial
+#                        ]
+# labels = ['control','baseline', 'initial'] #'control'
+# for function, label in zip(normalization_functions, labels):
+#     visualize_C_N(label, normalization=function)
+# visualize_C_N('simple_means', 't')
+
+## draw and save significance tables
+# for set_name in DATA_SETS_NAMES:
+#     raw_data = get_raw_data(set_name)
+#     significance = significance_between_soils(raw_data, 't')
+#     letters = significance[0]
+#     p_values = significance[1]
+#     visualize_significance(set_name, letters, p_values)
+
+# visualize_significance()
 
 
 # # plot ttest table
