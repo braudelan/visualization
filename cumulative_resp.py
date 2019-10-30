@@ -1,6 +1,6 @@
 import pdb
 import numpy
-from pandas import DataFrame
+from pandas import DataFrame, MultiIndex
 
 from raw_data import get_raw_data
 from stats import get_stats
@@ -18,8 +18,14 @@ def cumulative_co2():
     timepoints_index = [i for i in range(8)]
     intervals = [[timepoints[i], timepoints[i + 1]] for i in timepoints_index]
 
-    respiration_rates = DataFrame(index = intervals , columns=SOILS)
-    rates_stnd_errors = DataFrame(index = intervals , columns=SOILS)
+    # dataframe with averaged respiration rates for each time interval
+    intervals_as_array = numpy.asarray(intervals)
+    intervals_transposed = intervals_as_array.T
+    names = ['t_initial', 't_end']
+    multiindex = MultiIndex.from_arrays(arrays=intervals_transposed, names=names)
+    respiration_rates = DataFrame(index = multiindex , columns=SOILS)
+    rates_stnd_errors = DataFrame(index = multiindex , columns=SOILS)
+
     for soil in SOILS:
         data = means[soil]
         data_stde = stde[soil]
@@ -43,7 +49,7 @@ def cumulative_co2():
             rates.append(average)
             stnd_errors.append(average_stde)
             i += 1
-            pdb.set_trace()
+            # pdb.set_trace()
         respiration_rates[soil] = rates
         rates_stnd_errors[soil] = stnd_errors
 
