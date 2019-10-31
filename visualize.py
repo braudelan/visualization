@@ -1,4 +1,4 @@
-from matplotlib import pyplot             # todo solve: running visualize.py with all data sets raises an error
+from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_stats, normalize_to_control, normalize_to_baseline,\
