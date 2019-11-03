@@ -18,9 +18,8 @@ pyplot.rc('savefig',  pad_inches=1.5)
 # input & output locations
 INPUT_FILE = "all_tests.xlsx"
 FIGURES_DIRECTORY_PATH = '/home/elan/Dropbox/research/figures'
-SPECIFIED_DIRECTORY_PATH = '/significance/'
+SPECIFIED_DIRECTORY_PATH = '/absolute_values/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
-FILE_PREFIX = '_'
 
 # setup
 setup_arguments = get_setup_arguments()
@@ -30,78 +29,76 @@ NUMBERS = setup_arguments.numbers
 RAW_DATA_SETS = get_multi_sets(DATA_SETS_NAMES)
 
 i=1
-# plot dynamics of each soil parameter as a seperate graph
-# for set_name in DATA_SETS_NAMES:
-#
-#     # input data into DataFrame
-#     raw_data = get_raw_data(set_name)
-#
-#     # get basic statistics
-#     treatment_stats = get_stats(raw_data, 't')
-#     control_stats = get_stats(raw_data, 'c')
-#     control_normalized = normalize_to_control(raw_data)
-#     baseline_normalized = normalize_to_baseline(raw_data)
-#     initial_normalized = normalize_to_initial(raw_data)
-#     TOC_normalized_treatment = normalize_to_TOC(raw_data)['treatment']
-#     TOC_normalized_control = normalize_to_TOC(raw_data)['control']
-#     TOC_normalized_normal = normalize_to_TOC(raw_data)['normalized']
-#
-#     # statistics to plot
-#     treatment_means = treatment_stats.means
-#     treatment_stde = treatment_stats.stde
-#     control_means = control_stats.means
-#     control_stde = control_stats.stde
-#     control_normalized_means = control_normalized.means
-#     control_normalized_stde = control_normalized.stde
-#     baseline_normalized_means = baseline_normalized.means
-#     baseline_normalized_stde = baseline_normalized.stde
-#     initial_normalized_means = initial_normalized.means
-#     initial_normalized_stde = initial_normalized.stde
-#     TOC_normalized_treatment_means = TOC_normalized_treatment.means
-#     TOC_normalized_treatment_stde = TOC_normalized_treatment.stde
-#     TOC_normalized_normal_means = TOC_normalized_normal.means
-#     TOC_normalized_normal_stde = TOC_normalized_normal.stde
-#
-#     # plot
-#     dynamics_figure: Figure= make_figure(raw_data, i, set_name)
-#
-#     top_axes: Axes = make_axes(dynamics_figure, axes_position='top of 3')
-#     middle_axes: Axes = make_axes(dynamics_figure, axes_position='middle')
-#     bottom_axes: Axes = make_axes(dynamics_figure, axes_position='bottom of 3')
-#
-#     axis = [top_axes, middle_axes, bottom_axes]
-#     axis_positions = ['top', 'middle' 'bottom']
-#     axis_titles = ['control', 'baseline', 'intial']
-#
-#     for axes, title in zip(axis, axis_titles):
-#         title_position = (0.9, 0.8)
-#         axes.set_title(title, position=title_position)
-#
-#     for axes, axes_position in zip(axis, axis_positions):
-#         draw_labels(dynamics_figure, axes,
-#                     set_name, axes_position=axes_position)
-#
-#     # treatment_lines = plot_lines(top_axes, control_normalized_means,
-#     #                              stde=control_normalized_stde)
-#     # control_lines = plot_lines(means_axes, control_means,
-#     # #                                          'control', control_stde)
-#     plot_lines(top_axes, control_normalized_means,
-#                                     stde=control_normalized_stde)
-#     plot_lines(middle_axes, baseline_normalized_means,
-#                                                stde=baseline_normalized_stde)
-#     plot_lines(bottom_axes, initial_normalized_means,
-#                                              stde=initial_normalized_stde)
-#
-#     # legend
-#     # handles = top_axes.lines
-#     handles, labels = top_axes.get_legend_handles_labels()
-#     dynamics_figure.legend(handles, labels, loc='center right')
-#
-#
-#     dynamics_figure.savefig(OUTPUT_DIRECTORY_PATH + set_name + FILE_PREFIX + '.png')
-#     pyplot.cla()
-#
-#     i += 1
+# plot dynamics of each soil parameter as a separate graph
+for set_name in DATA_SETS_NAMES:
+
+    # input data into DataFrame
+    raw_data = get_raw_data(set_name)
+
+    # get basic statistics
+    treatment_stats = get_stats(raw_data, 't')
+    control_stats = get_stats(raw_data, 'c')
+    control_normalized = normalize_to_control(raw_data)
+    baseline_normalized = normalize_to_baseline(raw_data)
+    initial_normalized = normalize_to_initial(raw_data)
+    TOC_normalized_treatment = normalize_to_TOC(raw_data)['treatment']
+    TOC_normalized_control = normalize_to_TOC(raw_data)['control']
+    TOC_normalized_normal = normalize_to_TOC(raw_data)['normalized']
+
+    # statistics to plot
+    treatment_means = treatment_stats.means
+    treatment_stde = treatment_stats.stde
+    control_means = control_stats.means
+    control_stde = control_stats.stde
+    control_normalized_means = control_normalized.means
+    control_normalized_stde = control_normalized.stde
+    baseline_normalized_means = baseline_normalized.means
+    baseline_normalized_stde = baseline_normalized.stde
+    initial_normalized_means = initial_normalized.means
+    initial_normalized_stde = initial_normalized.stde
+    TOC_normalized_treatment_means = TOC_normalized_treatment.means
+    TOC_normalized_treatment_stde = TOC_normalized_treatment.stde
+    TOC_normalized_normal_means = TOC_normalized_normal.means
+    TOC_normalized_normal_stde = TOC_normalized_normal.stde
+
+    # figure
+    dynamics_figure: Figure= make_figure(raw_data, i, set_name)
+
+    # axis
+    top_axes: Axes = make_axes(dynamics_figure, axes_position='top of 2')
+    # middle_axes: Axes = make_axes(dynamics_figure, axes_position='middle')
+    bottom_axes: Axes = make_axes(dynamics_figure, axes_position='bottom of 2')
+
+    axis = [top_axes, bottom_axes]
+    axis_positions = ['top', 'bottom']
+    axis_titles = ['MRE treated', 'control']
+
+    #set titles
+    for axes, title in zip(axis, axis_titles):
+        title_position = (0.9, 0.8)
+        axes.set_title(title, position=title_position)
+
+    # insert decorations
+    for axes, axes_position in zip(axis, axis_positions):
+        draw_labels(dynamics_figure, axes,
+                    set_name, axes_position=axes_position)
+    # plot data
+    plot_lines(top_axes, treatment_means,
+                                    stde=treatment_stde)
+    # plot_lines(middle_axes, baseline_normalized_means,
+    #                                            stde=baseline_normalized_stde)
+    plot_lines(bottom_axes, control_means,
+                                    stde=control_stde)
+
+    # legend
+    handles, labels = top_axes.get_legend_handles_labels()
+    dynamics_figure.legend(handles, labels, loc='center right')
+
+
+    dynamics_figure.savefig(OUTPUT_DIRECTORY_PATH + set_name + '.png')
+    pyplot.cla()
+
+    i += 1
 
 
 # # plot baseline

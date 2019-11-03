@@ -1,33 +1,33 @@
-# todo mean_rates stde
-#   cumulative stde
-#   MBC weekly growth
+# todo compute stde
+
 import pdb
 import numpy
 from pandas import DataFrame, MultiIndex
 
 from raw_data import get_raw_data
 from stats import get_stats
-from helpers import Constants
+from helpers import Constants, get_week_ends
 
 SOILS = Constants.groups
 
+# respiration data
 RESP_raw_data = get_raw_data('RESP')
 RESP_stats = get_stats(RESP_raw_data, 't')
 RESP_means = RESP_stats.means
 RESP_stde = RESP_stats.stde
 
+# get the time intervals between samplings
 timepoints = RESP_means.index.values
 timepoints_index = [i for i in range(8)]
 intervals_limits = [[timepoints[i], timepoints[i + 1]] for i in timepoints_index]
 limits_arrayed = numpy.asarray(intervals_limits)
 transposed = limits_arrayed.T
-starts = transposed[0]
-ends = transposed[1]
-weeks = [1, 1, 1, 2, 2, 2, 3, 3]
-intervals = ends - starts
 
 # empty dataframes to store results
-levels = [weeks, starts, ends]
+MBC_starts = transposed[0]
+ends = transposed[1]
+weeks = [1, 1, 1, 2, 2, 2, 3, 3]
+levels = [weeks, MBC_starts, ends]
 names = ['week', 't_initial', 't_end']
 multiindex = MultiIndex.from_arrays(arrays=levels, names=names)
 respiration_rates = DataFrame(index=multiindex, columns=SOILS)
@@ -42,10 +42,10 @@ def mean_CO2_rates():
         rates = []
         stnd_errors = []
         i = 0
-        for interval_limits in intervals_limits:
+        for limits in intervals_limits:
 
-            t_initial = interval_limits[0]
-            t_end = interval_limits[1]
+            t_initial = limits[0]
+            t_end = limits[1]
 
             t_initial_means = data.loc[t_initial]
             t_initial_stde = data_stde.loc[t_initial]
@@ -65,18 +65,46 @@ def mean_CO2_rates():
     return respiration_rates, rates_stnd_errors
 
 # get weekly cumulative CO2 respired
+intervals = ends - MBC_starts
 mean_rates  = mean_CO2_rates()[0]
 cumulative_CO2 = mean_rates.mul(intervals, axis='rows') # rate X time
 grouped_by_week = cumulative_CO2.groupby(level='week')
 weekly_CO2 = grouped_by_week.sum()
 
-# get weekly MBC growth
-MBC_raw_data = get_raw_data('MBC')
+# MBC raw data
+MBC_raw_data: DataFrame = get_raw_data('MBC')
+
+# rearange data
+week_ends = get_week_ends(MBC_raw_data)
+MBC_raw_data = MBC_raw_data.loc[week_ends]
+
 MBC_stats = get_stats(MBC_raw_data, 't')
 MBC_means = MBC_stats.means
+MBC_means = MBC_means.iloc[:-1] # drop last week end
 MBC_stde = MBC_stats.stde
+MBC_stde = MBC_stde.iloc[:-1] # drop last week end
 
+# week beginings
+MBC_starts = MBC_means.iloc[:-1]
+MBC_starts_stde = MBC_stde.iloc[:-1]
 
+# week ends
+MBC_ends = MBC_means.iloc[1:]
+MBC_ends_stde = MBC_stde.iloc[1:]
+
+# change index to a range index
+frames_to_change_index = [
+                            MBC_starts,
+                            MBC_starts_stde,
+                            MBC_ends,
+                            MBC_starts_stde
+                      ]
+new_index = [1, 2, 3] # weeks
+
+for dataframe in frames_to_change_index:
+    dataframe.set_axis(new_index, inplace=True)
+
+weekly_growth = MBC_ends - MBC_starts
 
 
 
