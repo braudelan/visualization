@@ -1,4 +1,5 @@
 import pdb
+import numpy
 from pandas import DataFrame, MultiIndex
 from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
 from scipy.stats import ttest_ind
@@ -15,25 +16,26 @@ TREATMENTS = Constants.treatment_labels
 
 def significance_between_soils(raw_data, treatment):
 
+    # handle missing data
     data = replace_None(raw_data)
     data = data.loc[:, treatment]
     data = data.dropna(how='all')
-    days = data.index
 
+    days = data.index
 
 
     columns = days
     index_levels = [['MIN', 'MIN', 'ORG'], ['ORG', 'UNC', 'UNC']]
-    index_names = ['soil_1', 'soil_2']
+    index_names = numpy.array(['soil_1', 'soil_2'])
     index = MultiIndex.from_arrays(index_levels,
                                    names=index_names)
 
     # dataframe to store p_values
-    pvalues_columns = index_names + columns.values
+    pvalues_columns = numpy.append(index_names, columns.values)
     significance_pvalues = DataFrame(index=index,
                                      columns=pvalues_columns)
-    significance_pvalues.iloc[:, 0] = index_levels[0]
-    significance_pvalues.iloc[:, 1] = index_levels[1]
+    significance_pvalues.iloc[:, 0] = index_levels[0] # 'soil 1' column, insert values
+    significance_pvalues.iloc[:, 1] = index_levels[1] # 'soil 2' column, insert values
 
     # dataframe to store booleans rejecting/accepting null hypothesis
     significance_reject = DataFrame(index=index,

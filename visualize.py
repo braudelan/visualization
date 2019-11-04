@@ -2,7 +2,7 @@ from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
 from stats import get_stats, normalize_to_control, normalize_to_baseline,\
-    normalize_to_initial, normalize_to_TOC, get_C_N_ratio
+    normalize_to_initial, normalize_to_TOC, get_microbial_C_N
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
 from significance import significance_between_soils
@@ -130,7 +130,7 @@ def visualize_C_N(label: str, treatment: str=None,
     print('MBC stde: ', MBC_stats.stde)
     print('MBN stde: ', MBN_stats.stde)
 
-    C_to_N_stats = get_C_N_ratio(MBC_stats, MBN_stats)
+    C_to_N_stats = get_microbial_C_N(MBC_stats, MBN_stats)
     C_to_N = C_to_N_stats.means
     C_to_N_stde = C_to_N_stats.stde
 
