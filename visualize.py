@@ -185,13 +185,13 @@ def visualize_significance(set_name, notations, p_values):
 #     visualize_C_N(label, normalization=function)
 # visualize_C_N('simple_means', 't')
 
-## draw and save significance tables
-# for set_name in DATA_SETS_NAMES:
-#     raw_data = get_raw_data(set_name)
-#     significance = significance_between_soils(raw_data, 't')
-#     letters = significance[0]
-#     p_values = significance[1]
-#     visualize_significance(set_name, letters, p_values)
+# draw and save significance tables
+for set_name in DATA_SETS_NAMES:
+    raw_data = get_raw_data(set_name)
+    significance = significance_between_soils(raw_data, 't')
+    letters = significance[0]
+    p_values = significance[1]
+    visualize_significance(set_name, letters, p_values)
 
 # visualize_significance()
 

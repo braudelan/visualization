@@ -70,9 +70,9 @@ def replace_None(raw_data):
     return raw_data
 
 def propagate_stde(result, error_1, error_2):
-    '''calculate the stnd error of a function of two variables.
-    errors are relative errors if the function is a multiplication.
-    if the function is addition(or subtraction, errors are absolute.
+    '''compute the stnd error of a multiplication of two variables.
+    error_1 and error_2 are relative errors meaning the errors
+    divided by the mean itself.
     '''
 
     relative_error = (error_1**2 + error_2**2)**0.5
