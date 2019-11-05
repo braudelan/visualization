@@ -275,7 +275,7 @@ def get_microbial_C_N(MBC_stats, MBN_stats):
 def get_ergosterol_to_biomass(treatment: str='t', normalize_by=None):
 
     normalize = False if normalize_by is None else True
-    pdb.set_trace()
+
     # get MBC data
     MBC_raw = get_raw_data('MBC')
     week_ends = get_week_ends(MBC_raw)
