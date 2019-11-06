@@ -25,11 +25,27 @@ all_parameters = pandas.concat(stacked_data_sets, axis=1)
 correlations = all_parameters.corr()
 
 parameters = all_parameters.columns
+#
+# x = all_parameters['HWS']
+# for parameter in parameters:
+#     y = all_parameters[parameter]
+#     all_parameters.plot(x=x, y=y)
+#     pyplot.show()
+#     pyplot.cla()
 
-x = all_parameters['HWS']
-for parameter in parameters:
-    y = all_parameters[parameter]
-    all_parameters.plot(x=x, y=y)
-    pyplot.show()
-    pyplot.cla()
+
+# ------------------------------------- example of how to get r_square -------------------------------------------------
+from sklearn.linear_model import LinearRegression
+
+data = all_parameters[['HWS', 'AS']]
+data.dropna() # this will drop any row with any None value in this case leaving only days 0, 14 and 28
+
+data = data.dropna()
+y = data['AS'].values
+x = data['HWS'].values
+
+model = LinearRegression()
+model.fit(x, y)
+r_sq = model.score(x, y)
+
 
