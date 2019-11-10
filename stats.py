@@ -271,7 +271,6 @@ def get_microbial_C_N(MBC_stats, MBN_stats):
                  stdv=None)
 
 
-
 def get_ergosterol_to_biomass(treatment: str='t', normalize_by=None):
 
     normalize = False if normalize_by is None else True

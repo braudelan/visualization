@@ -170,18 +170,13 @@ def plot_lines(axes: Axes, data, linestyle='solid', stde=None):
 
 
 def draw_labels(figure: Figure, axes: Axes,
-                    set_name, axes_position='bottom'):
-
-    ##is_normalized = True if axes_position == 'bottom' else False # check if the data being plotted is normalized
+                    y_label: str, label_rotation=90, axes_position='bottom'):
 
     # text and text parameters
     xlabel_text = r'$incubation\ time\ \slash\ days$'
-    ylabel_RESP = r'$mg\ CO_{2}-C\ $'  \
-                      r'$\ast\ kg\ soil^{-1}\ \ast\ day^{-1} $'
-    ylabel_default = r'$mg\ \ast kg\ soil^{-1}$'
-    ylabel_text = ylabel_RESP if set_name == 'RESP' else ylabel_default
+    ylabel_text = y_label
 
-    ylabel_rotation = 90
+    ylabel_rotation = label_rotation
 
     is_bottom = True if ('bottom' in axes_position or
                            axes_position == 'single') else False
@@ -196,7 +191,7 @@ def draw_labels(figure: Figure, axes: Axes,
     # x label
     figure.text(0.5, 0.03, xlabel_text, ha='center')
     # y label
-    figure.text(0.05, 0.5, ylabel_text, va='center', rotation='vertical')
+    figure.text(0.05, 0.5, ylabel_text, va='center', rotation=ylabel_rotation)
 
     # legend
     axes.get_lines()

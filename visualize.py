@@ -200,7 +200,7 @@ def visualize_significance(set_name, notations, p_values):
 # visualize_significance()
 
 # -------------------------------------ergostrol-to-microbial-biomass ratio----------------------------------------------
-
+# todo fix scale of labels and MRE marks
 ERG_to_MBC_treatment = get_ergosterol_to_biomass('t')
 ERG_to_MBC_control = get_ergosterol_to_biomass('c')
 ERG_to_MBC_by_control = get_ergosterol_to_biomass(normalize_by=normalize_to_control)
@@ -220,6 +220,7 @@ tuples_names = [
     'control_normalized',
 ]
 
+y_label = r'$\% \frac{sergosterol}{MBC}$'
 zipped = zip(tuples_names, stats_tuples)
 i = 1
 for name, tuple in zipped:
@@ -228,7 +229,7 @@ for name, tuple in zipped:
     figure = make_figure(i)
     axes = make_axes(figure)
     plot_lines(axes,means,stde=stde)
-    draw_labels(figure,axes,name)
+    draw_labels(figure,axes,y_label=y_label, label_rotation=45)
 
     figure.savefig(OUTPUT_DIRECTORY_PATH + name + '.png')
 
