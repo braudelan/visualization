@@ -111,20 +111,16 @@ def DataFrame_to_image(data, css, outputfile="out.png", format="png"):
     os.remove(fn)
 
 
-# def get_round(dataframe):
-#
-#     number = dataframe.min().min()
-#     bounds = h, m, l = (10, 0.1, 0.01)
-#
-#     if number >= h:
-#         return 0
-#
-#     if number < h and number >= m:
-#         return 2
-#
-#     elif number < m  and number >= l:
-#         return 3
-#
-#     else:
-#         return 4
+def get_round(dataframe):
 
+    minimum = dataframe.min().min()
+    large, medium, small = (10, 0.1, 0.01)
+
+    round_to = (
+        0 if minimum >= large else
+        2 if minimum < large and minimum >= medium else
+        3 if minimum < medium and minimum >= small else
+        4
+    )
+
+    return round_to
