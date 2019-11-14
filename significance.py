@@ -30,20 +30,20 @@ def significance_between_soils(raw_data, treatment):
     index = MultiIndex.from_arrays(index_levels,
                                    names=index_names)
 
-    # dataframe to store p_values
-    pvalues_columns = numpy.append(index_names, columns.values)
-    significance_pvalues = DataFrame(index=index,
-                                     columns=pvalues_columns)
-    significance_pvalues.iloc[:, 0] = index_levels[0] # 'soil 1' column, insert values
-    significance_pvalues.iloc[:, 1] = index_levels[1] # 'soil 2' column, insert values
+    # # dataframe to store p_values
+    # pvalues_columns = numpy.append(index_names, columns.values)
+    # significance_pvalues = DataFrame(index=index,
+    #                                  columns=pvalues_columns)
+    # significance_pvalues.iloc[:, 0] = index_levels[0] # 'soil 1' column, insert values
+    # significance_pvalues.iloc[:, 1] = index_levels[1] # 'soil 2' column, insert values
 
     # dataframe to store booleans rejecting/accepting null hypothesis
-    significance_reject = DataFrame(index=index,
+    significance_booleans = DataFrame(index=index,
                                     columns=columns)
 
     # dataframe with letters anotating significance
     anotations_index_label = 'soil'
-    anotations_columms_label = 'days into incubation'
+    anotations_columms_label = 'day of incubation'
     anotations_index = ['MIN', 'ORG', 'UNC']
     anotations = DataFrame(index=anotations_index,
                                         columns=columns)
@@ -55,9 +55,9 @@ def significance_between_soils(raw_data, treatment):
     pair_3 = ('ORG', 'UNC')
 
     def anotate_significance(day):
-        MIN_ORG = significance_reject.loc[pair_1, day]
-        MIN_UNC = significance_reject.loc[pair_2, day]
-        ORG_UNC = significance_reject.loc[pair_3, day]
+        MIN_ORG = significance_booleans.loc[pair_1, day]
+        MIN_UNC = significance_booleans.loc[pair_2, day]
+        ORG_UNC = significance_booleans.loc[pair_3, day]
 
         option_1 = MIN_ORG == False and MIN_UNC == False and ORG_UNC == False # no difference
         option_2 = MIN_ORG == True and MIN_UNC == True and ORG_UNC == True # all different
@@ -101,16 +101,14 @@ def significance_between_soils(raw_data, treatment):
         pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')
         significance_matrix = DataFrame(pairwise_holm[2])
 
-        # input p_values into dataframe
-        p_values = significance_matrix['pval_corr'].values
-        significance_pvalues.loc[:, day] = p_values
+        # # input p_values into dataframe
+        # p_values = significance_matrix['pval_corr'].values
+        # significance_pvalues.loc[:, day] = p_values
 
         # input reject/accept booleans into dataframe
         booleans = significance_matrix['reject'].values
-        if day == 15:
-            significance_reject.iloc[0,6]
-        else:
-            significance_reject.loc[:, day] = booleans
+
+        significance_booleans.loc[:, day] = booleans
 
         # input significance letters notation
         significance_letters = anotate_significance(day)
@@ -118,9 +116,9 @@ def significance_between_soils(raw_data, treatment):
             anotations.loc[soil, day] = significance_letters[soil]
 
 
-    return anotations, significance_pvalues
+    return anotations, #significance_pvalues
 
 if __name__ == '__main__':
-    raw_data = get_raw_data("MBC")
+    raw_data = get_raw_data("RESP")
     significance = significance_between_soils(raw_data, 't')
 
