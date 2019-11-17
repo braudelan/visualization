@@ -55,17 +55,24 @@ def delay_factor(x, delay):
 
 
 def replace_None(raw_data):
+    '''
+     replace nan values with the average of remaining replicates.
+
+     :parameter
+     raw_data: dataframe
+     either treated, control or normalized results.
+     treatment level has to be dropped from columns.
+     '''
 
     TREATMENTS = Constants.treatment_labels
     SOILS = Constants.groups
     DAYS = raw_data.index
 
-    for treatment in TREATMENTS:
-        for soil in SOILS:
-            for day in DAYS:
-                daily_data = raw_data.loc[day, (treatment, soil)]
-                daily_mean = daily_data.mean()
-                daily_data.fillna(daily_mean, inplace=True)
+    for soil in SOILS:
+        for day in DAYS:
+            daily_data = raw_data.loc[day, soil]
+            daily_mean = daily_data.mean()
+            daily_data.fillna(daily_mean, inplace=True)
 
     return raw_data
 

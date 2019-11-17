@@ -55,6 +55,52 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     )
 
 
+def subtract_baseline(raw_data):
+
+    # get baseline stats
+    baseline_stats = get_baseline(raw_data)
+    baseline_means = baseline_stats.means
+    baseline_stde = baseline_stats.stde
+
+    # raw treatment data
+    raw_data = raw_data.loc[:, 't']
+
+    # reshape baseline means to the same dimensions as raw_data
+    baseline_reshaped = DataFrame().reindex_like(raw_data)
+    for soil in SOILS:
+        baseline_reshaped[soil] = baseline_means[soil]
+
+    baseline_subtracted = raw_data - baseline_reshaped
+
+    return baseline_subtracted
+
+
+def subtract_control(raw_data):
+    '''
+    subtract average control value from treated replicates.
+
+    the average of 4 (or less) replicates is subtracted from
+    each treatment replicate corresponding to the same treatment X time
+    combination.
+    '''
+    # raw data split to treatment and control
+    treatment_raw = raw_data.loc[:, 't']
+
+    control_means = get_stats(raw_data, 'c').means  # shape ->(10,3)
+
+    # empty dataframe with the same shape and indexes as raw_t
+    control_means_shaped = DataFrame().reindex_like(treatment_raw)  # shape ->(10,12)
+
+    # fill above shaped empty dataframe with the mean value for every set of replicates
+    for row in control_means_shaped.index:
+        for column in control_means_shaped.columns:
+            soil = column[0]
+            control_means_shaped.loc[row, column] = control_means.loc[row, soil]
+
+    control_subtracted = treatment_raw - control_means_shaped
+    print(treatment_raw, control_means_shaped)
+    return  control_subtracted
+
 def normalize_to_control(raw_data):
     '''normalize raw data of treatment samples to corresponding control samples.
 
@@ -68,14 +114,13 @@ def normalize_to_control(raw_data):
 
     control_means = get_stats(raw_c, 'c').means # shape ->(10,3)
 
-
     # empty dataframe with the same shape and indexes as raw_t
-    control_means_shaped = pandas.DataFrame().reindex_like(raw_t) # shape ->(10,12)
+    control_means_shaped = DataFrame().reindex_like(raw_t) # shape ->(10,12)
 
     # fill above shaped empty dataframe with the mean value for every set of replicates
     for row in control_means_shaped.index:
         for column in control_means_shaped.columns:
-            soil = column[1]
+            soil = column[0]
             control_means_shaped.loc[row, column] = control_means.loc[row, soil]
 
     normalized = raw_t / control_means_shaped * 100
@@ -250,25 +295,17 @@ def normalize_to_TOC(raw)-> dict:
     return TOC_normalized_by_category
 
 
-def get_microbial_C_N(MBC_stats, MBN_stats):
+def get_microbial_C_N(MBC_raw, MBN_raw):
     '''calculate microbial carbon-to-nitrogen ratio.'''
 
-    MBC_means = MBC_stats.means
-    week_ends = get_week_ends(MBC_means)
-    MBC_means = MBC_means.loc[week_ends]
-    MBC_stde = MBC_stats.stde.loc[week_ends]
-    MBC_relative_stde = MBC_stde / MBC_means
 
-    MBN_means = MBN_stats.means
-    MBN_stde = MBN_stats.stde
-    MBN_relative_stde = MBN_stde / MBN_means
+    week_ends = get_week_ends(MBC_raw)
+    MBC_raw = MBC_raw.loc[week_ends]
 
-    C_to_N = MBC_means / MBN_means
-    C_to_N_stde = propagate_stde(C_to_N, MBC_relative_stde, MBN_relative_stde)
 
-    return Stats(means=C_to_N,
-                 stde=C_to_N_stde,
-                 stdv=None)
+    C_to_N = MBC_raw / MBN_raw
+
+    return C_to_N_raw
 
 
 def get_ergosterol_to_biomass(treatment: str='t', normalize_by=None):

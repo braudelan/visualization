@@ -3,11 +3,18 @@ import pdb
 from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import get_stats, normalize_to_control, normalize_to_baseline,\
-    normalize_to_initial, normalize_to_TOC, get_microbial_C_N, get_ergosterol_to_biomass
+from stats import get_stats,\
+    normalize_to_control,\
+    normalize_to_baseline,\
+    normalize_to_TOC,\
+    get_microbial_C_N,\
+    get_ergosterol_to_biomass,\
+    subtract_control,
+
+    subtract_baseline
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
-from significance import significance_between_soils
+from significance import daily_significance_between_soils
 from helpers import get_week_ends, DataFrame_to_image
 
 # from model_dynamics import plot_model
@@ -20,7 +27,7 @@ pyplot.rc('savefig',  pad_inches=1.5)
 # input & output locations
 INPUT_FILE = "all_tests.xlsx"
 FIGURES_DIRECTORY_PATH = '/home/elan/Dropbox/research/figures'
-SPECIFIED_DIRECTORY_PATH = '/ergosterol_to_biomass/'
+SPECIFIED_DIRECTORY_PATH = '/significance/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
 
 # setup
@@ -115,49 +122,43 @@ i=1
 
 # -------------------------------------C-to-N ratio---------------------------------------------------------------------
 # visualize microbial C_to_N
-def visualize_C_N(label: str, treatment: str=None,
-                  normalization=None):
+def visualize_C_N(label: str, MBC_raw, MBN_raw):
+    #
+    # MBC_raw = get_raw_data('MBC')
+    # MBN_raw = get_raw_data('MBN')
+    # if normalization is not None:
+    #     MBC_stats = normalization(MBC_raw)
+    #     MBN_stats = normalization(MBN_raw)
+    # else:
+    #     MBC_stats = get_stats(MBC_raw, treatment)
+    #     MBN_stats = get_stats(MBN_raw, treatment)
+    #
+    # print ('MBC means: ', MBC_stats.means)
+    # print('MBN means: ', MBN_stats.means)
+    # print('MBC stde: ', MBC_stats.stde)
+    # print('MBN stde: ', MBN_stats.stde)
 
-    MBC_raw = get_raw_data('MBC')
-    MBN_raw = get_raw_data('MBN')
-    if normalization is not None:
-        MBC_stats = normalization(MBC_raw)
-        MBN_stats = normalization(MBN_raw)
-    else:
-        MBC_stats = get_stats(MBC_raw, treatment)
-        MBN_stats = get_stats(MBN_raw, treatment)
+    C_to_N_raw = get_microbial_C_N(MBC_raw, MBN_raw)
+    C_to_N_stats = get_stats(C_to_N_raw)
 
-    print ('MBC means: ', MBC_stats.means)
-    print('MBN means: ', MBN_stats.means)
-    print('MBC stde: ', MBC_stats.stde)
-    print('MBN stde: ', MBN_stats.stde)
-
-    C_to_N_stats = get_microbial_C_N(MBC_stats, MBN_stats)
-    C_to_N = C_to_N_stats.means
-    C_to_N_stde = C_to_N_stats.stde
-
+    means = C_to_N_stats.means
+    stde = C_to_N_stats.stde
 
     figure = make_figure()
     axes = make_axes(figure)
-    plot_lines(axes,C_to_N, stde=C_to_N_stde)
-    figure.savefig('%s/%s_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
+    plot_lines(axes,means, stde=stde)
+    figure.savefig(f'{OUTPUT_DIRECTORY_PATH}/{label}_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
 
-# normalization_functions = [
-#                             normalize_to_control,
-#                             normalize_to_baseline,
-#                             normalize_to_initial
-#                        ]
-# labels = ['control','baseline', 'initial'] #'control'
-# for function, label in zip(normalization_functions, labels):
-#     visualize_C_N(label, normalization=function)
-# visualize_C_N('simple_means', 't')
+MBC_absolute = get_raw_data('MBC')
+MBC_to_baseline = subtract_baseline(MBC_absolute)
+MBC_to_control = subtr
+
+visualize_C_N('simple_means', 't')
 
 
-# -------------------------------------significance between treatmetns---------------------------------------------------
+# -------------------------------------significance---------------------------------------------------
 
-def visualize_significance(set_name, notations, p_values):
-
-    css = """
+css = """
     <style type=\"text/css\">
     table {
     color: #333;
@@ -183,57 +184,59 @@ def visualize_significance(set_name, notations, p_values):
     background-color: white;
     }
     </style>
-    """
-    notations_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_letters'
-    values_output_file = OUTPUT_DIRECTORY_PATH + set_name + '_p_values'
+    """ # html code specifying the appearence of significance table
+
+def visualize_significance(set_name, notations, css, label: str=None):
+
+    notations_output_file = f'{OUTPUT_DIRECTORY_PATH}{set_name}_{label}.png'
     DataFrame_to_image(notations, css, outputfile=notations_output_file)
-    DataFrame_to_image(p_values, css, outputfile=values_output_file)
 
-# # visualize significance
-# for set_name in DATA_SETS_NAMES:
-#     raw_data = get_raw_data(set_name)
-#     significance = significance_between_soils(raw_data, 't')
-#     letters = significance[0]
-#     p_values = significance[1]
-#     visualize_significance(set_name, letters, p_values)
+# visualize significance between soils for every day of incubation
+def daily_between_soils_significance(data_sets_names, label: str=None):
 
-# visualize_significance()
+    for set_name in DATA_SETS_NAMES:
+        raw_data = get_raw_data(set_name)
+        normalized_raw_data = subtract_baseline(raw_data)
+        significance = daily_significance_between_soils(normalized_raw_data)
+        visualize_significance(set_name, significance, css, label)
+
+
 
 # -------------------------------------ergostrol-to-microbial-biomass ratio----------------------------------------------
-# todo fix scale of labels and MRE marks
-ERG_to_MBC_treatment = get_ergosterol_to_biomass('t')
-ERG_to_MBC_control = get_ergosterol_to_biomass('c')
-ERG_to_MBC_by_control = get_ergosterol_to_biomass(normalize_by=normalize_to_control)
-ERG_to_MBC_by_baseline = get_ergosterol_to_biomass(normalize_by=normalize_to_baseline)
-
-stats_tuples = [
-    ERG_to_MBC_control,
-    ERG_to_MBC_treatment,
-    ERG_to_MBC_by_baseline,
-    ERG_to_MBC_by_control,
-]
-
-tuples_names = [
-    'control',
-    'treatment',
-    'baseline_normalized',
-    'control_normalized',
-]
-
-y_label = r'$\% \frac{sergosterol}{MBC}$'
-zipped = zip(tuples_names, stats_tuples)
-i = 1
-for name, tuple in zipped:
-    means = tuple.means
-    stde = tuple.stde
-    figure = make_figure(i)
-    axes = make_axes(figure)
-    plot_lines(axes,means,stde=stde)
-    draw_labels(figure,axes,y_label=y_label, label_rotation=45)
-
-    figure.savefig(OUTPUT_DIRECTORY_PATH + name + '.png')
-
-    i += 1
-
-
-
+# # todo fix scale of labels and MRE marks
+# ERG_to_MBC_treatment = get_ergosterol_to_biomass('t')
+# ERG_to_MBC_control = get_ergosterol_to_biomass('c')
+# ERG_to_MBC_by_control = get_ergosterol_to_biomass(normalize_by=normalize_to_control)
+# ERG_to_MBC_by_baseline = get_ergosterol_to_biomass(normalize_by=normalize_to_baseline)
+#
+# stats_tuples = [
+#     ERG_to_MBC_control,
+#     ERG_to_MBC_treatment,
+#     ERG_to_MBC_by_baseline,
+#     ERG_to_MBC_by_control,
+# ]
+#
+# tuples_names = [
+#     'control',
+#     'treatment',
+#     'baseline_normalized',
+#     'control_normalized',
+# ]
+#
+# y_label = r'$\% \frac{sergosterol}{MBC}$'
+# zipped = zip(tuples_names, stats_tuples)
+# i = 1
+# for name, tuple in zipped:
+#     means = tuple.means
+#     stde = tuple.stde
+#     figure = make_figure(i)
+#     axes = make_axes(figure)
+#     plot_lines(axes,means,stde=stde)
+#     draw_labels(figure,axes,y_label=y_label, label_rotation=45)
+#
+#     figure.savefig(OUTPUT_DIRECTORY_PATH + name + '.png')
+#
+#     i += 1
+#
+#
+#

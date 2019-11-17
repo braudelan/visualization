@@ -3,13 +3,17 @@ import numpy
 
 from matplotlib import pyplot
 from sklearn.linear_model import LinearRegression
+import statsmodels.api as statsmodels
 
 from raw_data import get_raw_data, get_setup_arguments
+from helpers import Constants
+
 
 setup_arguments = get_setup_arguments()
 DATA_SETS_NAMES = setup_arguments.sets
+LEVEL_LABELS = Constants.level_labels
 
-def get_r_square(x: str, y: str):
+def r_squared_OLS(x: str, y: str):
 
     data = all_parameters[[x, y]]
     data = data.dropna()  # this will drop any row with any None value, in this case leaving only days 0, 14 and 28
@@ -17,6 +21,19 @@ def get_r_square(x: str, y: str):
     y = data[y].values.reshape(n_samples, 1)
     x = data[x].values.reshape(n_samples, 1)
 
+    model = LinearRegression()
+    model.fit(x, y)
+    r_sq = model.score(x, y)
+
+    return r_sq
+
+def r_squared_WLS(x: str, y: str):
+
+    data = all_parameters[[x, y]]
+    data = data.dropna()  # this will drop any row with any None value, in this case leaving only days 0, 14 and 28
+    n_samples = data.shape[0]
+    y = data[y].values.reshape(n_samples, 1)
+    x = data[x].values.reshape(n_samples, 1)
     model = LinearRegression()
     model.fit(x, y)
     r_sq = model.score(x, y)
@@ -36,11 +53,8 @@ def organize_data(data_sets_names):
     stacked_data_sets = []
     for data_set_name in data_sets_names:
         raw_data = get_raw_data(data_set_name)
-        grouped = raw_data.groupby(level=('soil', 'treatment')
-                                                , axis='columns')
-        means = grouped.mean()
-        stacked_twice = means.stack().stack()
-        renamed = stacked_twice.rename(data_set_name)
+        stacked = raw_data.stack(LEVEL_LABELS)
+        renamed = stacked.rename(data_set_name)
 
         stacked_data_sets.append(renamed)
 
@@ -53,14 +67,14 @@ def plot_correlations(arranged_data):
         for dep_var in parameters.drop(ind_var):
 
             # compute regrresion and get r_square
-            r_square = get_r_square(ind_var, dep_var)
+            r_square = r_squared_OLS(ind_var, dep_var)
             r_square = round(r_square, 2)
 
             if r_square > 0.5:
 
                 # data
                 data = all_parameters[[dep_var, ind_var]]
-                data = data.dropna(how='any')
+                data = data.dropna(how='all')
                 x = data[dep_var]
                 y = data[ind_var]
 

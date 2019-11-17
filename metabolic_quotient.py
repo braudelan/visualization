@@ -13,7 +13,7 @@ SOILS = Constants.groups
 #--------------------------------------weekly cumulative CO2------------------------------
 # respiration data
 RESP_raw_data = get_raw_data('RESP')
-RESP_stats = get_stats(RESP_raw_data, 't')
+RESP_stats = get_stats(RESP_raw_data, 'c')
 RESP_means = RESP_stats.means
 RESP_stde = RESP_stats.stde
 
@@ -91,7 +91,7 @@ MBC_raw_data: DataFrame = get_raw_data('MBC')
 week_ends = get_week_ends(MBC_raw_data)
 MBC_raw_data = MBC_raw_data.loc[week_ends]
 
-MBC_stats = get_stats(MBC_raw_data, 't')
+MBC_stats = get_stats(MBC_raw_data, 'c')
 MBC_means = MBC_stats.means
 MBC_means = MBC_means.iloc[:-1] # drop last week end
 MBC_stde = MBC_stats.stde
