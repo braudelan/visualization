@@ -14,8 +14,8 @@ from stats import get_stats,\
 
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
-from significance import daily_significance_between_soils
-from helpers import get_week_ends, DataFrame_to_image
+from significance import visualize_daily_significance
+from helpers import Constants, get_week_ends, DataFrame_to_image
 
 # from model_dynamics import plot_model
 # from Ttest import get_daily_Ttest
@@ -37,8 +37,11 @@ DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 RAW_DATA_SETS = get_multi_sets(DATA_SETS_NAMES)
 
-def visualize_dynamics(data_set_names):
+TABLE_CSS = Constants.table_css
+
+def dynamics(data_set_names):
     '''visualize dynamics of each parameter and save as a separate image file.'''
+
 
     def plot_data_pairs(data_pair, data_label: str,
                  figure_number, titles: list = None):
@@ -53,7 +56,7 @@ def visualize_dynamics(data_set_names):
 
         # figure
         dynamics_figure: Figure = \
-            make_figure(raw_data, figure_number, set_name)
+            make_figure(raw_data, figure_number, data_set_name)
 
         # axis
         top_axes: Axes = make_axes(dynamics_figure,
@@ -75,7 +78,7 @@ def visualize_dynamics(data_set_names):
         axis_positions = zip(axis, positions)
         for axes, axes_position in axis_positions:
             draw_labels(dynamics_figure, axes,
-                        set_name, axes_position=axes_position)
+                        data_set_name, axes_position=axes_position)
         # plot data
         plot_lines(top_axes, means_1, stde=stde_1)
         plot_lines(bottom_axes, means_2, stde=stde_2)
@@ -85,18 +88,35 @@ def visualize_dynamics(data_set_names):
         dynamics_figure.legend(handles, labels,
                                loc='center right')
 
-        output_file = f'{OUTPUT_DIRECTORY_PATH}{set_name}_{data_label}.png'
+        output_file = f'{OUTPUT_DIRECTORY_PATH}{data_set_name}_{data_label}.png'
         dynamics_figure.savefig(output_file)
         pyplot.clf()
 
     i = 1
-    for set_name in data_set_names:
+    for data_set_name in data_set_names:
 
         # raw data
-        if set_name == 'ERG':
+        if data_set_name == 'ERG':
             raw_data = get_ergosterol_to_biomass()
         else:
-            raw_data = get_raw_data(set_name)
+            raw_data = get_raw_data(data_set_name)
+
+        raw_treatment = raw_data['t']
+        raw_control = raw_data['c']
+        raw_control_normalized = control_normalize(raw_data)
+        raw_basline_normalized = baseline_normalize(raw_data)
+
+        raw_data_sets = [
+            ('MRE treated', raw_treatment),
+            ('control', raw_control),
+            ('control normalized', raw_control_normalized),
+            ('baseline normalized', raw_basline_normalized),
+        ]
+
+        # significance between soils on each day
+        for label, set in raw_data_sets:
+            output_file = f'{OUTPUT_DIRECTORY_PATH}{data_set_name}'
+            visualize_daily_significance(set, TABLE_CSS, OUTPUT_DIRECTORY_PATH, label)
 
         # get basic statistics
         treatment_stats = get_stats(raw_data, 't')
@@ -104,11 +124,11 @@ def visualize_dynamics(data_set_names):
         control_normalized = get_stats(control_normalize(raw_data))
         baseline_normalized = get_stats(baseline_normalize(raw_data))
 
+        # visualize dynamics
         absolute = (treatment_stats, control_stats)
         normalized = (control_normalized, baseline_normalized)
         absolute_titles = ['MRE treated', 'control']
         normalized_titles = ['control normalized','baseline normalized']
-
         plot_arguments = (
             (absolute, 'absolute', absolute_titles),
             (normalized, 'normalized', normalized_titles)
@@ -116,6 +136,7 @@ def visualize_dynamics(data_set_names):
         for pair, label, titles in plot_arguments:
             plot_data_pairs(data_pair=pair, data_label=label,
                                 figure_number=i, titles=titles)
+
 
         i += 1
 

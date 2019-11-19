@@ -198,6 +198,12 @@ def baseline_significance(data_sets_names) -> DataFrame:
 
     return baseline_letters
 
+def visualize_daily_significance(data_set, css, output_dir, label: str=None):
+
+    significance_matrix = daily_significance_between_soils(set)
+    output_file = f'{output_directory}{data_set}_{label}'
+    DataFrame_to_image(significance_matrix, css, output_file)
+
 
 if __name__ == '__main__':
 

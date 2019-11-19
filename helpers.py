@@ -20,6 +20,33 @@ class Constants:
     level_labels = ["soil", "treatment", "replicate"]
     input_file_name = "all_tests.xlsx"
     output_folder = '/home/elan/Dropbox/research/figures'
+    table_css = """
+                    <style type=\"text/css\">
+                    table {
+                    color: #333;
+                    font-family: Helvetica, Arial, sans-serif;
+                    width: 640px;
+                    border-collapse:
+                    collapse; 
+                    border-spacing: 0;
+                    }
+                    td, th {
+                    border: 1px solid transparent; /* No more visible border */
+                    height: 30px;
+                    }
+                    th {
+                    background: #DFDFDF; /* Darken header a bit */
+                    font-weight: bold;
+                    }
+                    td {
+                    background: #FAFAFA;
+                    text-align: center;
+                    }
+                    table tr:nth-child(odd) td{
+                    background-color: white;
+                    }
+                    </style>
+                    """
 
 
 def get_week_ends(dataframe):

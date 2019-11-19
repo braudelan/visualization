@@ -53,7 +53,7 @@ def organize_data(data_sets_names, treatment: str=None):
     return organized_data
 
 
-def plot_correlations(data):
+def visualize_correlations(data):
     parameters = data.columns
     for ind_var in parameters:
         for dep_var in parameters.drop(ind_var):

@@ -333,8 +333,8 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
 
     # data parameters
     CATEGORIES = raw_data_sets.keys()
-    N = len(raw_data_sets)
-    X_LOCATIONS = numpy.arange(N)
+    NUMBER_OF_CATEGORIES = len(raw_data_sets)
+    X_LOCATIONS = numpy.arange(NUMBER_OF_CATEGORIES)
     CATEGORIES_DATA = raw_data_sets.values()
 
     # plot parameters
