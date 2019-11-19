@@ -313,44 +313,20 @@ def get_microbial_C_N(MBC_raw, MBN_raw):
     return C_to_N_raw
 
 
-def get_ergosterol_to_biomass(treatment: str='t', normalize_by=None):
-
-    normalize = False if normalize_by is None else True
+def get_ergosterol_to_biomass():
 
     # get MBC data
     MBC_raw = get_raw_data('MBC')
     week_ends = get_week_ends(MBC_raw)
     MBC_raw = MBC_raw.loc[week_ends]
-    if normalize:
-        MBC_stats = normalize_by(MBC_raw)
-    else:
-        MBC_stats = get_stats(MBC_raw, treatment)
-    MBC_means = MBC_stats.means
-    MBC_stde = MBC_stats.stde
-    MBC_relative_stde = MBC_stde / MBC_means
 
     # get ERG data
     ERG_raw = get_raw_data('ERG')
-    if normalize:
-        ERG_stats = normalize_by(ERG_raw)
-    else:
-        ERG_stats = get_stats(ERG_raw, treatment)
-    ERG_means = ERG_stats.means
-    ERG_stde = ERG_stats.stde
-    ERG_relative_stde = ERG_stde / ERG_means
 
     # ompute ERG_to_MBC ratio
-    ERG_to_MBC = ERG_means / MBC_means *100
-    ratio_relative_stde = (ERG_relative_stde**2 + MBC_relative_stde**2)**0.5
-    ERG_to_MBC_stde = ratio_relative_stde * ERG_to_MBC
+    ERG_to_MBC = ERG_raw / MBC_raw
 
-    return Stats(
-        means=ERG_to_MBC,
-        stde=ERG_to_MBC_stde,
-        stdv=None
-    )
-
-
+    return ERG_to_MBC
 
 
 
