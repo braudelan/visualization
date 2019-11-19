@@ -9,9 +9,9 @@ from stats import get_stats,\
     normalize_to_TOC,\
     get_microbial_C_N,\
     get_ergosterol_to_biomass,\
-    control_normalize,
+    control_normalize,\
+    baseline_normalize
 
-    subtract_baseline
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
 from significance import daily_significance_between_soils
@@ -27,7 +27,7 @@ pyplot.rc('savefig',  pad_inches=1.5)
 # input & output locations
 INPUT_FILE = "all_tests.xlsx"
 FIGURES_DIRECTORY_PATH = '/home/elan/Dropbox/research/figures'
-SPECIFIED_DIRECTORY_PATH = '/significance/'
+SPECIFIED_DIRECTORY_PATH = '/dynamics/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
 
 # setup
@@ -37,77 +37,87 @@ DATA_SETS_NAMES = setup_arguments.sets
 NUMBERS = setup_arguments.numbers
 RAW_DATA_SETS = get_multi_sets(DATA_SETS_NAMES)
 
-i=1
-# plot dynamics of each soil parameter as a separate graph
-# for set_name in DATA_SETS_NAMES:
-#
-#     # input data into DataFrame
-#     raw_data = get_raw_data(set_name)
-#
-#     # get basic statistics
-#     treatment_stats = get_stats(raw_data, 't')
-#     control_stats = get_stats(raw_data, 'c')
-#     control_normalized = normalize_to_control(raw_data)
-#     baseline_normalized = normalize_to_baseline(raw_data)
-#     initial_normalized = normalize_to_initial(raw_data)
-#     TOC_normalized_treatment = normalize_to_TOC(raw_data)['treatment']
-#     TOC_normalized_control = normalize_to_TOC(raw_data)['control']
-#     TOC_normalized_normal = normalize_to_TOC(raw_data)['normalized']
-#
-#     # statistics to plot
-#     treatment_means = treatment_stats.means
-#     treatment_stde = treatment_stats.stde
-#     control_means = control_stats.means
-#     control_stde = control_stats.stde
-#     control_normalized_means = control_normalized.means
-#     control_normalized_stde = control_normalized.stde
-#     baseline_normalized_means = baseline_normalized.means
-#     baseline_normalized_stde = baseline_normalized.stde
-#     initial_normalized_means = initial_normalized.means
-#     initial_normalized_stde = initial_normalized.stde
-#     TOC_normalized_treatment_means = TOC_normalized_treatment.means
-#     TOC_normalized_treatment_stde = TOC_normalized_treatment.stde
-#     TOC_normalized_normal_means = TOC_normalized_normal.means
-#     TOC_normalized_normal_stde = TOC_normalized_normal.stde
-#
-#     # figure
-#     dynamics_figure: Figure= make_figure(raw_data, i, set_name)
-#
-#     # axis
-#     top_axes: Axes = make_axes(dynamics_figure, axes_position='top of 2')
-#     # middle_axes: Axes = make_axes(dynamics_figure, axes_position='middle')
-#     bottom_axes: Axes = make_axes(dynamics_figure, axes_position='bottom of 2')
-#
-#     axis = [top_axes, bottom_axes]
-#     axis_positions = ['top', 'bottom']
-#     axis_titles = ['MRE treated', 'control']
-#
-#     #set titles
-#     for axes, title in zip(axis, axis_titles):
-#         title_position = (0.9, 0.8)
-#         axes.set_title(title, position=title_position)
-#
-#     # insert decorations
-#     for axes, axes_position in zip(axis, axis_positions):
-#         draw_labels(dynamics_figure, axes,
-#                     set_name, axes_position=axes_position)
-#     # plot data
-#     plot_lines(top_axes, treatment_means,
-#                                     stde=treatment_stde)
-#     # plot_lines(middle_axes, baseline_normalized_means,
-#     #                                            stde=baseline_normalized_stde)
-#     plot_lines(bottom_axes, control_means,
-#                                     stde=control_stde)
-#
-#     # legend
-#     handles, labels = top_axes.get_legend_handles_labels()
-#     dynamics_figure.legend(handles, labels, loc='center right')
-#
-#
-#     dynamics_figure.savefig(OUTPUT_DIRECTORY_PATH + set_name + '.png')
-#     pyplot.cla()
-#
-#     i += 1
+def visualize_dynamics(data_set_names):
+    '''visualize dynamics of each parameter and save as a separate image file.'''
+
+    def plot_data_pairs(data_pair, data_label: str,
+                 figure_number, titles: list = None):
+
+        # statistics to plot
+        data_1 = data_pair[0]
+        data_2 = data_pair[1]
+        means_1 = data_1.means
+        stde_1 = data_1.stde
+        means_2 = data_2.means
+        stde_2 = data_2.stde
+
+        # figure
+        dynamics_figure: Figure = \
+            make_figure(raw_data, figure_number, set_name)
+
+        # axis
+        top_axes: Axes = make_axes(dynamics_figure,
+                                   axes_position='top of 2')
+        bottom_axes: Axes = make_axes(dynamics_figure,
+                                      axes_position='bottom of 2')
+
+        axis = [top_axes, bottom_axes]
+        positions = ['top', 'bottom']
+
+        # set titles
+        if titles:
+            axis_titles = zip(axis, titles)
+            for axes, title in axis_titles:
+                title_position = (0.9, 0.8)
+                axes.set_title(title, position=title_position)
+
+        # insert decorations
+        axis_positions = zip(axis, positions)
+        for axes, axes_position in axis_positions:
+            draw_labels(dynamics_figure, axes,
+                        set_name, axes_position=axes_position)
+        # plot data
+        plot_lines(top_axes, means_1, stde=stde_1)
+        plot_lines(bottom_axes, means_2, stde=stde_2)
+
+        # legend
+        handles, labels = top_axes.get_legend_handles_labels()
+        dynamics_figure.legend(handles, labels,
+                               loc='center right')
+
+        output_file = f'{OUTPUT_DIRECTORY_PATH}{set_name}_{data_label}.png'
+        dynamics_figure.savefig(output_file)
+        pyplot.clf()
+
+    i = 1
+    for set_name in data_set_names:
+
+        # raw data
+        if set_name == 'ERG':
+            raw_data = get_ergosterol_to_biomass()
+        else:
+            raw_data = get_raw_data(set_name)
+
+        # get basic statistics
+        treatment_stats = get_stats(raw_data, 't')
+        control_stats = get_stats(raw_data, 'c')
+        control_normalized = get_stats(control_normalize(raw_data))
+        baseline_normalized = get_stats(baseline_normalize(raw_data))
+
+        absolute = (treatment_stats, control_stats)
+        normalized = (control_normalized, baseline_normalized)
+        absolute_titles = ['MRE treated', 'control']
+        normalized_titles = ['control normalized','baseline normalized']
+
+        plot_arguments = (
+            (absolute, 'absolute', absolute_titles),
+            (normalized, 'normalized', normalized_titles)
+        )
+        for pair, label, titles in plot_arguments:
+            plot_data_pairs(data_pair=pair, data_label=label,
+                                figure_number=i, titles=titles)
+
+        i += 1
 
 # -------------------------------------baseline-------------------------------------------------------------------------
 
@@ -121,22 +131,8 @@ i=1
 # control_composite_figure.savefig('%scontrol.png' % OUTPUT_DIRECTORY_PATH)
 
 # -------------------------------------C-to-N ratio---------------------------------------------------------------------
-# visualize microbial C_to_N
+
 def visualize_C_N(label: str, MBC_raw, MBN_raw):
-    #
-    # MBC_raw = get_raw_data('MBC')
-    # MBN_raw = get_raw_data('MBN')
-    # if normalization is not None:
-    #     MBC_stats = normalization(MBC_raw)
-    #     MBN_stats = normalization(MBN_raw)
-    # else:
-    #     MBC_stats = get_stats(MBC_raw, treatment)
-    #     MBN_stats = get_stats(MBN_raw, treatment)
-    #
-    # print ('MBC means: ', MBC_stats.means)
-    # print('MBN means: ', MBN_stats.means)
-    # print('MBC stde: ', MBC_stats.stde)
-    # print('MBN stde: ', MBN_stats.stde)
 
     C_to_N_raw = get_microbial_C_N(MBC_raw, MBN_raw)
     C_to_N_stats = get_stats(C_to_N_raw)
@@ -149,65 +145,15 @@ def visualize_C_N(label: str, MBC_raw, MBN_raw):
     plot_lines(axes,means, stde=stde)
     figure.savefig(f'{OUTPUT_DIRECTORY_PATH}/{label}_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
 
-MBC_absolute = get_raw_data('MBC')
-MBC_to_baseline = subtract_baseline(MBC_absolute)
-MBC_to_control = subtr
-
-visualize_C_N('simple_means', 't')
-
-
-# -------------------------------------significance---------------------------------------------------
-
-css = """
-    <style type=\"text/css\">
-    table {
-    color: #333;
-    font-family: Helvetica, Arial, sans-serif;
-    width: 640px;
-    border-collapse:
-    collapse; 
-    border-spacing: 0;
-    }
-    td, th {
-    border: 1px solid transparent; /* No more visible border */
-    height: 30px;
-    }
-    th {
-    background: #DFDFDF; /* Darken header a bit */
-    font-weight: bold;
-    }
-    td {
-    background: #FAFAFA;
-    text-align: center;
-    }
-    table tr:nth-child(odd) td{
-    background-color: white;
-    }
-    </style>
-    """ # html code specifying the appearence of significance table
-
-def visualize_significance(set_name, notations, css, label: str=None):
-
-    notations_output_file = f'{OUTPUT_DIRECTORY_PATH}{set_name}_{label}.png'
-    DataFrame_to_image(notations, css, outputfile=notations_output_file)
-
-# visualize significance between soils for every day of incubation
-def daily_between_soils_significance(data_sets_names, label: str=None):
-
-    for set_name in DATA_SETS_NAMES:
-        raw_data = get_raw_data(set_name)
-        normalized_raw_data = subtract_baseline(raw_data)
-        significance = daily_significance_between_soils(normalized_raw_data)
-        visualize_significance(set_name, significance, css, label)
-
-
 
 # -------------------------------------ergostrol-to-microbial-biomass ratio----------------------------------------------
 # # todo fix scale of labels and MRE marks
-# ERG_to_MBC_treatment = get_ergosterol_to_biomass('t')
-# ERG_to_MBC_control = get_ergosterol_to_biomass('c')
-# ERG_to_MBC_by_control = get_ergosterol_to_biomass(normalize_by=normalize_to_control)
-# ERG_to_MBC_by_baseline = get_ergosterol_to_biomass(normalize_by=normalize_to_baseline)
+# raw_ERG_to_MBC = get_ergosterol_to_biomass()
+# ERG_to_MBC_treatment = raw_ERG_to_MBC['t']
+# ERG_to_MBC_control = raw_ERG_to_MBC['c']
+# ERG_to_MBC_by_control = control_normalize(raw_ERG_to_MBC)
+# ERG_to_MBC_by_baseline = baseline_normalize(raw_ERG_to_MBC)
+#
 #
 # stats_tuples = [
 #     ERG_to_MBC_control,
@@ -237,6 +183,49 @@ def daily_between_soils_significance(data_sets_names, label: str=None):
 #     figure.savefig(OUTPUT_DIRECTORY_PATH + name + '.png')
 #
 #     i += 1
+
+
+# -------------------------------------significance---------------------------------------------------
 #
+# css = """
+#     <style type=\"text/css\">
+#     table {
+#     color: #333;
+#     font-family: Helvetica, Arial, sans-serif;
+#     width: 640px;
+#     border-collapse:
+#     collapse;
+#     border-spacing: 0;
+#     }
+#     td, th {
+#     border: 1px solid transparent; /* No more visible border */
+#     height: 30px;
+#     }
+#     th {
+#     background: #DFDFDF; /* Darken header a bit */
+#     font-weight: bold;
+#     }
+#     td {
+#     background: #FAFAFA;
+#     text-align: center;
+#     }
+#     table tr:nth-child(odd) td{
+#     background-color: white;
+#     }
+#     </style>
+#     """ # html code specifying the appearence of significance table
 #
+# def visualize_significance(set_name, notations, css, label: str=None):
 #
+#     notations_output_file = f'{OUTPUT_DIRECTORY_PATH}{set_name}_{label}.png'
+#     DataFrame_to_image(notations, css, outputfile=notations_output_file)
+#
+# # visualize significance between soils for every day of incubation
+# def daily_between_soils_significance(data_sets_names, label: str=None):
+#
+#     for set_name in DATA_SETS_NAMES:
+#         raw_data = get_raw_data(set_name)
+#         normalized_raw_data = subtract_baseline(raw_data)
+#         significance = daily_significance_between_soils(normalized_raw_data)
+#         visualize_significance(set_name, significance, css, label)
+
