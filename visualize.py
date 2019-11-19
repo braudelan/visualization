@@ -9,7 +9,7 @@ from stats import get_stats,\
     normalize_to_TOC,\
     get_microbial_C_N,\
     get_ergosterol_to_biomass,\
-    subtract_control,
+    control_normalize,
 
     subtract_baseline
 from plot import make_figure, make_axes, plot_lines, \

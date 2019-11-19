@@ -1,12 +1,14 @@
 import pdb
+from collections import namedtuple
+
 import numpy
 from pandas import DataFrame, Series, MultiIndex
 from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
 from scipy.stats import ttest_ind
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import get_stats, subtract_control, subtract_baseline
-from helpers import Constants, replace_None, get_week_ends
+from stats import get_stats, control_normalize, baseline_normalize
+from helpers import Constants, replace_nan_with_mean, get_week_ends, DataFrame_to_image
 
 OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
 setup_args = get_setup_arguments()
@@ -17,7 +19,8 @@ TREATMENTS = Constants.treatment_labels
 COLUMNS_LEVELS = Constants.level_labels
 
 
-def anotate_significance(booleans, day=None):
+def anotate(booleans, day=None):
+    ''' assign letters to soils according to significant differences'''
 
     # define pairs
     pair_1 = ('MIN', 'ORG')
@@ -67,14 +70,36 @@ def anotate_significance(booleans, day=None):
     return anotations
 
 
-def daily_significance_between_soils(raw_data, treatment=None):
+def daily_significance_between_soils(data, treatment=None):
+
+    def arrange_data(data, day):
+        stacked_data = data.stack()
+        sliced_by_day = stacked_data.loc[day]
+        daily_data = sliced_by_day.stack()
+        daily_data = daily_data.droplevel('replicate')
+        id = daily_data.index.values
+        value = daily_data.values
+
+        ArragedData = namedtuple('ArrangedData', ['id', 'value'])
+
+        return ArragedData(id=id, value=value)
+
+    def find_missing_days(dataframe) -> list:
+        mask = []
+        days = dataframe.index
+        for soil in SOILS:
+            soil_mask = [day for day in days if
+                                dataframe.loc[day, soil].isnull().all()]
+            mask.extend(soil_mask)
+
+        return mask
 
     # handle missing data
     if treatment is not None:
-      data = raw_data.loc[:, treatment]
-    data = raw_data.dropna(how='all')
-    data = replace_None(data)
-
+      data = data.loc[:, treatment]
+    data = data.dropna(how='all')
+    data = data.drop(find_missing_days(data))
+    data = replace_nan_with_mean(data)
 
     # dataframe to store booleans rejecting/accepting null hypothesis
     days = data.index
@@ -85,7 +110,7 @@ def daily_significance_between_soils(raw_data, treatment=None):
     significance_booleans = DataFrame(index=index,
                                     columns=days)
 
-    # dataframe to store letters anotating significance
+    # dataframe to store significance by letters
     letters_index_label = 'soil'
     letters_columms_label = 'day of incubation'
     letters_index = ['MIN', 'ORG', 'UNC']
@@ -95,24 +120,22 @@ def daily_significance_between_soils(raw_data, treatment=None):
                            columns=letters_columms_label, inplace=True)
 
     for day in days:
-        stacked_data = data.stack()
-        sliced_by_day = stacked_data.loc[day]
-        daily_data = sliced_by_day.stack()
-        daily_data = daily_data.droplevel('replicate')
-        result = daily_data.values
-        id = daily_data.index.values
+
+        arranged_data = arrange_data(data, day)
+        id = arranged_data.id
+        value = arranged_data.value
 
         # multiple comparisons objects
-        multiple_comparisons = MultiComparison(result, id)
+        multiple_comparisons = MultiComparison(value, id)
         pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')
         significance_matrix = DataFrame(pairwise_holm[2])
-
+        # pdb.set_trace()
         # insert reject/accept booleans into dataframe
         reject_accept = significance_matrix['reject'].values
-        significance_booleans.loc[:, day] = reject_accept
+        significance_booleans[day] = reject_accept
 
         # get anotation letters and insert them into letters dataframe
-        significance_letters = anotate_significance(significance_booleans, day=day)
+        significance_letters = anotate(significance_booleans, day=day)
         for soil in letters_index:
             letters.loc[soil, day] = significance_letters[soil]
 
@@ -129,17 +152,17 @@ def baseline_significance(data_sets_names) -> DataFrame:
         should be computed.
 
     :returns
-
-    dataframe
-        with letters designating significance
+        dataframe with letters designating significance
         between baseline values for each data set.
      '''
 
     def get_data_set_significance(raw_data) -> Series:
-        week_ends_control = raw_data.loc[
-            get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
+
+        week_ends_control = raw_data.loc[get_week_ends(raw_data),
+                                                        ('c', SOILS)]  # week ends control samples from raw data
         stacked = week_ends_control.stack(level=COLUMNS_LEVELS)
-        index_reset = stacked.reset_index(level=('days', 'treatment', 'replicate'), drop=True)
+        index_reset = stacked.reset_index(level=('days', 'treatment', 'replicate'),
+                                                                            drop=True)
         data = index_reset
 
         id = data.index.values
@@ -153,14 +176,15 @@ def baseline_significance(data_sets_names) -> DataFrame:
         index_names = numpy.array(['soil_1', 'soil_2'])
         index = MultiIndex.from_arrays(index_levels,
                                        names=index_names)
+
         significance_booleans = Series(index=index)
 
         # insert reject/accept booleans into dataframe
         reject_accept = significance_matrix['reject'].values
         significance_booleans.loc[:] = reject_accept
-        letters = anotate_significance(significance_booleans)
 
-        return letters
+        return significance_booleans
+
 
     data_sets = get_multi_sets(data_sets_names)
 
@@ -169,18 +193,61 @@ def baseline_significance(data_sets_names) -> DataFrame:
     baseline_letters = DataFrame(index=index, columns=columns)
     for name, data in data_sets.items():
         significance = get_data_set_significance(data)
-        baseline_letters[name] = significance
+        data_set_significance_letters = anotate(significance)
+        baseline_letters[name] = data_set_significance_letters
 
     return baseline_letters
 
+
 if __name__ == '__main__':
-    raw_data = get_raw_data("HWS")
-    control_subtracted = subtract_control(raw_data)
-    baseline_subtracted = subtract_baseline(raw_data)
 
-    data_sets = {'control': control_subtracted, 'baseline': baseline_subtracted}
-    for name, data_set in data_sets.items():
+    for data_set in DATA_SETS_NAMES:
 
-        significance_matrix = daily_significance_between_soils(data_set)
+        if data_set == 'ERG':
+            raw_data = get_raw_data()
+        raw_data = get_raw_data(data_set)
+        treatment = raw_data['t']
+        control = raw_data['c']
+        control_subtracted = control_normalize(raw_data)
+        baseline_subtracted = baseline_normalize(raw_data)
 
-        print(f'{name}: {significance_matrix}')
+        sets = {
+            'treatment': treatment,
+            'control': control,
+            'control_normalized': control_subtracted,
+            'baseline_normalized': baseline_subtracted,
+        }
+
+        for name, set in sets.items():
+
+            significance_matrix = daily_significance_between_soils(set)
+            css = """
+                    <style type=\"text/css\">
+                    table {
+                    color: #333;
+                    font-family: Helvetica, Arial, sans-serif;
+                    width: 640px;
+                    border-collapse:
+                    collapse; 
+                    border-spacing: 0;
+                    }
+                    td, th {
+                    border: 1px solid transparent; /* No more visible border */
+                    height: 30px;
+                    }
+                    th {
+                    background: #DFDFDF; /* Darken header a bit */
+                    font-weight: bold;
+                    }
+                    td {
+                    background: #FAFAFA;
+                    text-align: center;
+                    }
+                    table tr:nth-child(odd) td{
+                    background-color: white;
+                    }
+                    </style>
+                    """  # html code specifying the appearence of significance table
+            output_directory = '/home/elan/Dropbox/research/figures/significance/daily_between_soils/'
+            output_file = f'{output_directory}{data_set}_{name}'
+            DataFrame_to_image(significance_matrix, css, output_file)

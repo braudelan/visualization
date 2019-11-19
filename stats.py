@@ -55,7 +55,7 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     )
 
 
-def subtract_baseline(raw_data):
+def baseline_normalize(raw_data):
 
     # get baseline stats
     baseline_stats = get_baseline(raw_data)
@@ -70,17 +70,17 @@ def subtract_baseline(raw_data):
     for soil in SOILS:
         baseline_reshaped[soil] = baseline_means[soil]
 
-    baseline_subtracted = raw_data - baseline_reshaped
+    normalized = raw_data / baseline_reshaped * 100
 
-    return baseline_subtracted
+    return normalized
 
 
-def subtract_control(raw_data):
+def control_normalize(raw_data):
     '''
-    subtract average control value from treated replicates.
+    divide each replicate with the average of corresponding control replicates.
 
-    the average of 4 (or less) replicates is subtracted from
-    each treatment replicate corresponding to the same treatment X time
+    each treatment replicate is divided by the average of 4 (or less)
+     corresponding control replicates and finally returned as a percantage
     combination.
     '''
     # raw data split to treatment and control
@@ -97,9 +97,10 @@ def subtract_control(raw_data):
             soil = column[0]
             control_means_shaped.loc[row, column] = control_means.loc[row, soil]
 
-    control_subtracted = treatment_raw - control_means_shaped
-    print(treatment_raw, control_means_shaped)
-    return  control_subtracted
+    normalized = treatment_raw / control_means_shaped * 100
+
+    return  normalized
+
 
 def normalize_to_control(raw_data):
     '''normalize raw data of treatment samples to corresponding control samples.
@@ -233,6 +234,7 @@ def get_baseline(raw_data):
     week_ends_control = raw_data.loc[get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
     week_ends_control.columns = week_ends_control.columns.droplevel('treatment')
     control_stacked = week_ends_control.stack(level='replicate')
+
 
     means = control_stacked.mean().reindex(SOILS)
     stdv = control_stacked.std()

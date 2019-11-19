@@ -366,8 +366,7 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
 
     bars = {}
     for x_location, data_set, category_name in zip(X_LOCATIONS, #todo turn into a function
-                                                   CATEGORIES_DATA,
-                                                   CATEGORIES):
+                                                   CATEGORIES_DATA, CATEGORIES):
         # baseline data
         baseline_statistics = get_baseline(data_set)
         BASELINE = baseline_statistics.means

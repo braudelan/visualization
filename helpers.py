@@ -54,7 +54,7 @@ def delay_factor(x, delay):
     return partialSums
 
 
-def replace_None(raw_data):
+def replace_nan_with_mean(raw_data):
     '''
      replace nan values with the average of remaining replicates.
 
