@@ -13,27 +13,14 @@ setup_arguments = get_setup_arguments()
 DATA_SETS_NAMES = setup_arguments.sets
 LEVEL_LABELS = Constants.level_labels
 
-def r_squared_OLS(x: str, y: str):
+def get_r_squared(data, x: str, y: str):
 
-    data = all_parameters[[x, y]]
+    data = data[[x, y]]
     data = data.dropna()  # this will drop any row with any None value, in this case leaving only days 0, 14 and 28
     n_samples = data.shape[0]
     y = data[y].values.reshape(n_samples, 1)
     x = data[x].values.reshape(n_samples, 1)
 
-    model = LinearRegression()
-    model.fit(x, y)
-    r_sq = model.score(x, y)
-
-    return r_sq
-
-def r_squared_WLS(x: str, y: str):
-
-    data = all_parameters[[x, y]]
-    data = data.dropna()  # this will drop any row with any None value, in this case leaving only days 0, 14 and 28
-    n_samples = data.shape[0]
-    y = data[y].values.reshape(n_samples, 1)
-    x = data[x].values.reshape(n_samples, 1)
     model = LinearRegression()
     model.fit(x, y)
     r_sq = model.score(x, y)
@@ -61,26 +48,27 @@ def organize_data(data_sets_names, treatment: str=None):
         renamed = stacked.rename(data_set_name)
 
         stacked_data_sets.append(renamed)
+    organized_data = pandas.concat(stacked_data_sets, axis=1)
 
-    return stacked_data_sets
+    return organized_data
 
 
-def plot_correlations(arranged_data):
-    parameters = arranged_data.columns
+def plot_correlations(data):
+    parameters = data.columns
     for ind_var in parameters:
         for dep_var in parameters.drop(ind_var):
 
             # compute regrresion and get r_square
-            r_square = r_squared_OLS(ind_var, dep_var)
+            r_square = get_r_squared(data, ind_var, dep_var)
             r_square = round(r_square, 2)
 
             if r_square > 0.5:
 
                 # data
-                data = all_parameters[[dep_var, ind_var]]
-                data = data.dropna(how='all')
-                x = data[dep_var]
-                y = data[ind_var]
+                pairwise_data = data[[dep_var, ind_var]]
+                pairwise_data = pairwise_data.dropna(how='all')
+                x = pairwise_data[dep_var]
+                y = pairwise_data[ind_var]
 
                 # plot
                 pyplot.scatter(x, y)
@@ -111,9 +99,8 @@ def plot_correlations(arranged_data):
 # ------------------------------------- correlations matrix ------------------------------------------------------------
 # DataFrame.corr() uses pearson pairwise correlation by default
 def make_correlations_matrix(data_sets_names, treatment):
-    stacked_data_sets = organize_data(data_sets_names, treatment)
-    all_parameters = pandas.concat(stacked_data_sets, axis=1)
-    correlations = all_parameters.corr()
+    data = organize_data(data_sets_names, treatment)
+    correlations = data.corr()
 
     css = """
         <style type=\"text/css\">
