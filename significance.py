@@ -7,7 +7,7 @@ from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
 from scipy.stats import ttest_ind
 
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import get_stats, control_normalize, baseline_normalize
+from stats import get_stats, control_normalize, baseline_normalize, get_ergosterol_to_biomass
 from helpers import Constants, replace_nan_with_mean, get_week_ends, DataFrame_to_image
 
 OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
@@ -204,18 +204,19 @@ if __name__ == '__main__':
     for data_set in DATA_SETS_NAMES:
 
         if data_set == 'ERG':
-            raw_data = get_raw_data()
-        raw_data = get_raw_data(data_set)
+            raw_data = get_ergosterol_to_biomass()
+        else:
+            raw_data = get_raw_data(data_set)
         treatment = raw_data['t']
         control = raw_data['c']
-        control_subtracted = control_normalize(raw_data)
-        baseline_subtracted = baseline_normalize(raw_data)
+        control_normalized = control_normalize(raw_data)
+        baseline_normalized = baseline_normalize(raw_data)
 
         sets = {
             'treatment': treatment,
             'control': control,
-            'control_normalized': control_subtracted,
-            'baseline_normalized': baseline_subtracted,
+            'control_normalized': control_normalized,
+            'baseline_normalized': baseline_normalized,
         }
 
         for name, set in sets.items():

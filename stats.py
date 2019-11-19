@@ -16,7 +16,7 @@ STATS_NAMES = [
 
 Stats = namedtuple('Stats', STATS_NAMES)
 
-def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
+def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
     '''
     calculate basic statistics for a given data sets.
 
@@ -26,15 +26,18 @@ def get_stats(raw_data: DataFrame, treatment: str) -> namedtuple:
     '''
 
     # means
-    groupby_soil_treatment = raw_data.groupby(level=['treatment', 'soil'], axis=1)
+    levels =['treatment', 'soil'] if treatment else 'soil'
+    groupby_soil_treatment = raw_data.groupby(level=levels, axis=1)
 
     means = groupby_soil_treatment.mean()  # means of 4 replicates
     stdv = groupby_soil_treatment.std() # std deviation
-    sdte = groupby_soil_treatment.sem()  # std error
+    stde = groupby_soil_treatment.sem()  # std error
+
     # drop control\MRE
-    means = means.xs(treatment, level=0, axis=1)
-    stdv = stdv.xs(treatment, level=0, axis=1)
-    stde = sdte.xs(treatment, level=0, axis=1)
+    if treatment is not None:
+        means = means[treatment]
+        stdv = stdv[treatment]
+        stde = stde[treatment]
 
     means.treatment_label = treatment
     # control = means.xs('c', level=0, axis=1)

@@ -74,12 +74,6 @@ def MRE_notation_marks(axes: Axes):
 
 def make_figure(data=None, number=None, data_set_name=None):
 
-
-    # last_day = data.index[-1]
-
-    # title_text = r'$\bf{Figure %s.}$ means of %s across %s days of incubation. (a) all soils, ' \
-    #              r'(b) normalized to control' % (number, data_set_name, last_day)
-
     title_text = data_set_name
     # create and adjut figure
     figure = pyplot.figure(number, figsize=(20, 15))
