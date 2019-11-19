@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 import statsmodels.api as statsmodels
 
 from raw_data import get_raw_data, get_setup_arguments
-from helpers import Constants
+from helpers import Constants, DataFrame_to_image
 
 
 setup_arguments = get_setup_arguments()
@@ -47,13 +47,17 @@ def add_regrresion_line(x, y, axes):
 
 
 
-def organize_data(data_sets_names):
+def organize_data(data_sets_names, treatment: str=None):
     '''organize data to fit the corr method'''
 
     stacked_data_sets = []
     for data_set_name in data_sets_names:
         raw_data = get_raw_data(data_set_name)
-        stacked = raw_data.stack(LEVEL_LABELS)
+        if treatment is not None:
+            raw_data = raw_data[treatment]
+            stacked = raw_data.stack(level=('soil', 'replicate'))
+        else:
+            stacked = raw_data.stack(LEVEL_LABELS)
         renamed = stacked.rename(data_set_name)
 
         stacked_data_sets.append(renamed)
@@ -103,13 +107,48 @@ def plot_correlations(arranged_data):
                 continue
 
 
-stacked_data_sets = organize_data(DATA_SETS_NAMES)
-all_parameters = pandas.concat(stacked_data_sets, axis=1)
 
 # ------------------------------------- correlations matrix ------------------------------------------------------------
-# correlations = all_parameters.corr()
+# DataFrame.corr() uses pearson pairwise correlation by default
+def make_correlations_matrix(data_sets_names, treatment):
+    stacked_data_sets = organize_data(data_sets_names, treatment)
+    all_parameters = pandas.concat(stacked_data_sets, axis=1)
+    correlations = all_parameters.corr()
 
+    css = """
+        <style type=\"text/css\">
+        table {
+        color: #333;
+        font-family: Helvetica, Arial, sans-serif;
+        width: 640px;
+        border-collapse:
+        collapse; 
+        border-spacing: 0;
+        }
+        td, th {
+        border: 1px solid transparent; /* No more visible border */
+        height: 30px;
+        }
+        th {
+        background: #DFDFDF; /* Darken header a bit */
+        font-weight: bold;
+        }
+        td {
+        background: #FAFAFA;
+        text-align: center;
+        }
+        table tr:nth-child(odd) td{
+        background-color: white;
+        }
+        </style>
+        """  # html code specifying the appearence of significance table
+    output_directory = '/home/elan/Dropbox/research/figures/correlations/'
+    output_file = f'{output_directory}correlations_{treatment}'
+    DataFrame_to_image(correlations, css, output_file)
 
+treatments = ['t', 'c', None]
+for treatment in treatments:
+    make_correlations_matrix(DATA_SETS_NAMES, treatment)
 # ------------------------------------- plot --------------------------------------------------------------
 # plot_correlations(all_parameters)
 
