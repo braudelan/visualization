@@ -2,13 +2,12 @@ import pdb
 
 from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
-from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
+from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass
 from stats import get_stats,\
     normalize_to_control,\
     normalize_to_baseline,\
     normalize_to_TOC,\
-    get_microbial_C_N,\
-    get_ergosterol_to_biomass,\
+    get_microbial_C_N, \
     control_normalize,\
     baseline_normalize
 
