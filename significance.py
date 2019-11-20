@@ -6,8 +6,8 @@ from pandas import DataFrame, Series, MultiIndex
 from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
 from scipy.stats import ttest_ind
 
-from raw_data import get_setup_arguments, get_raw_data, get_multi_sets
-from stats import get_stats, control_normalize, baseline_normalize, get_ergosterol_to_biomass
+from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass
+from stats import get_stats, control_normalize, baseline_normalize
 from helpers import Constants, replace_nan_with_mean, get_week_ends, DataFrame_to_image
 
 OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
@@ -19,8 +19,8 @@ TREATMENTS = Constants.treatment_labels
 COLUMNS_LEVELS = Constants.level_labels
 
 
-def anotate(booleans, day=None):
-    ''' assign letters to soils according to significant differences'''
+def annotate(booleans, day=None):
+    ''' return a Series with letters indicating significance.'''
 
     # define pairs
     pair_1 = ('MIN', 'ORG')
@@ -68,6 +68,57 @@ def anotate(booleans, day=None):
     anotations = Series(anotations)
 
     return anotations
+
+
+def get_letters(data_set, data_set_name):
+    '''
+     return a dataframe with letters indicating significance between groups.
+
+     :argument
+
+     data(Series):
+        index with one level only containing the group labels.
+
+    :return
+
+    a Series with the same index as argument.
+    values are letters indicating whether differences between
+     the group means are significant.
+
+     '''
+
+    # Series to store booleans rejecting/accepting null hypothesis
+    index_levels = [
+        ['MIN', 'MIN', 'ORG'],
+        ['ORG', 'UNC', 'UNC']
+    ]
+    index_names = numpy.array(['soil_1', 'soil_2'])
+    index = MultiIndex.from_arrays(index_levels,
+                                   names=index_names)
+    significance_booleans = Series(index=index,
+                                   name=data_set_name)
+
+    # Series to store significance by letters
+    letters_index_label = 'soil'
+    letters_index = ['MIN', 'ORG', 'UNC']
+    letters = Series(index=letters_index,
+                     name=data_set_name)
+
+    id = data_set.index.values
+    value = data_set.values
+
+    # multiple comparison
+    multiple_comparisons = MultiComparison(value, id)  # instanciate multiple comparisons object
+    pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')  # preform pairwise t-test
+    significance_matrix = DataFrame(pairwise_holm[2])  # store results in dataframe
+    groups_as_index = significance_matrix.set_index(['group1', 'group2'])
+    significance_booleans = groups_as_index['reject']
+
+    # annotate
+    significance_letters = annotate(significance_booleans)
+    significance_letters.name = data_set_name
+
+    return significance_letters
 
 
 def daily_significance_between_soils(data, treatment=None):
@@ -135,7 +186,7 @@ def daily_significance_between_soils(data, treatment=None):
         significance_booleans[day] = reject_accept
 
         # get anotation letters and insert them into letters dataframe
-        significance_letters = anotate(significance_booleans, day=day)
+        significance_letters = annotate(significance_booleans, day=day)
         for soil in letters_index:
             letters.loc[soil, day] = significance_letters[soil]
 
@@ -193,10 +244,11 @@ def baseline_significance(data_sets_names) -> DataFrame:
     baseline_letters = DataFrame(index=index, columns=columns)
     for name, data in data_sets.items():
         significance = get_data_set_significance(data)
-        data_set_significance_letters = anotate(significance)
+        data_set_significance_letters = annotate(significance)
         baseline_letters[name] = data_set_significance_letters
 
     return baseline_letters
+
 
 def visualize_daily_significance(data_set, css, output_dir, label: str=None):
 
@@ -204,57 +256,63 @@ def visualize_daily_significance(data_set, css, output_dir, label: str=None):
     output_file = f'{output_directory}{data_set}_{label}'
     DataFrame_to_image(significance_matrix, css, output_file)
 
-
-if __name__ == '__main__':
-
-    for data_set in DATA_SETS_NAMES:
-
-        if data_set == 'ERG':
-            raw_data = get_ergosterol_to_biomass()
-        else:
-            raw_data = get_raw_data(data_set)
-        treatment = raw_data['t']
-        control = raw_data['c']
-        control_normalized = control_normalize(raw_data)
-        baseline_normalized = baseline_normalize(raw_data)
-
-        sets = {
-            'treatment': treatment,
-            'control': control,
-            'control_normalized': control_normalized,
-            'baseline_normalized': baseline_normalized,
-        }
-
-        for name, set in sets.items():
-
-            significance_matrix = daily_significance_between_soils(set)
-            css = """
-                    <style type=\"text/css\">
-                    table {
-                    color: #333;
-                    font-family: Helvetica, Arial, sans-serif;
-                    width: 640px;
-                    border-collapse:
-                    collapse; 
-                    border-spacing: 0;
-                    }
-                    td, th {
-                    border: 1px solid transparent; /* No more visible border */
-                    height: 30px;
-                    }
-                    th {
-                    background: #DFDFDF; /* Darken header a bit */
-                    font-weight: bold;
-                    }
-                    td {
-                    background: #FAFAFA;
-                    text-align: center;
-                    }
-                    table tr:nth-child(odd) td{
-                    background-color: white;
-                    }
-                    </style>
-                    """  # html code specifying the appearence of significance table
-            output_directory = '/home/elan/Dropbox/research/figures/significance/daily_between_soils/'
-            output_file = f'{output_directory}{data_set}_{name}'
-            DataFrame_to_image(significance_matrix, css, output_file)
+#
+# if __name__ == '__main__':
+#
+#     raw = get_raw_data('MBC')
+#     raw_baseline = get_raw_baseline(raw)
+#     raw_baseline_stacked = raw_baseline.stack().droplevel(0)
+#
+#     letters = get_letters(raw_baseline_stacked, 'MBC')
+#     #
+#     # for data_set in DATA_SETS_NAMES:
+#
+#         if data_set == 'ERG':
+#             raw_data = get_ergosterol_to_biomass()
+#         else:
+#             raw_data = get_raw_data(data_set)
+#         treatment = raw_data['t']
+#         control = raw_data['c']
+#         control_normalized = control_normalize(raw_data)
+#         baseline_normalized = baseline_normalize(raw_data)
+#
+#         sets = {
+#             'treatment': treatment,
+#             'control': control,
+#             'control_normalized': control_normalized,
+#             'baseline_normalized': baseline_normalized,
+#         }
+#
+#         for name, set in sets.items():
+#
+#             significance_matrix = daily_significance_between_soils(set)
+#             css = """
+#                     <style type=\"text/css\">
+#                     table {
+#                     color: #333;
+#                     font-family: Helvetica, Arial, sans-serif;
+#                     width: 640px;
+#                     border-collapse:
+#                     collapse;
+#                     border-spacing: 0;
+#                     }
+#                     td, th {
+#                     border: 1px solid transparent; /* No more visible border */
+#                     height: 30px;
+#                     }
+#                     th {
+#                     background: #DFDFDF; /* Darken header a bit */
+#                     font-weight: bold;
+#                     }
+#                     td {
+#                     background: #FAFAFA;
+#                     text-align: center;
+#                     }
+#                     table tr:nth-child(odd) td{
+#                     background-color: white;
+#                     }
+#                     </style>
+#                     """  # html code specifying the appearence of significance table
+#             output_directory = '/home/elan/Dropbox/research/figures/significance/daily_between_soils/'
+#             output_file = f'{output_directory}{data_set}_{name}'
+#             DataFrame_to_image(significance_matrix, css, output_file)
