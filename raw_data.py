@@ -6,8 +6,9 @@ import argparse
 
 import pandas
 
-from helpers import Constants
+from helpers import Constants, get_week_ends
 
+DATA_SETS_NAMES = Constants.parmeters
 SOILS = Constants.groups
 LEVELS = Constants.level_labels
 TREATMENTS = Constants.treatment_labels
@@ -36,7 +37,7 @@ def get_setup_arguments() -> ParsedArgs:
     independent = parsed_args.independent_sets
     which = parsed_args.which
 
-    all_data_sets = ['MBC', 'HWS', 'DOC', 'AS', 'RESP', 'MBN', 'ERG', 'TOC']
+    all_data_sets = DATA_SETS_NAMES
     all_numbers = range(1, len(all_data_sets)+1)
 
     if sets or numbers or (independent and which):
@@ -56,20 +57,65 @@ def get_raw_data(data_set_name):
     input_file = "all_tests.xlsx"
 
     # data set into DataFrame
-    raw_data = pandas.read_excel(input_file, index_col=0,
-                                 header=[0, 1, 2], sheet_name=data_set_name, na_values=["-", " "])
-
+    raw_data = pandas.read_excel(input_file,
+                                 index_col=0,header=[0, 1, 2],
+                                 sheet_name=data_set_name,
+                                 na_values=["-", " "])
     raw_data.rename_axis('days', inplace=True) # label for index
-    raw_data.columns.rename(LEVELS, level=None, inplace=True)  # level labels
-    raw_data.columns.set_levels(TREATMENTS, level='treatment',
-                                inplace=True) # treatment level categories
-    raw_data.columns.set_levels(SOILS, level='soil', inplace=True) # soil level categories
-    raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
+    raw_data.columns.rename(LEVELS,
+                            level=None, inplace=True)  # level labels
+    raw_data.columns.set_levels(TREATMENTS,
+                                level='treatment', inplace=True) # treatment level categories
+    raw_data.columns.set_levels(SOILS, level='soil',
+                                            inplace=True) # soil level categories
+    raw_data = raw_data.swaplevel('soil',
+                                  'treatment', axis=1)
 
-    if data_set_name == 'RESP':
-        raw_data = raw_data * 24
+    is_TOC = True if data_set_name == 'TOC' else False
+    is_RESP = True if data_set_name == 'RESP' else False
+    raw_data = (
+        raw_data * 24 if is_RESP else
+        raw_data.drop(14) if is_TOC else
+        raw_data
+    )
 
     return raw_data
+
+
+def get_ergosterol_to_biomass():
+
+    MBC_raw = get_raw_data('MBC')
+    week_ends = get_week_ends(MBC_raw)
+    MBC_raw_week_ends = MBC_raw.loc[week_ends]
+    ERG_raw = get_raw_data('ERG')
+    ERG_to_MBC = ERG_raw / MBC_raw_week_ends # compute ERG_to_MBC ratio
+    ERG_to_MBC = ERG_to_MBC.drop(0) # drop day 0 with irregular data
+
+    return ERG_to_MBC
+
+
+def get_raw_MBC_to_MBN():
+
+    raw_MBC = get_raw_data('MBC')
+    week_ends = get_week_ends(raw_MBC)
+    raw_MBC_week_ends = raw_MBC.loc[week_ends]
+    raw_MBN = get_raw_data('MBN')
+    raw_MBC_to_MBN = raw_MBC_week_ends / raw_MBN
+
+    return raw_MBC_to_MBN
+
+
+def get_raw_TOC_TN():
+    raw_TOC = get_raw_data('TOC')
+    raw_TN = get_raw_data('TON')
+    raw_TOC_TN = raw_TOC / raw_TN
+
+    return raw_TOC_TN
+
+def get_raw_basal_qCO2():
+    raw_control_MBC = get_raw_data('MBC')['c']
+    raw_control_RESP = get_raw_data('RESP', ['c'])
+
 
 
 def get_multi_sets(keys) -> dict:
