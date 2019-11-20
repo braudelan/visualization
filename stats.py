@@ -1,11 +1,9 @@
 ''' calculate and return different statistics from raw data.'''
-import pdb
 
 from collections import namedtuple
-import pandas
 from pandas import DataFrame
-from raw_data import get_multi_sets, get_raw_data
-from helpers import Constants, get_week_ends, propagate_stde
+from raw_data import get_raw_data
+from helpers import Constants, get_week_ends
 
 SOILS = Constants.groups
 STATS_NAMES = [
@@ -311,22 +309,6 @@ def get_microbial_C_N(MBC_raw, MBN_raw):
     C_to_N = MBC_raw / MBN_raw
 
     return C_to_N_raw
-
-
-def get_ergosterol_to_biomass():
-
-    # get MBC data
-    MBC_raw = get_raw_data('MBC')
-    week_ends = get_week_ends(MBC_raw)
-    MBC_raw = MBC_raw.loc[week_ends]
-
-    # get ERG data
-    ERG_raw = get_raw_data('ERG')
-
-    # ompute ERG_to_MBC ratio
-    ERG_to_MBC = ERG_raw / MBC_raw
-
-    return ERG_to_MBC
 
 
 

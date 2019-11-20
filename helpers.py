@@ -8,16 +8,51 @@ import imgkit
 
 class Constants:
 
-    groups = ['ORG', 'MIN', 'UNC']
-    color_options = ('darkred', 'royalblue', 'dimgrey')
+    parmeters = [
+        'MBC',
+        'HWS',
+        'DOC',
+        'AS',
+        'RESP',
+        'MBN',
+        'ERG',
+        'TOC',
+        'TON',
+    ]
+    groups = [
+        'ORG',
+        'MIN',
+        'UNC'
+    ]
+    color_options = (
+        'darkred',
+        'royalblue',
+        'dimgrey',
+    )
     colors =  dict(zip(groups, color_options))
-    marker_options = ('*', 'o', 'd')
+    marker_options = (
+        '*',
+        'o',
+        'd',
+    )
     markers =  dict(zip(groups, marker_options))
-    line_style_labels = ('solid', 'broken', 'dotted')
-    line_style_options = ('-', '-.', ':')
+    line_style_labels = (
+        'solid',
+        'broken',
+        'dotted',
+    )
+    line_style_options = (
+        '-',
+        '-.',
+        ':',
+    )
     line_styles = dict(zip(line_style_labels, line_style_options))
     treatment_labels = ['c', 't']
-    level_labels = ["soil", "treatment", "replicate"]
+    level_labels = [
+        "soil",
+        "treatment",
+        "replicate",
+    ]
     input_file_name = "all_tests.xlsx"
     output_folder = '/home/elan/Dropbox/research/figures'
     table_css = """
@@ -56,30 +91,6 @@ def get_week_ends(dataframe):
     return every_7th
 
 
-def delay_factor(x, delay):
-    ''' return a function alternating between 0 and 1 with delay.'''
-
-    N_HARMONICS = 1000
-    CYCLE = 28
-
-    def bn(n):
-        n = int(n)
-        if (n % 2 != 0):
-            return 2 / (pi * n)
-        else:
-            return 0
-
-    # Wn
-    def wn(n):
-        wn = (2 * pi * n) / CYCLE
-        return wn
-
-    a0 = 0.5
-    partialSums = a0
-    for n in range(1, N_HARMONICS):
-        partialSums = partialSums + bn(n) * sin(wn(n) * (x - delay))
-    return partialSums
-
 
 def replace_nan_with_mean(raw_data):
     '''
@@ -102,6 +113,7 @@ def replace_nan_with_mean(raw_data):
             daily_data.fillna(daily_mean, inplace=True)
 
     return raw_data
+
 
 def propagate_stde(result, error_1, error_2):
     '''compute the stnd error of a multiplication of two variables.
@@ -145,16 +157,47 @@ def DataFrame_to_image(data, css, outputfile="out.png", format="png"):
     os.remove(fn)
 
 
-def get_round(dataframe):
+def get_round(data):
 
-    minimum = dataframe.min().min()
+    minimum = data.min().min()
     large, medium, small = (10, 0.1, 0.01)
 
-    round_to = (
+    significant_digits = (
         0 if minimum >= large else
         2 if minimum < large and minimum >= medium else
         3 if minimum < medium and minimum >= small else
         4
     )
 
-    return round_to
+    return significant_digits
+
+def round_column_data(series):
+    significant_digits = get_round(series)
+    rounded_series = series.round(significant_digits)
+
+    return rounded_series
+
+
+def delay_factor(x, delay):
+    ''' return a function alternating between 0 and 1 with delay.'''
+
+    N_HARMONICS = 1000
+    CYCLE = 28
+
+    def bn(n):
+        n = int(n)
+        if (n % 2 != 0):
+            return 2 / (pi * n)
+        else:
+            return 0
+
+    # Wn
+    def wn(n):
+        wn = (2 * pi * n) / CYCLE
+        return wn
+
+    a0 = 0.5
+    partialSums = a0
+    for n in range(1, N_HARMONICS):
+        partialSums = partialSums + bn(n) * sin(wn(n) * (x - delay))
+    return partialSums
