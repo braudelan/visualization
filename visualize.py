@@ -2,15 +2,9 @@ import pdb
 
 from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
-from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass
+from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass, get_microbial_C_N, \
+    baseline_normalize, control_normalize
 from stats import get_stats,\
-    normalize_to_control,\
-    normalize_to_baseline,\
-    normalize_to_TOC,\
-    get_microbial_C_N, \
-    control_normalize,\
-    baseline_normalize
-
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
 from significance import visualize_daily_significance
@@ -24,8 +18,8 @@ from helpers import Constants, get_week_ends, DataFrame_to_image
 pyplot.rc('savefig',  pad_inches=1.5)
 
 # input & output locations
-INPUT_FILE = "all_tests.xlsx"
-FIGURES_DIRECTORY_PATH = '/home/elan/Dropbox/research/figures'
+INPUT_FILE = Constants.input_file_name
+FIGURES_DIRECTORY_PATH = Constants.output_directory
 SPECIFIED_DIRECTORY_PATH = '/dynamics/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
 

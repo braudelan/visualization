@@ -10,7 +10,7 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-from stats import get_stats, get_baseline
+from stats import get_stats, get_baseline_stats
 from helpers import Constants
 
 
@@ -164,7 +164,8 @@ def plot_lines(axes: Axes, data, linestyle='solid', stde=None):
 
 
 def draw_labels(figure: Figure, axes: Axes,
-                    y_label: str, label_rotation=90, axes_position='bottom'):
+                                y_label: str, label_rotation=90,
+                                axes_position='bottom'):
 
     # text and text parameters
     xlabel_text = r'$incubation\ time\ \slash\ days$'
@@ -362,7 +363,7 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
     for x_location, data_set, category_name in zip(X_LOCATIONS, #todo turn into a function
                                                    CATEGORIES_DATA, CATEGORIES):
         # baseline data
-        baseline_statistics = get_baseline(data_set)
+        baseline_statistics = get_baseline_stats(data_set)
         BASELINE = baseline_statistics.means
         BASELINE_STDE = baseline_statistics.stde
 
@@ -404,8 +405,8 @@ def plot_total_increase(raw_data_sets: dict) -> Figure:
     for data_set_name, data_set in raw_data_sets.items():
 
         # baseline
-        baseline = get_baseline(data_set)[0]
-        baseline_std_error = get_baseline(data_set)[1]
+        baseline = get_baseline_stats(data_set)[0]
+        baseline_std_error = get_baseline_stats(data_set)[1]
 
         # last day of incubation
         MRE_means = get_stats(data_set).MRE

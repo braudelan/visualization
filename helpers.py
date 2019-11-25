@@ -8,7 +8,9 @@ import imgkit
 
 class Constants:
 
-    parmeters = [
+    input_file_name = "all_tests.xlsx"
+    output_directory = '/home/elan/Dropbox/research/figures'
+    parameters = [
         'MBC',
         'HWS',
         'DOC',
@@ -18,6 +20,13 @@ class Constants:
         'ERG',
         'TOC',
         'TON',
+    ]
+    parameters_units = [
+        r'$mg\\ast\kg^{-1}$',
+        r'$mg\\ast\kg^{-1}$',
+        r'$mg\\ast\kg^{-1}$',
+        r'$\percent\WSA$',
+        r'$mg\ \CO_2\-C\\ast\\kg^{-1]\*day^{-1}$'
     ]
     groups = [
         'ORG',
@@ -48,13 +57,11 @@ class Constants:
     )
     line_styles = dict(zip(line_style_labels, line_style_options))
     treatment_labels = ['c', 't']
-    level_labels = [
-        "soil",
+    level_names = [
         "treatment",
+        "soil",
         "replicate",
     ]
-    input_file_name = "all_tests.xlsx"
-    output_folder = '/home/elan/Dropbox/research/figures'
     table_css = """
                     <style type=\"text/css\">
                     table {

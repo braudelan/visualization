@@ -5,13 +5,15 @@ from raw_data import get_raw_data,\
     get_raw_MBC_to_MBN,\
     get_raw_TOC_TN,\
     get_setup_arguments
-from significance import get_letters
-from helpers import get_week_ends, round_column_data
+from significance import get_significance_booleans, annotate
+from helpers import get_week_ends, round_column_data, DataFrame_to_image, Constants
 
+TOP_OUTPUT_DIRECTORY = Constants.output_directory
+OUTPUT_DIRECTORY = TOP_OUTPUT_DIRECTORY + '/baseline/'
 
 DATA_SETS_NAMES: list = get_setup_arguments().sets
 DATA_SETS_NAMES.extend(['TOC_TN', 'MBC_MBN'])
-
+TABLE_RENDERING_STRING = Constants.table_css
 
 def get_raw_baseline(raw_data): # todo find a better name for this function
     '''take raw data and rearrange it for baseline computations '''
@@ -45,11 +47,13 @@ def get_baseline_stats(data_sets_names):
         
         # significance between means
         raw_baseline_stacked = raw_baseline.stack().droplevel(0)
-        data_set_significance = get_letters(raw_baseline_stacked, data_set_name)
-    
+        booleans = get_significance_booleans(raw_baseline_stacked)
+        significance_letters = annotate(booleans)
+        significance_letters.name = data_set_name
+
         # append
         data_sets_means.append(data_set_means)
-        data_sets_significances.append(data_set_significance)
+        data_sets_significances.append(significance_letters)
 
     significance_of_means = pandas.concat(data_sets_significances, axis='columns')
     means = pandas.concat(data_sets_means, axis='columns')
@@ -62,3 +66,12 @@ def get_baseline_stats(data_sets_names):
 if __name__ == '__main__':
 
     baseline_stats = get_baseline_stats(DATA_SETS_NAMES)
+    # means = baseline_stats[0]
+    # significance = baseline_stats[1]
+    #
+    # MEANS_OUTPUT_FILE = f'{OUTPUT_DIRECTORY}means'
+    # SIGNIFICANCE_OUTPUT_FILE = f'{OUTPUT_DIRECTORY}significance'
+    # DataFrame_to_image(means, TABLE_RENDERING_STRING,
+    #                                     MEANS_OUTPUT_FILE)
+    # DataFrame_to_image(significance, TABLE_RENDERING_STRING,
+    #                                     SIGNIFICANCE_OUTPUT_FILE)
