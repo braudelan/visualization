@@ -1,81 +1,74 @@
-import pandas
-from matplotlib import pyplot
-from matplotlib.axes import Axes
 
+from raw_data import get_raw_data, baseline_normalize
+from significance import get_significance_booleans
 from helpers import get_week_ends, Constants
 
 
 SOILS = Constants.groups
 
-def get_weekly_growth(data, stde):
 
-    week_ends = get_week_ends(data)  # list day 0 and end of every week
-    week_end_data = data.loc[week_ends, :]
-    week_end_stde = stde.loc[week_ends, :]
-    week_labels = ['1st', '2nd', '3rd', '4th'] if len(week_end_data.index) == 5 else ['1st', '2nd', '3rd']
-    week_end_days = week_end_data.index
-    last_day = week_end_days[-1]
+def get_weekly_growth(raw_data):
 
-    weekly_growth = pandas.DataFrame(index=SOILS)
+    def rename_columns(dataframes):
 
-    for day, week in zip(week_end_days, week_labels):
+        def get_renaming_map(data):
+            old = data.columns
+            new = list(range(1, 5))
+            zipped = zip(old, new)
+            return dict(zipped)
 
-        growth = week_end_data.loc[day + 7] - week_end_data.loc[day]
-        weekly_growth[week] = growth
+        for dataframe in dataframes:
+            rename_by = get_renaming_map(dataframe)
+            dataframe.rename(mapper=rename_by,
+                             axis='columns', inplace=True)
 
-    total_growth = week_end_data.loc[last_day] - week_end_data.loc[0]
-    weekly_growth['total'] = total_growth
+    intervals_limits = get_week_ends(raw_data)
+    data = raw_data.loc[intervals_limits]
+    data = data.T
+
+    t_start = data.loc[:, 0:21]
+    t_end =  data.loc[:, 7:28]
+
+    # rename column labels from interval limits to intervals (days to weeks)
+    endings_beginings = [
+        t_end,
+        t_start
+    ]
+    rename_columns(endings_beginings)
+
+    # weekly growth
+    weekly_growth = t_end - t_start
+    weekly_growth = weekly_growth.droplevel(
+                                    'replicate')
+    weekly_growth = weekly_growth.rename_axis(
+                                    columns='week')
 
     return weekly_growth
 
+def weekly_growth_means(weekly_growth):
+    '''retrun means of weekly growth for every soil.'''
+    stacked = weekly_growth.stack()
+    grouped_soil_week = stacked.groupby(['soil', 'week'])
+    means = grouped_soil_week.mean()
 
+    return means
 
-def tabulate_growth(weekly_growth, data_set_name, number):
+def significance_between_weeks(soil_weekly_growth):
+    '''compute significance between weekly growth for specific soil.'''
 
-# variabels
-    args = (number, data_set_name)
-    #
-    # row_labels = []
-    # for soil in SOILS:
-    #     control_label   = soil + r'$_{c}$'
-    #     treatment_label = soil + r'$_{t}$'
-    #     row_labels.append(control_label)
-    #     row_labels.append(treatment_label)
-    #
-    # growth_columns = ['1st week', '2nd week', '3rd week', '4th week']
+    data = soil_weekly_growth
+    data = data.stack().droplevel(0)
 
+    booleans = get_significance_booleans(data)
 
-# pyplot parameters
-    pyplot.rc('font', size=18)
-    title_params = { 'fontsize': 20}
+    return booleans
 
-# text
-    title_text = r'$\bf{Table %s.}$  weekly change in %s across 4 weeks of incubation' %args
+if __name__ == '__main__':
 
-# create and adjust figure
-    table_figure = pyplot.figure(number, figsize=(10,15))
-    table_figure.tight_layout()
-    # table_figure.subplots_adjust(top=0.3)
-
-# add and adjust subplot
-    axes: Axes = table_figure.add_subplot(111)
-    axes.axis('off')
-    axes.axis('tight')
-    axes.set_title(title_text, pad=0.2, fontsize=20, position=(0.42, 1.1))
-
-# plot table
-    growth_table = axes.table(cellText=weekly_growth.values,
-                                loc='center',
-                                cellLoc='center',
-                                # colWidths=[0.07, 0.1, 0.1, 0.1, 0.1],
-                                )
-
-    for cell in growth_table._cells:
-        if cell[0] == 0 or cell[1] == -1:
-            growth_table._cells[cell].set_text_props(weight='bold')
-
-    # growth_table.scale(2, 3)
-
-
-    return table_figure
-
+    raw_data = get_raw_data('MBC')
+    raw_data = baseline_normalize(raw_data)
+    weekly_growth = get_weekly_growth(raw_data)
+    for soil in SOILS:
+        soil_weekly_growth = weekly_growth.loc[soil]
+        booleans = significance_between_weeks(soil_weekly_growth)
+        print(f'{soil}:\n{booleans}')
