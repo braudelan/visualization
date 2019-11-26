@@ -124,8 +124,8 @@ def replace_nan_with_mean(raw_data):
 
 def propagate_stde(result, error_1, error_2):
     '''compute the stnd error of a multiplication of two variables.
-    error_1 and error_2 are relative errors meaning the errors
-    divided by the mean itself.
+    error_1 and error_2 are relative errors
+     (i.e divided by the mean).
     '''
 
     relative_error = (error_1**2 + error_2**2)**0.5
