@@ -11,8 +11,8 @@ def get_weekly_growth(raw_data):
 
     def rename_columns(dataframes):
 
-        def get_renaming_map(data):
-            old = data.columns
+        def get_renaming_map(dataframe):
+            old = dataframe.columns
             new = list(range(1, 5))
             zipped = zip(old, new)
             return dict(zipped)
