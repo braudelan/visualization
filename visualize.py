@@ -4,7 +4,7 @@ from matplotlib import pyplot
 from matplotlib.pyplot import Figure, Axes
 from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass, get_microbial_C_N, \
     baseline_normalize, control_normalize
-from stats import get_stats,\
+from stats import get_stats
 from plot import make_figure, make_axes, plot_lines, \
     draw_labels, plot_control_composite, plot_C_N
 from significance import visualize_daily_significance

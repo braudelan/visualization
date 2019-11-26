@@ -5,7 +5,7 @@ from scipy.stats import ttest_ind
 
 from raw_data import get_setup_arguments, get_raw_data
 from stats import get_stats, normalize_to_control
-from growth import get_weekly_growth, tabulate_growth
+from MBC_growth import get_weekly_growth, tabulate_growth
 from helpers import Constants, replace_nan
 
 
