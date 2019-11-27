@@ -12,18 +12,18 @@ from helpers import Constants, get_week_ends, propagate_stde
 SOILS = Constants.groups
 
 #--------------------------------------weekly cumulative CO2------------------------------
-# respiration raw data
-RESP_raw_data = get_raw_data('RESP')
-RESP_treatment = RESP_raw_data['t']
-RESP_control = RESP_raw_data['c']
-
-# means
-RESP_stats = get_stats(RESP_treatment)
-RESP_means = RESP_stats.means
-RESP_stde = RESP_stats.stde
+#raw data
+raw_data = get_raw_data('RESP')
+# RESP_treatment = RESP_raw_data['t']
+# RESP_control = RESP_raw_data['c']
+#
+# # means
+# RESP_stats = get_stats(RESP_treatment)
+# RESP_means = RESP_stats.means
+# RESP_stde = RESP_stats.stde
 
 # limits of time intervals between samplings
-SAMPLING_TIMEPOINTS = RESP_means.index.values
+SAMPLING_TIMEPOINTS = raw_data.index.values
 timepoints_index = [i for i in range(8)]
 intervals_limits = [[SAMPLING_TIMEPOINTS[i], SAMPLING_TIMEPOINTS[i + 1]] for i in timepoints_index]
 limits_arrayed = numpy.asarray(intervals_limits)
@@ -33,13 +33,13 @@ ENDINGS = LIMITS[1]
 
 MEANS = namedtuple('MEANS', ['means', 'stde'])
 
-def get_mean_rates():
+def get_mean_rates(treatment):
     '''
     get average rate between every two consecutive sampling points.
 
-    :param respiration_stats: namedtuple
-    tuple containing the means and stnd errors of
-    respiration rates.
+    :param treatment: str
+    either 't'(MRE treated) or 'c' for control.
+    designates which treatment to slice out.
 
     :return: namedtuple
     mean respiration rates averaged between each two consecutive
@@ -64,6 +64,11 @@ def get_mean_rates():
                 index=multi_index, columns=SOILS)
     rates_stnd_errors = DataFrame(
                 index=multi_index, columns=SOILS)
+
+    # data
+    RESP_stats = get_stats(raw_data, treatment)
+    RESP_means = RESP_stats.means
+    RESP_stde = RESP_stats.stde
 
     for soil in SOILS:
         data = RESP_means[soil]

@@ -9,7 +9,7 @@ import imgkit
 class Constants:
 
     input_file_name = "all_tests.xlsx"
-    output_directory = '/home/elan/Dropbox/research/figures'
+    figures_directory = '/home/elan/Dropbox/research/figures'
     parameters = [
         'MBC',
         'HWS',
@@ -21,13 +21,18 @@ class Constants:
         'TOC',
         'TON',
     ]
-    parameters_units = [
-        r'$mg\\ast\kg^{-1}$',
-        r'$mg\\ast\kg^{-1}$',
-        r'$mg\\ast\kg^{-1}$',
-        r'$\percent\WSA$',
-        r'$mg\ \CO_2\-C\\ast\\kg^{-1]\*day^{-1}$'
+    units = [
+        r'$mg\ast kg\ soil^{-1} $',
+        r'$mg\ast kg\ soil^{-1} $',
+        r'$mg\ast kg\ soil^{-1} $',
+        r'$\%WSA$',
+        r'$mg CO_2-C \ast kg^{-1}\ast day^{-1}$',
+        r'$mg\ast kg\ soil^{-1} $',
+        r'$\%MBC$',
+        r'$\%soil weight$',
+        r'$\%soil weight$'
     ]
+    parameters_units = dict(zip(parameters, units))
     groups = [
         'ORG',
         'MIN',

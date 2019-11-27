@@ -8,7 +8,7 @@ from raw_data import get_raw_data,\
 from significance import get_significance_booleans, annotate
 from helpers import get_week_ends, round_column_data, DataFrame_to_image, Constants
 
-TOP_OUTPUT_DIRECTORY = Constants.output_directory
+TOP_OUTPUT_DIRECTORY = Constants.figures_directory
 OUTPUT_DIRECTORY = TOP_OUTPUT_DIRECTORY + '/baseline/'
 
 DATA_SETS_NAMES: list = get_setup_arguments().sets

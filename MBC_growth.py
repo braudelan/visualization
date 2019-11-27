@@ -1,15 +1,15 @@
+from collections import namedtuple
 
 from raw_data import get_raw_data, baseline_normalize
 from significance import get_significance_booleans
 from helpers import get_week_ends, Constants
 
-
+Stats = namedtuple('Stats', ['means', 'stde'])
 SOILS = Constants.groups
-
 
 def get_weekly_growth(raw_data):
 
-    def rename_columns(dataframes):
+    def rename_columns(dataframe):
 
         def get_renaming_map(dataframe):
             old = dataframe.columns
@@ -17,10 +17,9 @@ def get_weekly_growth(raw_data):
             zipped = zip(old, new)
             return dict(zipped)
 
-        for dataframe in dataframes:
-            rename_by = get_renaming_map(dataframe)
-            dataframe.rename(mapper=rename_by,
-                             axis='columns', inplace=True)
+        rename_by = get_renaming_map(dataframe)
+        dataframe.rename(mapper=rename_by,
+                         axis='columns', inplace=True)
 
     intervals_limits = get_week_ends(raw_data)
     data = raw_data.loc[intervals_limits]
@@ -34,24 +33,34 @@ def get_weekly_growth(raw_data):
         t_end,
         t_start
     ]
-    rename_columns(endings_beginings)
+    for dataframe in endings_beginings:
+        rename_columns(dataframe)
 
-    # weekly growth
+    # get weekly growth
     weekly_growth = t_end - t_start
+
+    # change irregular values to none
+    weekly_growth.loc[('ORG', 2), 4] = None
     weekly_growth = weekly_growth.droplevel(
                                     'replicate')
     weekly_growth = weekly_growth.rename_axis(
                                     columns='week')
 
+
+
     return weekly_growth
 
-def weekly_growth_means(weekly_growth):
+def get_weekly_growth_means(weekly_growth):
     '''retrun means of weekly growth for every soil.'''
     stacked = weekly_growth.stack()
     grouped_soil_week = stacked.groupby(['soil', 'week'])
     means = grouped_soil_week.mean()
+    stde = grouped_soil_week.sem()
 
-    return means
+    return Stats(
+        means=means,
+        stde=stde
+    )
 
 def significance_between_weeks(soil_weekly_growth):
     '''compute significance between weekly growth for specific soil.'''

@@ -19,7 +19,7 @@ pyplot.rc('savefig',  pad_inches=1.5)
 
 # input & output locations
 INPUT_FILE = Constants.input_file_name
-FIGURES_DIRECTORY_PATH = Constants.output_directory
+FIGURES_DIRECTORY_PATH = Constants.figures_directory
 SPECIFIED_DIRECTORY_PATH = '/dynamics/'
 OUTPUT_DIRECTORY_PATH = FIGURES_DIRECTORY_PATH + SPECIFIED_DIRECTORY_PATH
 

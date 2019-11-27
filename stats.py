@@ -27,16 +27,14 @@ def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
     groupby_soil_treatment = raw_data.groupby(level=levels, axis=1)
 
     means = groupby_soil_treatment.mean()  # means of 4 replicates
-    stdv = groupby_soil_treatment.std() # std deviation
     stde = groupby_soil_treatment.sem()  # std error
 
-    # drop control\MRE
-    if treatment is not None:
+    # drop control or MRE if the treatment argument is passed
+    if treatment:
         means = means[treatment]
-        stdv = stdv[treatment]
         stde = stde[treatment]
 
-    means.treatment_label = treatment
+    # means.treatment_label = treatment
     # control = means.xs('c', level=0, axis=1)
     # control_SE = means_SE.xs('c', level=0, axis=1)
     # control_SD = means_SD.xs('c', level=0, axis=1)
