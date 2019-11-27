@@ -1,5 +1,9 @@
-import pandas
+import pdb
+
 import numpy
+import pandas
+from pandas import DataFrame, Series
+import seaborn
 
 from matplotlib import pyplot
 from matplotlib.figure import Figure
@@ -10,35 +14,32 @@ import statsmodels.api as statsmodels
 from raw_data import get_raw_data, get_setup_arguments, baseline_normalize
 from helpers import Constants, DataFrame_to_image
 
+FIGURES_DIRECTORY = Constants.figures_directory
+OUTPUT_DIRECTORY = f'{FIGURES_DIRECTORY}/correlations/'
 
 setup_arguments = get_setup_arguments()
 DATA_SETS_NAMES = setup_arguments.sets
 LEVEL_NAMES = Constants.level_names
+UNITS = Constants.parameters_units
 
-def get_r_squared(data, x: str, y: str):
+def get_r_squared(pairwise_data: DataFrame,
+                        x: Series, y: Series):
 
-    data = data[[x, y]]
-    data = data.dropna()  # drop any row that has any None values
-    n_samples = data.shape[0]
-    y = data[y].values.reshape(n_samples, 1)
-    x = data[x].values.reshape(n_samples, 1)
+    n_samples = pairwise_data.shape[0]
+    y = y.values.reshape(n_samples, 1)
+    x = x.values.reshape(n_samples, 1)
 
     model = LinearRegression()
     model.fit(x, y)
     r_sq = model.score(x, y)
+    r_sq = round(r_sq, 2)
 
     return r_sq
 
 
-def add_regrresion_line(x, y, axes):
-    m, b = numpy.polyfit(x, y, 1)
-    X_plot = numpy.linspace(axes.get_xlim()[0], axes.get_xlim()[1], 100)
-    pyplot.plot(X_plot, m * X_plot + b, '-')
-
-
-def organize_data_sets(data_sets_names,
+def get_all_parameters(data_sets_names,
                        normalize_by=None, treatment: str=None):
-    '''organize data to fit regrresion functions'''
+    '''organize data to fit regression functions'''
 
     def stack_data(data_set_name):
 
@@ -59,83 +60,101 @@ def organize_data_sets(data_sets_names,
         return stacked_data
 
     # get all the stacked data sets
-    stacked_data_sets = []
+    stacked_data_sets_list = []
     for data_set_name in data_sets_names:
         stacked_data = stack_data(data_set_name)
-        stacked_data_sets.append(stacked_data)
+        stacked_data_sets_list.append(stacked_data)
 
     # concat the stacked data sets into a dataframe
-    organized_data_sets = pandas.concat(
-                            stacked_data_sets, axis=1)
+    all_parameters = pandas.concat(
+                    stacked_data_sets_list, axis=1)
 
     # drop unnecessary index levels
-    levels_to_drop = ['days', 'replicate']
-    organized_data_sets = organized_data_sets.\
-                            droplevel(levels_to_drop)
+    levels_to_drop = 'days'
+    all_parameters = all_parameters.droplevel(
+                                    levels_to_drop)
 
-    return organized_data_sets
-
-
+    return all_parameters
 
 
-def visualize_correlations(data, data_type):
+def plot_regression(pairwise_data,
+                    x_name, y_name, r_square):
 
-    def plot_regrresion(data, ind_var, dep_var):
+    def add_regression_line():
+        x = pairwise_data[x_name]
+        y = pairwise_data[y_name]
+        slope, intercept = numpy.polyfit(x, y, 1)
+        X_plot = numpy.linspace(
+            axes.get_xlim()[0], axes.get_xlim()[1], 100)
+        x = X_plot
+        y = slope * X_plot + intercept
+        axes.plot(x, y, '-')
 
-        # get the data and assign x and y
-        pairwise_data = data[[dep_var, ind_var]]
-        pairwise_data = pairwise_data.dropna(how='all')
-        x = pairwise_data[dep_var]
-        y = pairwise_data[ind_var]
+    # initialize figure and axes
+    figure = pyplot.figure()
 
-        # initialize figure and axes
-        figure = pyplot.figure()
-        axes: Axes = figure.add_subplot(111)
+    # plot
+    axes = seaborn.scatterplot(x=x_name,
+                        y=y_name,
+                        hue='treatment',
+                        style='soil',
+                        data=pairwise_data)
 
-        # plot
-        axes.scatter(x, y)
-        add_regrresion_line(x, y, axes)
+    # regression line
+    add_regression_line()
 
-        # labels etc.
-        x_label = ind_var
-        y_label = dep_var
-        axes.set_ylabel(y_label)
-        axes.set_xlabel(x_label)
+    # labels and decorations
+    x_label = f'{x_name} ({UNITS[x_name]})'
+    y_label = f'{y_name} ({UNITS[y_name]})'
+    axes.set_ylabel(y_label, labelpad=0.1)
+    axes.set_xlabel(x_label, labelpad=0.1)
 
+    # r_sqaure
+    axes.text(0.95, 0.1, f'r_square:{str(r_square)}',
+                fontweight='bold',
+                horizontalalignment='right',
+                transform=axes.transAxes)
 
-    parameters = data.columns
+    return figure
+
+def visualize_regression(all_parameters, min_r_square):
+
+    def save_regression_plot(figure):
+        save_to = f'{OUTPUT_DIRECTORY}' \
+                  f'{ind_var}_{dep_var}_test.png'
+        figure.savefig(save_to, dpi=300,
+                       format='png',bbox_inches='tight')
+        pyplot.close()
+
+    parameters = all_parameters.columns
     for ind_var in parameters:
         for dep_var in parameters.drop(ind_var):
 
-            # compute regrresion and get r_square
-            r_square = get_r_squared(data, ind_var, dep_var)
-            r_square = round(r_square, 2)
+            # data
+            paird_data_sets = [ind_var, dep_var]
+            pairwise_data = all_parameters[paird_data_sets]
+            pairwise_data = pairwise_data.dropna(how='any')
+            pairwise_data = pairwise_data.reset_index()
+            x = pairwise_data[ind_var]
+            y = pairwise_data[dep_var]
 
-            if r_square > 0.5:
+            # compute regression and get r_square
+            r_square = get_r_squared(pairwise_data, x, y)
 
-                # data
-
-
+            if r_square > min_r_square:
                 # plot
-                plot_regrresion(data, ind_var, dep_var)
-                # add r_square
-                pyplot.text(0.95, 0.1, f'r_square:{str(r_square)}',
-                            fontweight='bold', horizontalalignment='right',
-                            transform=axes.transAxes)
+                figure = plot_regression(
+                    pairwise_data, ind_var, dep_var, r_square)
 
-                save_to = f'/home/elan/Dropbox/research' \
-                          f'/figures/correlations/linear_regrresion/' \
-                          f'{data_type}_{ind_var}_{dep_var}.png'
-                pyplot.savefig(save_to, dpi=300, format='png',
-                               bbox_inches='tight')
-                pyplot.close()
-
+                # save plot
+                save_regression_plot(figure)
             else:
                 continue
 
-if __name__ == '__main__':
-    organized_data = organize_data_sets(DATA_SETS_NAMES)
 
+if __name__ == '__main__':
+    data = get_all_parameters(DATA_SETS_NAMES)
+    visualize_regression(data, 0.6)
 
 # ------------------------------------- correlations matrix ------------------------------------------------------------
 # # DataFrame.corr() uses pearson pairwise correlation by default
