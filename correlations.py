@@ -22,20 +22,6 @@ DATA_SETS_NAMES = setup_arguments.sets
 LEVEL_NAMES = Constants.level_names
 UNITS = Constants.parameters_units
 
-def get_r_squared(pairwise_data: DataFrame,
-                        x: Series, y: Series):
-
-    n_samples = pairwise_data.shape[0]
-    y = y.values.reshape(n_samples, 1)
-    x = x.values.reshape(n_samples, 1)
-
-    model = LinearRegression()
-    model.fit(x, y)
-    r_sq = model.score(x, y)
-    r_sq = round(r_sq, 2)
-
-    return r_sq
-
 
 def get_all_parameters(data_sets_names,
                        normalize_by=None, treatment: str=None):
@@ -77,18 +63,36 @@ def get_all_parameters(data_sets_names,
     return all_parameters
 
 
+def get_r_squared(pairwise_data: DataFrame,
+                        x: Series, y: Series):
+
+    n_samples = pairwise_data.shape[0]
+    y = y.values.reshape(n_samples, 1)
+    x = x.values.reshape(n_samples, 1)
+
+    model = LinearRegression()
+    model.fit(x, y)
+    r_sq = model.score(x, y)
+    r_sq = round(r_sq, 2)
+
+    return r_sq
+
+def add_regression_line(axes, x, y):
+    slope, intercept = numpy.polyfit(x, y, 1)
+    X_plot = numpy.linspace(
+        axes.get_xlim()[0], axes.get_xlim()[1], 100)
+    x = X_plot
+    y = slope * X_plot + intercept
+    axes.plot(x, y, '-')
+
+    slope = round(slope, 4)
+    intercept = round(intercept, 4)
+
+    return slope, intercept
+
+
 def plot_regression(pairwise_data,
                     x_name, y_name, r_square):
-
-    def add_regression_line():
-        x = pairwise_data[x_name]
-        y = pairwise_data[y_name]
-        slope, intercept = numpy.polyfit(x, y, 1)
-        X_plot = numpy.linspace(
-            axes.get_xlim()[0], axes.get_xlim()[1], 100)
-        x = X_plot
-        y = slope * X_plot + intercept
-        axes.plot(x, y, '-')
 
     # initialize figure and axes
     figure = pyplot.figure()
@@ -99,9 +103,9 @@ def plot_regression(pairwise_data,
                         hue='treatment',
                         style='soil',
                         data=pairwise_data)
-
-    # regression line
-    add_regression_line()
+    #
+    # # regression line
+    # add_regression_line()
 
     # labels and decorations
     x_label = f'{x_name} ({UNITS[x_name]})'
@@ -121,11 +125,12 @@ def visualize_regression(all_parameters, min_r_square):
 
     def save_regression_plot(figure):
         save_to = f'{OUTPUT_DIRECTORY}' \
-                  f'{ind_var}_{dep_var}_test.png'
+                  f'{ind_var}_{dep_var}.png'
         figure.savefig(save_to, dpi=300,
                        format='png',bbox_inches='tight')
         pyplot.close()
 
+    file = open(f'{OUTPUT_DIRECTORY}coefficients.txt', 'w+')
     parameters = all_parameters.columns
     for ind_var in parameters:
         for dep_var in parameters.drop(ind_var):
@@ -146,53 +151,66 @@ def visualize_regression(all_parameters, min_r_square):
                 figure = plot_regression(
                     pairwise_data, ind_var, dep_var, r_square)
 
+                # add regression line
+                axes = figure.axes[0]
+                slope, intercept = add_regression_line(axes, x, y)
+
                 # save plot
                 save_regression_plot(figure)
+
+                # save regression coefficients
+                string = f'{ind_var} X {dep_var}: y = {slope}x + {intercept}\r\n\n'
+                file.write(string)
+
             else:
                 continue
+
+    return
+
+def correlations_matrix():
+    data = get_all_parameters(DATA_SETS_NAMES)
+    correlations = data.corr()
+
+    css = """
+        <style type=\"text/css\">
+        table {
+        color: #333;
+        font-family: Helvetica, Arial, sans-serif;
+        width: 640px;
+        border-collapse:
+        collapse;
+        border-spacing: 0;
+        }
+        td, th {
+        border: 1px solid transparent; /* No more visible border */
+        height: 30px;
+        }
+        th {
+        background: #DFDFDF; /* Darken header a bit */
+        font-weight: bold;
+        }
+        td {
+        background: #FAFAFA;
+        text-align: center;
+        }
+        table tr:nth-child(odd) td{
+        background-color: white;
+        }
+        </style>
+        """  # html code specifying the appearence of significance table
+    output_directory = '/home/elan/Dropbox/research/figures/correlations/'
+    output_file = f'{output_directory}pairwise_pearson'
+    DataFrame_to_image(correlations, css, output_file)
 
 
 if __name__ == '__main__':
     data = get_all_parameters(DATA_SETS_NAMES)
-    visualize_regression(data, 0.6)
+    correlations_matrix()
+    # visualize_regression(data, 0.6)
 
 # ------------------------------------- correlations matrix ------------------------------------------------------------
 # # DataFrame.corr() uses pearson pairwise correlation by default
-# def make_correlations_matrix(data_sets_names, treatment):
-#     data = organize_data(data_sets_names, treatment)
-#     correlations = data.corr()
-#
-#     css = """
-#         <style type=\"text/css\">
-#         table {
-#         color: #333;
-#         font-family: Helvetica, Arial, sans-serif;
-#         width: 640px;
-#         border-collapse:
-#         collapse;
-#         border-spacing: 0;
-#         }
-#         td, th {
-#         border: 1px solid transparent; /* No more visible border */
-#         height: 30px;
-#         }
-#         th {
-#         background: #DFDFDF; /* Darken header a bit */
-#         font-weight: bold;
-#         }
-#         td {
-#         background: #FAFAFA;
-#         text-align: center;
-#         }
-#         table tr:nth-child(odd) td{
-#         background-color: white;
-#         }
-#         </style>
-#         """  # html code specifying the appearence of significance table
-#     output_directory = '/home/elan/Dropbox/research/figures/correlations/'
-#     output_file = f'{output_directory}correlations_{treatment}'
-#     DataFrame_to_image(correlations, css, output_file)
-#
+
 # treatments = ['t', 'c', None]
 # for treatment in treatments:
 #     make_correlations_matrix(DATA_SETS_NAMES, treatment)

@@ -3,7 +3,7 @@ import pandas
 from raw_data import get_raw_data,\
     get_ergosterol_to_biomass,\
     get_raw_MBC_to_MBN,\
-    get_raw_TOC_TN,\
+    get_raw_TOC_TON,\
     get_setup_arguments
 from significance import get_significance_booleans, annotate
 from helpers import get_week_ends, round_column_data, DataFrame_to_image, Constants
@@ -35,7 +35,7 @@ def get_baseline_stats(data_sets_names):
         raw_data = (
             get_ergosterol_to_biomass() if data_set_name == 'ERG' else
             get_raw_MBC_to_MBN() if data_set_name == 'MBC_MBN' else
-            get_raw_TOC_TN() if data_set_name == 'TOC_TN' else
+            get_raw_TOC_TON() if data_set_name == 'TOC_TN' else
             get_raw_data(data_set_name)
         )
 

@@ -175,7 +175,7 @@ def daily_significance_between_soils(
 
 
 def visualize_daily_significance(raw_data: DataFrame,
-        data_set_name: str, format_by, output_dir, label: str=None):
+        data_set_name: str, format_by, output_dir, label: str = None):
 
     '''
     create and save a table image with significance letters.
@@ -206,7 +206,9 @@ def visualize_daily_significance(raw_data: DataFrame,
 
     significance = daily_significance_between_soils(raw_data)
     output_file = f'{output_dir}{data_set_name}_{label}'
+    pdb.set_trace()
     DataFrame_to_image(significance, format_by, output_file)
+
 
 if __name__ == '__main__':
 

@@ -72,14 +72,12 @@ def MRE_notation_marks(axes: Axes):
                    )
 
 
-def make_figure(data=None, number=None, data_set_name=None):
+def make_figure(number=None,):
 
-    title_text = data_set_name
     # create and adjut figure
     figure = pyplot.figure(number, figsize=(20, 15))
     figure.tight_layout()
     figure.subplots_adjust(hspace=0)
-    figure.suptitle(title_text, x=0.5, y=0, fontsize=22)
 
     return figure
 

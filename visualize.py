@@ -35,7 +35,6 @@ TABLE_CSS = Constants.table_css
 def dynamics(data_set_names):
     '''visualize dynamics of each parameter and save as a separate image file.'''
 
-
     def plot_data_pairs(data_pair, data_label: str,
                  figure_number, titles: list = None):
 
@@ -133,6 +132,23 @@ def dynamics(data_set_names):
 
         i += 1
 
+
+def visualize_C_N(raw_data, label: str):
+
+
+    C_to_N_stats = get_stats(raw_data)
+
+    means = C_to_N_stats.means
+    stde = C_to_N_stats.stde
+
+    figure = make_figure()
+    axes = make_axes(figure)
+    plot_lines(axes, means, stde=stde)
+    figure.savefig(f'{OUTPUT_DIRECTORY_PATH}/{label}_C_to_N.png')
+
+
+
+
 # -------------------------------------baseline-------------------------------------------------------------------------
 
 # # plot baseline
@@ -145,19 +161,6 @@ def dynamics(data_set_names):
 # control_composite_figure.savefig('%scontrol.png' % OUTPUT_DIRECTORY_PATH)
 
 # -------------------------------------C-to-N ratio---------------------------------------------------------------------
-
-def visualize_C_N(label: str, MBC_raw, MBN_raw):
-
-    C_to_N_raw = get_microbial_C_N(MBC_raw, MBN_raw)
-    C_to_N_stats = get_stats(C_to_N_raw)
-
-    means = C_to_N_stats.means
-    stde = C_to_N_stats.stde
-
-    figure = make_figure()
-    axes = make_axes(figure)
-    plot_lines(axes,means, stde=stde)
-    figure.savefig(f'{OUTPUT_DIRECTORY_PATH}/{label}_C_to_N.png' % (OUTPUT_DIRECTORY_PATH, label))
 
 
 # -------------------------------------ergostrol-to-microbial-biomass ratio----------------------------------------------

@@ -7,6 +7,7 @@ from helpers import get_week_ends, Constants
 Stats = namedtuple('Stats', ['means', 'stde'])
 SOILS = Constants.groups
 
+
 def get_weekly_growth(raw_data):
 
     def rename_columns(dataframe):

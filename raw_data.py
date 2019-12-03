@@ -88,7 +88,7 @@ def get_ergosterol_to_biomass():
     MBC_raw_week_ends = MBC_raw.loc[week_ends]
     ERG_raw = get_raw_data('ERG')
     ERG_to_MBC = ERG_raw / MBC_raw_week_ends # compute ERG_to_MBC ratio
-    ERG_to_MBC = ERG_to_MBC.drop(0) # drop day 0 with irregular data
+    ERG_to_MBC.loc[0, ('t', 'UNC', 1)] = None #irregular data (replicate#1 in MRE_treated UNC at day 0)
 
     return ERG_to_MBC
 
@@ -104,12 +104,12 @@ def get_raw_MBC_to_MBN():
     return raw_MBC_to_MBN
 
 
-def get_raw_TOC_TN():
+def get_raw_TOC_TON():
     raw_TOC = get_raw_data('TOC')
-    raw_TN = get_raw_data('TON')
-    raw_TOC_TN = raw_TOC / raw_TN
+    raw_TON = get_raw_data('TON')
+    raw_TOC_TON = raw_TOC / raw_TON
 
-    return raw_TOC_TN
+    return raw_TOC_TON
 
 
 def get_raw_basal_qCO2():
@@ -155,10 +155,11 @@ def get_multi_sets(keys) -> dict:
     return dataframes
 
 
-def get_microbial_C_N(MBC_raw, MBN_raw):
+def get_microbial_C_N():
     '''calculate microbial carbon-to-nitrogen ratio.'''
 
-
+    MBC_raw = get_raw_data('MBC')
+    MBN_raw = get_raw_data('MBN')
     week_ends = get_week_ends(MBC_raw)
     MBC_raw = MBC_raw.loc[week_ends]
 
