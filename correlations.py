@@ -9,7 +9,9 @@ from matplotlib import pyplot
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
-import statsmodels.api as statsmodels
+from statsmodels.regression import linear_model
+from statsmodels.regression.linear_model import RegressionResults
+from statsmodels.tools.tools import add_constant
 
 from raw_data import get_raw_data, get_setup_arguments, baseline_normalize
 from helpers import Constants, DataFrame_to_image
@@ -62,9 +64,19 @@ def get_all_parameters(data_sets_names,
 
     return all_parameters
 
+def linear_regression_statsmodels(x, y):
 
-def get_r_squared(pairwise_data: DataFrame,
-                        x: Series, y: Series):
+    y = y.values
+    x = x.values
+    x = sm.add_constant(x)
+
+    model = sm.OLS(y, x, missing='drop')
+    fit_result = model.fit()
+
+    return fit_result
+
+def linaer_regression_sklearn(pairwise_data: DataFrame,
+                              x: Series, y: Series):
 
     n_samples = pairwise_data.shape[0]
     y = y.values.reshape(n_samples, 1)
@@ -92,7 +104,7 @@ def add_regression_line(axes, x, y):
 
 
 def plot_regression(pairwise_data,
-                    x_name, y_name, r_square):
+                    x_name, y_name, fit_result):
 
     # initialize figure and axes
     figure = pyplot.figure()
@@ -121,16 +133,85 @@ def plot_regression(pairwise_data,
 
     return figure
 
-def visualize_regression(all_parameters, min_r_square):
+def visualize_regression(all_parameters, min_r_square, ):
 
     def save_regression_plot(figure):
         save_to = f'{OUTPUT_DIRECTORY}' \
-                  f'{ind_var}_{dep_var}.png'
+                  f'{ind_var}_{dep_var}_test.png'
         figure.savefig(save_to, dpi=300,
                        format='png',bbox_inches='tight')
         pyplot.close()
 
+
+    def get_regression(x, y)-> RegressionResults:
+
+        y = y.values
+        x = x.values
+        x = add_constant(x)
+
+        # intialize the model
+        model = linear_model.OLS(y, x, missing='drop')
+
+        # fit the regression
+        fit_result = model.fit()
+
+        return fit_result
+
+
+    def add_regression_line(axes):
+
+        lower_xlim, upper_xlim = axes.get_xlim()
+        X_plot = numpy.linspace(lower_xlim, upper_xlim, 100)
+        y = slope * X_plot + intercept
+
+        axes.plot(X_plot, y, '-')
+
+
+    def plot_regression(pairwise_data,
+                        x_name, y_name, fit_result):
+
+        # initialize figure and axes
+        figure = pyplot.figure()
+
+        # plot
+        axes = seaborn.scatterplot(x=x_name,
+                                   y=y_name,
+                                   hue='treatment',
+                                   style='soil',
+                                   data=pairwise_data)
+
+        # labels and decorations
+        x_label = f'{x_name} ({UNITS[x_name]})'
+        y_label = f'{y_name} ({UNITS[y_name]})'
+        axes.set_ylabel(y_label, labelpad=0.1)
+        axes.set_xlabel(x_label, labelpad=0.1)
+
+        # r_sqaure
+        axes.text(0.95, 0.1, f'r_square:{str(r_square)}',
+                  fontweight='bold',
+                  horizontalalignment='right',
+                  transform=axes.transAxes)
+
+        return figure
+
+
+    def write_regression_params(file):
+
+        data_pair = f'{ind_var} X {dep_var}'
+        equation = f'y = {slope}x + {intercept}'
+        interval = f'confidence interval for the slope:' \
+                   f'{slope_confidence[0]}, {slope_confidence[1]}'
+        rsquared = f'r_squared: {r_square}'
+
+        output = f'\n\n{data_pair}:\n' \
+                 f'\t{equation}\n' \
+                 f'\t{interval}\n' \
+                 f'\t{rsquared}\r'
+
+        file.write(output)
+
     file = open(f'{OUTPUT_DIRECTORY}coefficients.txt', 'w+')
+
     parameters = all_parameters.columns
     for ind_var in parameters:
         for dep_var in parameters.drop(ind_var):
@@ -143,24 +224,46 @@ def visualize_regression(all_parameters, min_r_square):
             x = pairwise_data[ind_var]
             y = pairwise_data[dep_var]
 
-            # compute regression and get r_square
-            r_square = get_r_squared(pairwise_data, x, y)
+            # compute regression
+            fit_result = get_regression(x, y)
+
+            # regression results
+            round_to = 3
+            alpha = 0.05
+            r_square = round(fit_result.rsquared, round_to)
+            intercept, slope = fit_result.params.round(round_to)
+            conf_interval = fit_result.conf_int(alpha).round(round_to)
+            slope_confidence =  conf_interval[1]
+
 
             if r_square > min_r_square:
+
                 # plot
                 figure = plot_regression(
                     pairwise_data, ind_var, dep_var, r_square)
 
                 # add regression line
                 axes = figure.axes[0]
-                slope, intercept = add_regression_line(axes, x, y)
+                add_regression_line(axes)
 
                 # save plot
                 save_regression_plot(figure)
 
-                # save regression coefficients
-                string = f'{ind_var} X {dep_var}: y = {slope}x + {intercept}\r\n\n'
-                file.write(string)
+                # write regression parameters
+                write_regression_params(file)
+                # indent = f'\t\t\t'
+                # data_pair = f'{ind_var} X {dep_var}'
+                # equation = f'y = {slope}x + {intercept}'
+                # interval = f'confidence interval for the slope:' \
+                #            f'{slope_confidence[0]}, {slope_confidence[1]}'
+                # rsquared = f'r_squared: {r_square}'
+                #
+                # output = f'{data_pair}:\n' \
+                #            f'{indent}{equation}\n' \
+                #            f'{indent}{interval}\n' \
+                #            f'{indent}{rsquared}\r\n\n'
+                #
+                # file.write(output)
 
             else:
                 continue
@@ -205,8 +308,8 @@ def correlations_matrix():
 
 if __name__ == '__main__':
     data = get_all_parameters(DATA_SETS_NAMES)
-    correlations_matrix()
-    # visualize_regression(data, 0.6)
+    # correlations_matrix()
+    visualize_regression(data, 0.6)
 
 # ------------------------------------- correlations matrix ------------------------------------------------------------
 # # DataFrame.corr() uses pearson pairwise correlation by default
