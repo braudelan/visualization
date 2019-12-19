@@ -8,7 +8,7 @@ import pandas
 from pandas import DataFrame
 
 from helpers import Constants, get_week_ends
-from stats import get_baseline_stats, SOILS, get_stats
+from stats import get_baseline_stats, get_stats
 
 DATA_SETS_NAMES = Constants.parameters
 SOILS = Constants.groups
@@ -81,6 +81,29 @@ def get_raw_data(data_set_name):
     return raw_data
 
 
+def get_HWS_to_MBC():
+
+    raw_MBC = get_raw_data('MBC')
+    week_ends = get_week_ends(raw_MBC)
+    raw_MBC_week_ends = raw_MBC.loc[week_ends]
+    raw_HWS = get_raw_data('HWS')
+    raw_HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
+
+    return raw_HWS_to_MBC
+
+
+def get_raw_MBC_to_TOC():
+    '''normalize raw MBC to baseline TOC values'''
+
+    raw_MBC = get_raw_data('MBC')
+    grouped_by_soil = raw_MBC.groupby(level='soil', axis=1)
+
+    raw_TOC = get_raw_data('TOC')
+    baseline_TOC = get_baseline_stats(raw_TOC)
+
+    # raw_MBC_TOC =
+
+
 def get_ergosterol_to_biomass():
 
     MBC_raw = get_raw_data('MBC')
@@ -117,7 +140,7 @@ def get_raw_basal_qCO2():
     raw_control_RESP = get_raw_data('RESP', ['c'])
 
 
-def get_multi_sets(keys) -> dict:
+def get_multi_sets(keys, normalize_by=None) -> dict:
 
     """
     Import multipule data sets as DataFrames
@@ -131,26 +154,18 @@ def get_multi_sets(keys) -> dict:
     # which data sets to iterate through
     data_set_names = keys
 
-    # dictionary of DataFrames to append data sets into
+    # append all data sets into a dictionary
     dataframes = {}
-
-
     for data_set_name in data_set_names:
 
-        # input data into DataFrame ahd append into dataframes
-        raw_data = pandas.read_excel(input_file, index_col=0, header=[0, 1, 2],
-                                     sheet_name=data_set_name, na_values=["-", " "])
+        raw_data = get_raw_data(data_set_name)
 
-        raw_data.rename_axis('days', inplace=True)  # label for index
-        raw_data.columns.rename(["soil", "treatment", "replicate"],
-                                level=None, inplace=True)  # level labels
-        raw_data.columns.set_levels(['c', 't'], level='treatment',
-                                    inplace=True)  # treatment level categories
-        raw_data.columns.set_levels(['ORG', 'MIN', 'UNC'],
-                                    level='soil', inplace=True)  # soil level categories
-        raw_data = raw_data.swaplevel('soil', 'treatment', axis=1)
+        if normalize_by:
+            raw_data = normalize_by(raw_data)
 
         dataframes[data_set_name] = raw_data
+
+    dataframes['ERG-to-MBC'] = get_ergosterol_to_biomass()
 
     return dataframes
 
@@ -169,10 +184,14 @@ def get_microbial_C_N():
     return microbial_c_to_n
 
 
-def baseline_normalize(raw_data):
+def baseline_normalize(raw_data, baseline=None):
 
     # get baseline stats
-    baseline_stats = get_baseline_stats(raw_data)
+    if baseline:
+        raw_baseline = get_raw_data(baseline)
+        baseline_stats = get_baseline_stats(raw_baseline)
+    else:
+        baseline_stats = get_baseline_stats(raw_data)
     baseline_means = baseline_stats.means
 
     # raw treatment data
@@ -183,23 +202,41 @@ def baseline_normalize(raw_data):
     for soil in SOILS:
         baseline_reshaped[soil] = baseline_means[soil]
 
-    normalized = raw_data / baseline_reshaped * 100
-
+    if baseline:
+        normalized = raw_data / baseline_reshaped * 100
+    else:
+        normalized = (raw_data - baseline_reshaped) / baseline_reshaped * 100
     return normalized
 
 
-def control_normalize(raw_data):
+def control_normalize(raw_data, control=None):
     '''
     divide each replicate with the average of corresponding control replicates.
 
     each treatment replicate is divided by the average of 4 (or less)
      corresponding control replicates and finally returned as a percantage
     combination.
+
+    parameter:
+    raw_data: DataFrame
+    the data to be normalized.
+
+    parameter:
+    control: str
+    the name of the data set from which control values will be taken
+    and normalized by. if this parameter is not given control values will be
+    taken from raw_data.
     '''
-    # raw data split to treatment and control
+    # raw data of treated samples
     treatment_raw = raw_data.loc[:, 't']
 
-    control_means = get_stats(raw_data, 'c').means  # shape ->(10,3)
+    # control raw_data
+    if control:
+        control_raw = get_raw_data(control)['c']
+    else:
+        control_raw = raw_data['c']
+
+    control_means = get_stats(control_raw).means  # shape ->(10,3)
 
     # empty dataframe with the same shape and indexes as raw_t
     control_reindexed = DataFrame().reindex_like(treatment_raw)  # shape ->(10,12)
@@ -211,6 +248,37 @@ def control_normalize(raw_data):
             control_reindexed.loc[row, column] =\
                                 control_means.loc[row, soil]
 
-    normalized = treatment_raw / control_reindexed * 100
+    normalized = treatment_raw - control_reindexed
 
     return  normalized
+
+
+def normalize_to_initial(raw_data, initial=None):
+
+    # raw data from treated samples
+    treatment_raw = raw_data['t']
+
+    # get the mean of the first sampling of the control treatment
+    if initial:
+        control_raw = get_raw_data(initial)['c']
+    else:
+        control_raw = raw_data['c']
+
+    control_means = get_stats(control_raw).means  # shape ->(10,3)
+    day_zero = control_means.loc[0]
+    print(f'control means: {control_means}')
+    print(f'day 0: {day_zero}')
+
+    # empty dataframe with the same shape and indexes as raw_t
+    control_reindexed = DataFrame().reindex_like(treatment_raw)  # shape ->(10,12)
+
+    # fill above shaped empty dataframe with the mean value for every set of replicates
+    for row in treatment_raw.index:
+        for column in treatment_raw.columns:
+            soil = column[0] # because there is a 'replicate' level, otherwise soil=column
+            control_reindexed.loc[row, column] = day_zero[soil]
+    print(f'control reindexed: {control_reindexed}')
+
+    normalized = treatment_raw - control_reindexed
+
+    return normalized

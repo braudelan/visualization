@@ -8,6 +8,9 @@ Stats = namedtuple('Stats', ['means', 'stde'])
 SOILS = Constants.groups
 
 
+def growth(raw_data):
+
+
 def get_weekly_growth(raw_data):
 
     def rename_columns(dataframe):

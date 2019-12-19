@@ -64,74 +64,73 @@ def get_all_parameters(data_sets_names,
 
     return all_parameters
 
-def linear_regression_statsmodels(x, y):
+
+def get_regression(x, y)-> RegressionResults:
 
     y = y.values
     x = x.values
-    x = sm.add_constant(x)
+    x = add_constant(x)
 
-    model = sm.OLS(y, x, missing='drop')
+    # intialize the model
+    model = linear_model.OLS(y, x, missing='drop')
+
+    # fit the regression
     fit_result = model.fit()
 
     return fit_result
 
-def linaer_regression_sklearn(pairwise_data: DataFrame,
-                              x: Series, y: Series):
-
-    n_samples = pairwise_data.shape[0]
-    y = y.values.reshape(n_samples, 1)
-    x = x.values.reshape(n_samples, 1)
-
-    model = LinearRegression()
-    model.fit(x, y)
-    r_sq = model.score(x, y)
-    r_sq = round(r_sq, 2)
-
-    return r_sq
-
-def add_regression_line(axes, x, y):
-    slope, intercept = numpy.polyfit(x, y, 1)
-    X_plot = numpy.linspace(
-        axes.get_xlim()[0], axes.get_xlim()[1], 100)
-    x = X_plot
-    y = slope * X_plot + intercept
-    axes.plot(x, y, '-')
-
-    slope = round(slope, 4)
-    intercept = round(intercept, 4)
-
-    return slope, intercept
-
-
-def plot_regression(pairwise_data,
-                    x_name, y_name, fit_result):
+def scatter_and_regression_line(data, data_set_name,
+                         x_name, y_name, fit_result=None):
 
     # initialize figure and axes
     figure = pyplot.figure()
 
     # plot
-    axes = seaborn.scatterplot(x=x_name,
-                        y=y_name,
-                        hue='treatment',
-                        style='soil',
-                        data=pairwise_data)
-    #
-    # # regression line
-    # add_regression_line()
+    regression_line_kws = {
+        'color': 'k',
+        'lw': 1,
+    }
+    axes: Axes = seaborn.scatterplot(
+        x=x_name,
+        y=y_name,
+        hue='soil',
+        style='days',
+        data=data,
+    )
+    seaborn.regplot(
+        x=x_name,
+        y=y_name,
+        data=data,
+        robust=True,
+        scatter=False,
+        ax=axes,
+        line_kws=regression_line_kws,
+    )
 
     # labels and decorations
-    x_label = f'{x_name} ({UNITS[x_name]})'
-    y_label = f'{y_name} ({UNITS[y_name]})'
+    axes.set_title(data_set_name, pad=5)
+    x_label = f'{x_name}'
+    y_label = f'{y_name}'
     axes.set_ylabel(y_label, labelpad=0.1)
     axes.set_xlabel(x_label, labelpad=0.1)
 
     # r_sqaure
-    axes.text(0.95, 0.1, f'r_square:{str(r_square)}',
-                fontweight='bold',
-                horizontalalignment='right',
-                transform=axes.transAxes)
+    rsqaured_x, rsqaured_y = (0.95, 0.1)
+    if fit_result:
+        r_square = round(fit_result.rsquared,2)
+        axes.text(
+            x=rsqaured_x,
+            y=rsqaured_y,
+            s=f'r_square: {str(r_square)}',
+            fontweight='bold',
+            horizontalalignment='right',
+            transform=axes.transAxes
+        )
+    pyplot.close()
 
-    return figure
+    return axes
+
+
 
 def visualize_regression(all_parameters, min_r_square, ):
 
@@ -141,21 +140,6 @@ def visualize_regression(all_parameters, min_r_square, ):
         figure.savefig(save_to, dpi=300,
                        format='png',bbox_inches='tight')
         pyplot.close()
-
-
-    def get_regression(x, y)-> RegressionResults:
-
-        y = y.values
-        x = x.values
-        x = add_constant(x)
-
-        # intialize the model
-        model = linear_model.OLS(y, x, missing='drop')
-
-        # fit the regression
-        fit_result = model.fit()
-
-        return fit_result
 
 
     def add_regression_line(axes):
@@ -251,19 +235,7 @@ def visualize_regression(all_parameters, min_r_square, ):
 
                 # write regression parameters
                 write_regression_params(file)
-                # indent = f'\t\t\t'
-                # data_pair = f'{ind_var} X {dep_var}'
-                # equation = f'y = {slope}x + {intercept}'
-                # interval = f'confidence interval for the slope:' \
-                #            f'{slope_confidence[0]}, {slope_confidence[1]}'
-                # rsquared = f'r_squared: {r_square}'
-                #
-                # output = f'{data_pair}:\n' \
-                #            f'{indent}{equation}\n' \
-                #            f'{indent}{interval}\n' \
-                #            f'{indent}{rsquared}\r\n\n'
-                #
-                # file.write(output)
+
 
             else:
                 continue
@@ -311,12 +283,82 @@ if __name__ == '__main__':
     # correlations_matrix()
     visualize_regression(data, 0.6)
 
-# ------------------------------------- correlations matrix ------------------------------------------------------------
-# # DataFrame.corr() uses pearson pairwise correlation by default
-
-# treatments = ['t', 'c', None]
-# for treatment in treatments:
-#     make_correlations_matrix(DATA_SETS_NAMES, treatment)
-# ------------------------------------- plot --------------------------------------------------------------
-# plot_correlations(all_parameters)
-
+# # ------------------------------------- correlations matrix ------------------------------------------------------------
+# # # DataFrame.corr() uses pearson pairwise correlation by default
+#
+# # treatments = ['t', 'c', None]
+# # for treatment in treatments:
+# #     make_correlations_matrix(DATA_SETS_NAMES, treatment)
+# # ------------------------------------- plot --------------------------------------------------------------
+# # plot_correlations(all_parameters)
+#
+#
+#
+# def linear_regression_statsmodels(x, y):
+#
+#     y = y.values
+#     x = x.values
+#     x = sm.add_constant(x)
+#
+#     model = sm.OLS(y, x, missing='drop')
+#     fit_result = model.fit()
+#
+#     return fit_result
+#
+# def linaer_regression_sklearn(pairwise_data: DataFrame,
+#                               x: Series, y: Series):
+#
+#     n_samples = pairwise_data.shape[0]
+#     y = y.values.reshape(n_samples, 1)
+#     x = x.values.reshape(n_samples, 1)
+#
+#     model = LinearRegression()
+#     model.fit(x, y)
+#     r_sq = model.score(x, y)
+#     r_sq = round(r_sq, 2)
+#
+#     return r_sq
+#
+# def add_regression_line(axes, x, y):
+#     slope, intercept = numpy.polyfit(x, y, 1)
+#     X_plot = numpy.linspace(
+#         axes.get_xlim()[0], axes.get_xlim()[1], 100)
+#     x = X_plot
+#     y = slope * X_plot + intercept
+#     axes.plot(x, y, '-')
+#
+#     slope = round(slope, 4)
+#     intercept = round(intercept, 4)
+#
+#     return slope, intercept
+#
+#
+# def plot_regression(pairwise_data,
+#                     x_name, y_name, fit_result):
+#
+#     # initialize figure and axes
+#     figure = pyplot.figure()
+#
+#     # plot
+#     axes = seaborn.scatterplot(x=x_name,
+#                         y=y_name,
+#                         hue='treatment',
+#                         style='soil',
+#                         data=pairwise_data)
+#     #
+#     # # regression line
+#     # add_regression_line()
+#
+#     # labels and decorations
+#     x_label = f'{x_name} ({UNITS[x_name]})'
+#     y_label = f'{y_name} ({UNITS[y_name]})'
+#     axes.set_ylabel(y_label, labelpad=0.1)
+#     axes.set_xlabel(x_label, labelpad=0.1)
+#
+#     # r_sqaure
+#     axes.text(0.95, 0.1, f'r_square:{str(r_square)}',
+#                 fontweight='bold',
+#                 horizontalalignment='right',
+#                 transform=axes.transAxes)
+#
+#     return figure

@@ -42,10 +42,10 @@ def MRE_notation_marks(axes: Axes):
     MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
 
     arrow_angle = 0.7 # radians from a downwards line perpendicular to x axis
-    offset_head_x = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
-    offset_base_x = offset_head_x + math.sin(arrow_angle) # offset of arrow base
-    head_y = -0.03 # fraction of axes size
-    base_y = head_y -0.07 # fraction of axes size
+    offset_head = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
+    offset_base = offset_head + math.sin(arrow_angle) # offset of arrow base
+    head_y = -0.03 # given as fraction of axes size
+    base_y = head_y -0.07 # given as fraction of axes size
 
     arrow_properties = dict(
                             arrowstyle="wedge,tail_width=0.7",
@@ -64,13 +64,32 @@ def MRE_notation_marks(axes: Axes):
       #               )
       axes.annotate(
                     s='',
-                    xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
-                    xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+                    xy=(time_point - offset_head, head_y ), # arrow head coordinates
+                    xytext=(time_point - offset_base, base_y), # arrow base coordinates
                     xycoords=('data','axes fraction'),
                     textcoords=('data', 'axes fraction'),
                     arrowprops=(arrow_properties)
                    )
 
+
+def make_figure_axes(fig_size=(20,15),dpi=72,
+                     number=None, axes_position=111):
+
+    # create and adjut figure
+    figure = pyplot.figure(figsize=fig_size, dpi=dpi)
+    figure.tight_layout()
+    figure.subplots_adjust(hspace=0)
+
+    # intialize axes
+    axes: Axes = figure.add_subplot(axes_position)
+
+    # axes parameters
+    axes.xaxis.set_minor_locator(MINOR_LOCATOR)
+    axes.xaxis.set_major_locator(MAJOR_LOCATOR)
+    axes.tick_params(axis='x', which='minor', width=1, length=3)
+    axes.margins(x=0.03, y=0.1)
+
+    return figure, axes
 
 def make_figure(number=None,):
 
@@ -280,12 +299,19 @@ def make_bar_axes(figure: Figure, x_locations, soil_width, y_label,
 
     axes: Axes = figure.add_subplot(111)
 
-    axes.set_ylabel(y_label, rotation=45, position=(20, 0.65), ha='right', ma='center')
+    axes.set_ylabel(y_label, rotation=90, position=(20, 0.65), ha='right', ma='center')
     axes.set_xlabel(x_label)
     axes.set_yticks([])
     axes.set_xticks(x_locations + soil_width)
     axes.set_xticklabels(categories)
-    axes.xaxis.set_tick_params(length=1, pad=20)
+    axes.xaxis.set_tick_params(length=0, pad=10)
+    axes.margins(y=0.3)
+    x_majortick_labels = axes.get_xmajorticklabels()
+    axes.set_xticklabels(
+        x_majortick_labels,
+        ha='right',
+        rotation=-30
+    )
 
     return axes
 
@@ -319,26 +345,25 @@ def make_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
     return bars
 
 
-def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead of 'UNC' bars, x_label
+def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Figure: #todo: horizontal line instead of 'UNC' bars, x_label
     """plot baseline values of multiple data sets.
 
     this function takes only the control replicates from every data set(=category or analysis)
     and produces the average for every soil over day 0 and every week end.
-    all replicates from all sampling days are pooled together representing replicates of the same sample
-    and the mean and std error are calculated accordingly.
+    these replicates are pooled together and the mean and std error are computed.
     means and std errors are divided by the mean of UNC soil to normalize the results.
 
     """
+    PLOT_STYLE = 'seaborn-ticks'
+    pyplot.style.use(PLOT_STYLE)
 
-    # data parameters
+    # data and plotting parameters
+    CATEGORIES_DATA = raw_data_sets.values()
     CATEGORIES = raw_data_sets.keys()
     NUMBER_OF_CATEGORIES = len(raw_data_sets)
-    X_LOCATIONS = numpy.arange(NUMBER_OF_CATEGORIES)
-    CATEGORIES_DATA = raw_data_sets.values()
-
-    # plot parameters
-    CATEGORY_WIDTH = 0.5
-    SOIL_WIDTH = CATEGORY_WIDTH / 2
+    LENGTH_OF_X = NUMBER_OF_CATEGORIES * spacing
+    X_LOCATIONS = numpy.arange(0, LENGTH_OF_X, spacing)
+    SOIL_WIDTH = spacing * relative_width
 
     # labels
     baseline_y_label = r'$mean\ baseline\ value\ \slash$'\
@@ -346,7 +371,7 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
     x_label = 'soil properties'
 
     # figure
-    basline_figure = pyplot.figure(figsize=(15,10))
+    basline_figure = pyplot.figure()
 
     basline_figure.subplots_adjust(hspace=0)
 
@@ -357,45 +382,47 @@ def plot_baseline(raw_data_sets: dict) -> Figure: #todo: horizontal line instead
                                   categories=CATEGORIES
                                   )
 
+    # plot bars for each category(=data_set)
     bars = {}
-    for x_location, data_set, category_name in zip(X_LOCATIONS, #todo turn into a function
+    for x_location, data_set, data_set_name in zip(X_LOCATIONS, #todo turn into a function
                                                    CATEGORIES_DATA, CATEGORIES):
         # baseline data
         baseline_statistics = get_baseline_stats(data_set)
-        BASELINE = baseline_statistics.means
-        BASELINE_STDE = baseline_statistics.stde
+        baseline_means = baseline_statistics.means
 
-        NORMALIZATION_FACTOR = BASELINE['UNC']
+        normalization_factor = baseline_means['UNC']
 
         # bar plot input
-        baseline_bar_heights = BASELINE / NORMALIZATION_FACTOR
-        baseline_bar_errors = BASELINE_STDE / NORMALIZATION_FACTOR
-
-        # growth_bar_heights = growth / baseline
+        baseline_bar_heights = (baseline_means - normalization_factor) / normalization_factor * 100
 
         labels = SOILS
 
         # plot baseline
         baseline_bars = make_bars(baseline_axes, x_location,
-                                  baseline_bar_heights, SOIL_WIDTH, labels, baseline_bar_errors)
+                                  baseline_bar_heights, SOIL_WIDTH, labels)
 
-        bars[category_name] = baseline_bars
-        # bars[category_name + '_growth'] = growth_bars
+        bars[data_set_name] = baseline_bars
 
     # legend
     legend_handles = bars['MBC'].values()
     legend_labels = bars['MBC'].keys()
-    basline_figure.legend(legend_handles, legend_labels, loc='center right')
+    basline_figure.legend(
+        legend_handles,
+        legend_labels,
+        loc='upper right',
+        bbox_to_anchor=(1, 1),
+        bbox_transform=baseline_axes.transAxes
+    )
 
     # remove rectangle patch of UNC
     for category in CATEGORIES:
-        for soil in SOILS:
-            if soil == 'UNC':
-                bar = bars[category][soil]
-                bar_rectangle = bar.patches
-                bar_rectangle.clear()
+            bar = bars[category]['UNC']
+            rectangle = bar.get_children()[0]
+            rectangle.set_visible(False)
 
-    return basline_figure
+    # plot a line for the height of UN
+
+    return basline_figure, bars
 
 
 def plot_total_increase(raw_data_sets: dict) -> Figure:

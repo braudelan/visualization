@@ -2,15 +2,23 @@
 
 from collections import namedtuple
 from pandas import DataFrame
-from helpers import Constants, get_week_ends
+
+from helpers import Constants, Stats, get_week_ends
 
 SOILS = Constants.groups
-STATS_NAMES = [
-    'means',
-    'stde',
-]
 
-Stats = namedtuple('Stats', STATS_NAMES)
+#
+# def stats_from_scratch(data_set_name, treatment):
+#
+#     raw_data = get_raw_data(data_set_name)[treatment]
+#     stats = get_stats(raw_data)
+#     means = stats.means
+#     stde = stats.stde
+#
+#     return Stats(
+#         means=means,
+#         stde=stde,
+#     )
 
 
 def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
@@ -50,6 +58,16 @@ def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
         # difference=difference,
         # normalized_diff=normalized_diffget
     )
+
+
+def get_multiple_stats(multi_data_sets):
+
+    multiple_stats = {}
+    for name, raw_data in multi_data_sets.items():
+        stats = get_stats(raw_data)
+        multiple_stats[name] = stats
+
+    return multiple_stats
 
 
 def get_baseline_stats(raw_data):

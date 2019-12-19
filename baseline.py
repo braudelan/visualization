@@ -33,11 +33,15 @@ def get_baseline_stats(data_sets_names):
     for data_set_name in data_sets_names:
 
         raw_data = (
-            get_ergosterol_to_biomass() if data_set_name == 'ERG' else
+            # get_ergosterol_to_biomass() if data_set_name == 'ERG' else
             get_raw_MBC_to_MBN() if data_set_name == 'MBC_MBN' else
             get_raw_TOC_TON() if data_set_name == 'TOC_TN' else
+            get_raw_data(data_set_name) * 0.4 if data_set_name == 'HWS' else
             get_raw_data(data_set_name)
         )
+
+        # data_set_name = 'ERG-to-MBC' if data_set_name == 'ERG'\
+        #                                             else data_set_name
 
         raw_baseline = get_raw_baseline(raw_data)
 

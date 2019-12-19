@@ -1,13 +1,17 @@
 import os
-
-import numpy
-from pandas import DataFrame
+from collections import namedtuple
 import random
 import imgkit
+import numpy
+
+
+class Stats:
+    def __init__(self, means, stde):
+        self.means = means
+        self.stde = stde
 
 
 class Constants:
-
     input_file_name = "all_tests.xlsx"
     figures_directory = '/home/elan/Dropbox/research/figures'
     parameters = [
@@ -21,16 +25,17 @@ class Constants:
         'TOC',
         'TON',
     ]
+    generic_units = r'mg\ast kg\ soil^{-1}'
     units = [
-        r'$mg\ast kg\ soil^{-1} $',
-        r'$mg\ast kg\ soil^{-1} $',
-        r'$mg\ast kg\ soil^{-1} $',
-        r'$\%WSA$',
-        r'$mg CO_2-C \ast kg^{-1}\ast day^{-1}$',
-        r'$mg\ast kg\ soil^{-1} $',
-        r'$\%MBC$',
-        r'$\%soil weight$',
-        r'$\%soil weight$'
+        r'mg\ast kg\ soil^{-1}',
+        r'mg\ast kg\ soil^{-1}',
+        r'mg\ast kg\ soil^{-1}',
+        r'\%WSA',
+        r'mg CO_2-C \ast kg^{-1}\ast day^{-1}',
+        r'mg\ast kg\ soil^{-1}',
+        r'\%MBC',
+        r'\%soil weight',
+        r'\%soil weight'
     ]
     parameters_units = dict(zip(parameters, units))
     groups = [
@@ -38,29 +43,24 @@ class Constants:
         'MIN',
         'UNC'
     ]
+    line_style_options = (
+        '--',
+        '-.',
+        ':',
+    )
     color_options = (
         'darkred',
         'royalblue',
         'dimgrey',
     )
-    colors =  dict(zip(groups, color_options))
     marker_options = (
         '*',
         'o',
         'd',
     )
+    colors =  dict(zip(groups, color_options))
     markers =  dict(zip(groups, marker_options))
-    line_style_labels = (
-        'solid',
-        'broken',
-        'dotted',
-    )
-    line_style_options = (
-        '-',
-        '-.',
-        ':',
-    )
-    line_styles = dict(zip(line_style_labels, line_style_options))
+    line_styles = dict(zip(groups, line_style_options))
     treatment_labels = ['c', 't']
     level_names = [
         "treatment",
@@ -101,7 +101,6 @@ def get_week_ends(dataframe):
     every_7th = dataframe.index.isin([0, 7, 14, 21, 28])
 
     return every_7th
-
 
 
 def replace_nan_with_mean(raw_data):
@@ -183,6 +182,7 @@ def get_round(data):
 
     return significant_digits
 
+
 def round_column_data(series):
     significant_digits = get_round(series)
     rounded_series = series.round(significant_digits)
@@ -190,26 +190,28 @@ def round_column_data(series):
     return rounded_series
 
 
-def delay_factor(x, delay):
-    ''' return a function alternating between 0 and 1 with delay.'''
+def get_cumulative_sum(array: numpy.ndarray):
+    array_length = len(array)
+    cum_sum = numpy.zeros(array_length)
 
-    N_HARMONICS = 1000
-    CYCLE = 28
-
-    def bn(n):
-        n = int(n)
-        if (n % 2 != 0):
-            return 2 / (pi * n)
+    for i in range(array_length):
+        if i == 0:
+            cum_sum[i] = array[i]
         else:
-            return 0
+            cum_sum[i] = cum_sum[i-1] + array[i]
 
-    # Wn
-    def wn(n):
-        wn = (2 * pi * n) / CYCLE
-        return wn
+    return cum_sum
 
-    a0 = 0.5
-    partialSums = a0
-    for n in range(1, N_HARMONICS):
-        partialSums = partialSums + bn(n) * sin(wn(n) * (x - delay))
-    return partialSums
+
+def get_cumulative_error(array: numpy.ndarray):
+    array_length = len(array)
+    cum_sum = numpy.zeros(array_length)
+
+    for i in range(array_length):
+        if i == 0:
+            cum_sum[i] = array[i]
+        else:
+            cum_sum[i] = ((cum_sum[i-1])**2 + (array[i])**2)**0.5
+
+    return cum_sum
+

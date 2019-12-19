@@ -5,33 +5,26 @@ from collections import namedtuple
 import numpy
 from pandas import DataFrame, MultiIndex
 
-from raw_data import get_raw_data, baseline_normalize
+from raw_data import get_raw_data
 from stats import get_stats
-from helpers import Constants, get_week_ends, propagate_stde
+from helpers import *
 
 SOILS = Constants.groups
 
 #--------------------------------------weekly cumulative CO2------------------------------
 #raw data
 raw_data = get_raw_data('RESP')
-# RESP_treatment = RESP_raw_data['t']
-# RESP_control = RESP_raw_data['c']
-#
-# # means
-# RESP_stats = get_stats(RESP_treatment)
-# RESP_means = RESP_stats.means
-# RESP_stde = RESP_stats.stde
 
 # limits of time intervals between samplings
 SAMPLING_TIMEPOINTS = raw_data.index.values
 timepoints_index = [i for i in range(8)]
-intervals_limits = [[SAMPLING_TIMEPOINTS[i], SAMPLING_TIMEPOINTS[i + 1]] for i in timepoints_index]
-limits_arrayed = numpy.asarray(intervals_limits)
-LIMITS = limits_arrayed.T  # array.shape-->(2, len(SAMPLING_TIMEPOINTS))
-BEGININGS = LIMITS[0]
-ENDINGS = LIMITS[1]
+interval_list = [[SAMPLING_TIMEPOINTS[i], SAMPLING_TIMEPOINTS[i + 1]] for i in timepoints_index]
+intervals_arrayed = numpy.asarray(interval_list)
+INTERVALS = intervals_arrayed.T  # array.shape-->(2, len(SAMPLING_TIMEPOINTS))
+BEGININGS = INTERVALS[0]
+ENDINGS = INTERVALS[1]
+SAMPLING_INTERVALS = ENDINGS- BEGININGS
 
-MEANS = namedtuple('MEANS', ['means', 'stde'])
 
 def get_mean_rates(treatment):
     '''
@@ -41,7 +34,7 @@ def get_mean_rates(treatment):
     either 't'(MRE treated) or 'c' for control.
     designates which treatment to slice out.
 
-    :return: namedtuple
+    :return: class Stats
     mean respiration rates averaged between each two consecutive
     sampling points.
     '''
@@ -71,53 +64,66 @@ def get_mean_rates(treatment):
     RESP_stde = RESP_stats.stde
 
     for soil in SOILS:
-        data = RESP_means[soil]
-        data_stde = RESP_stde[soil]
+        soil_respiration = RESP_means[soil]
+        soil_stde = RESP_stde[soil]
 
-        rates = []
+        mean_rates = []
         stnd_errors = []
-        for limits in intervals_limits:
+        for interval in interval_list:
 
-            t_initial = limits[0]
-            t_end = limits[1]
+            t_initial = interval[0]
+            t_end = interval[1]
 
-            t_initial_means = data.loc[t_initial]
-            t_initial_stde = data_stde.loc[t_initial]
-            t_end_means = data.loc[t_end]
-            t_end_stde = data_stde.loc[t_end]
+            t_initial_means = soil_respiration.loc[t_initial]
+            t_initial_stde = soil_stde.loc[t_initial]
+            t_end_means = soil_respiration.loc[t_end]
+            t_end_stde = soil_stde.loc[t_end]
 
             mean = (t_initial_means + t_end_means) / 2
-            stde = (t_initial_stde**2 + t_end_stde**2)**0.5
+            stde = (t_initial_stde**2 + t_end_stde**2)**0.5 / 2
 
-            rates.append(mean)
+            mean_rates.append(mean)
             stnd_errors.append(stde)
 
-        respiration_rates[soil] = rates
+        respiration_rates[soil] = mean_rates
         rates_stnd_errors[soil] = stnd_errors
 
-    return MEANS(
+    return Stats(
         means=respiration_rates,
         stde=rates_stnd_errors
     )
 
-def get_cumulative_respiration(mean_rates):
+def get_cumulative_respiration(treatment):
 
-    intervals = ENDINGS - BEGININGS
+    mean_rates = get_mean_rates(treatment)
     means = mean_rates.means
     stde = mean_rates.stde
 
     # weekly CO2
-    cumulative_CO2 = means.mul(intervals,
-                                    axis='rows')  # rate X time
-    cumulative_stde = stde.mul(intervals,
-                                     axis='rows')  # multiply stnd error by the same constant(i.e. time)
+    mean_amounts = means.mul(SAMPLING_INTERVALS, axis='rows')  # rate X time
+    stde_amounts = stde.mul(SAMPLING_INTERVALS, axis='rows')  # multiply stnd error by the same constant(i.e. time)
 
-    return MEANS(
-        means=cumulative_CO2,
-        stde=cumulative_stde
+    # compute cumulative CO2 for every sampling day
+    cumulative_respiration = mean_amounts.apply(
+        get_cumulative_sum,
+        axis='index',
+        raw=True,
+    )
+    cumulative_error = stde_amounts.apply(
+        get_cumulative_error,
+        axis='index',
+        raw=True,
+    )
+    cumulative_respiration = cumulative_respiration.droplevel([0,1]).rename_axis('day')
+    cumulative_error = cumulative_error.droplevel([0,1]).rename_axis('day')
+
+    return  Stats(
+        means=cumulative_respiration,
+        stde=cumulative_error,
     )
 
-def get_weekly_cumulative(mean_rates):
+
+def get_weekly_respiration(mean_rates):
     ''' get cumulative respiration for each week.'''
 
     cumulative = get_cumulative_respiration(mean_rates)
@@ -140,8 +146,8 @@ def get_weekly_cumulative(mean_rates):
     )
 
 if __name__ == '__main__':
-    mean_rates = get_mean_rates()
-    weekly_cumulative = get_weekly_cumulative(mean_rates)
+    mean_rates = get_mean_rates('t')
+    weekly_cumulative = get_weekly_respiration(mean_rates)
 
 #--------------------------------------weekly MBC growth------------------------------------------
 # # MBC raw data

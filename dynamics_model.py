@@ -195,8 +195,3 @@ if __name__ == '__main__':
     legend = axes.legend(handles=handles, labels=labels, loc='best', prop={'size': 20})
     figure.savefig('%s/%s_model_weighted' %(OUTPUT_FOLDER, data_set_name))
 
-    # for soil in SOILS:
-    #     result = fit_model(function, data_set[soil], data_SD[soil])
-    #     chi_square = get_chi_square(result)
-    #
-    #     print(soil + ':' + str(chi_square
