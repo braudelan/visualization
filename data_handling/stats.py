@@ -60,10 +60,15 @@ def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
     )
 
 
-def get_multiple_stats(multi_data_sets):
+def get_multiple_stats(raw_data_sets):
+    '''
+     get multiple Stats objects for a given set of raw data sets.
 
+     raw_data_sets:
+     a dict with data set names as keys and the raw data as values.
+     '''
     multiple_stats = {}
-    for name, raw_data in multi_data_sets.items():
+    for name, raw_data in raw_data_sets.items():
         stats = get_stats(raw_data)
         multiple_stats[name] = stats
 

@@ -1,14 +1,14 @@
 """
 load data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 import argparse
 
 import pandas
 from pandas import DataFrame
 
 from helpers import Constants, get_week_ends
-from stats import get_baseline_stats, get_stats
+from data_handling.stats import get_baseline_stats, get_stats
 
 DATA_SETS_NAMES = Constants.parameters
 SOILS = Constants.groups
@@ -45,7 +45,7 @@ def get_raw_data(data_set_name):
     """
 
     # data file to read data set from
-    input_file = "all_tests.xlsx"
+    input_file = "../all_tests.xlsx"
 
     # data set into DataFrame
     raw_data = pandas.read_excel(input_file,
@@ -81,13 +81,17 @@ def get_raw_data(data_set_name):
     return raw_data
 
 
-def get_HWS_to_MBC():
+def get_HWS_to_MBC(inverted=False):
 
     raw_MBC = get_raw_data('MBC')
     week_ends = get_week_ends(raw_MBC)
     raw_MBC_week_ends = raw_MBC.loc[week_ends]
     raw_HWS = get_raw_data('HWS')
-    raw_HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
+
+    HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
+    MBC_to_HWS = raw_MBC_week_ends / raw_HWS * 100
+
+    raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
 
     return raw_HWS_to_MBC
 
@@ -140,7 +144,7 @@ def get_raw_basal_qCO2():
     raw_control_RESP = get_raw_data('RESP', ['c'])
 
 
-def get_multi_sets(keys, normalize_by=None) -> dict:
+def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict:
 
     """
     Import multipule data sets as DataFrames
@@ -149,23 +153,30 @@ def get_multi_sets(keys, normalize_by=None) -> dict:
     """
 
     # data file to read data sets from
-    input_file = "all_tests.xlsx"
+    input_file = "../all_tests.xlsx"
 
     # which data sets to iterate through
     data_set_names = keys
 
     # append all data sets into a dictionary
-    dataframes = {}
+    dataframes = OrderedDict()
     for data_set_name in data_set_names:
 
         raw_data = get_raw_data(data_set_name)
 
+        if data_set_name == 'ERG':
+            raw_data = get_ergosterol_to_biomass()
+
+        if wknds and data_set_name == 'MBC':
+            week_ends = [0, 7, 14, 21, 28]
+            raw_data = raw_data.loc[week_ends]
+
         if normalize_by:
             raw_data = normalize_by(raw_data)
 
+        elif treatment:
+            raw_data = raw_data['t']
         dataframes[data_set_name] = raw_data
-
-    dataframes['ERG-to-MBC'] = get_ergosterol_to_biomass()
 
     return dataframes
 
@@ -184,18 +195,19 @@ def get_microbial_C_N():
     return microbial_c_to_n
 
 
-def baseline_normalize(raw_data, baseline=None):
+def baseline_normalize(raw_data, treatment='t', baseline=None):
 
     # get baseline stats
     if baseline:
-        raw_baseline = get_raw_data(baseline)
+        raw_baseline = get_raw_data(baseline) * 10000 if \
+                        baseline == 'TOC' else get_raw_data(baseline)
         baseline_stats = get_baseline_stats(raw_baseline)
     else:
         baseline_stats = get_baseline_stats(raw_data)
     baseline_means = baseline_stats.means
 
     # raw treatment data
-    raw_data = raw_data.loc[:, 't']
+    raw_data = raw_data.loc[:, treatment]
 
     # reshape baseline means to the same dimensions as raw_data
     baseline_reshaped = DataFrame().reindex_like(raw_data)
@@ -253,10 +265,10 @@ def control_normalize(raw_data, control=None):
     return  normalized
 
 
-def normalize_to_initial(raw_data, initial=None):
+def normalize_to_initial(raw_data, treatment='t', initial=None):
 
     # raw data from treated samples
-    treatment_raw = raw_data['t']
+    treatment_raw = raw_data[treatment]
 
     # get the mean of the first sampling of the control treatment
     if initial:
@@ -266,8 +278,6 @@ def normalize_to_initial(raw_data, initial=None):
 
     control_means = get_stats(control_raw).means  # shape ->(10,3)
     day_zero = control_means.loc[0]
-    print(f'control means: {control_means}')
-    print(f'day 0: {day_zero}')
 
     # empty dataframe with the same shape and indexes as raw_t
     control_reindexed = DataFrame().reindex_like(treatment_raw)  # shape ->(10,12)
@@ -277,8 +287,20 @@ def normalize_to_initial(raw_data, initial=None):
         for column in treatment_raw.columns:
             soil = column[0] # because there is a 'replicate' level, otherwise soil=column
             control_reindexed.loc[row, column] = day_zero[soil]
-    print(f'control reindexed: {control_reindexed}')
 
     normalized = treatment_raw - control_reindexed
 
     return normalized
+
+
+def toc_normalize(raw_data):
+
+    # get baseline TOC in mg/kg
+    toc_raw = get_raw_data('TOC')
+    toc_baseline_stats = get_baseline_stats(toc_raw)
+    toc_baseline = toc_baseline_stats.means * 10000 # 10^4 mg in 1% of kg
+    toc_stde = toc_baseline_stats.stde * 10000
+
+
+
+

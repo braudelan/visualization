@@ -1,17 +1,14 @@
 from collections import namedtuple
 
-from raw_data import get_raw_data, baseline_normalize
-from significance import get_significance_booleans
+from data_handling.raw_data import get_raw_data, baseline_normalize
+from data_handling.significance import get_significance_booleans
 from helpers import get_week_ends, Constants
 
 Stats = namedtuple('Stats', ['means', 'stde'])
 SOILS = Constants.groups
 
 
-def growth(raw_data):
-
-
-def get_weekly_growth(raw_data):
+def get_raw_weekly_growth(raw_data):
 
     def rename_columns(dataframe):
 
@@ -54,12 +51,18 @@ def get_weekly_growth(raw_data):
 
     return weekly_growth
 
-def get_weekly_growth_means(weekly_growth):
+def get_mean_weekly_growth(raw_data):
     '''retrun means of weekly growth for every soil.'''
+
+    weekly_growth = get_raw_weekly_growth(raw_data)
+
+
     stacked = weekly_growth.stack()
     grouped_soil_week = stacked.groupby(['soil', 'week'])
     means = grouped_soil_week.mean()
+    means = means.unstack().T
     stde = grouped_soil_week.sem()
+    stde = stde.unstack().T
 
     return Stats(
         means=means,
@@ -80,7 +83,7 @@ if __name__ == '__main__':
 
     raw_data = get_raw_data('MBC')
     raw_data = baseline_normalize(raw_data)
-    weekly_growth = get_weekly_growth(raw_data)
+    weekly_growth = get_raw_weekly_growth(raw_data)
     for soil in SOILS:
         soil_weekly_growth = weekly_growth.loc[soil]
         booleans = significance_between_weeks(soil_weekly_growth)

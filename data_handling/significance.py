@@ -1,15 +1,9 @@
-import pdb
-from collections import namedtuple
-
-import numpy
-from pandas import DataFrame, Series, MultiIndex
-from statsmodels.stats.multicomp import MultiComparison, pairwise_tukeyhsd
+from pandas import DataFrame, Series
+from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import ttest_ind
 
-from raw_data import get_setup_arguments, get_raw_data, get_multi_sets, get_ergosterol_to_biomass, baseline_normalize, \
-    control_normalize
-from stats import get_stats
-from helpers import Constants, replace_nan_with_mean, get_week_ends, DataFrame_to_image
+from data_handling.raw_data import *
+from helpers import *
 
 
 setup_args = get_setup_arguments()
@@ -24,14 +18,18 @@ COLUMNS_LEVELS = Constants.level_names
 
 def get_significance_booleans(data):
     '''
-    preform multiple t-tests.
+    preform multiple comparisons (t-tests).
 
-    :param data: Series
-    only one level index containing the group(id) labels.
+    paramters
+    ---------
+    data: Series
+        must have a single level index containing the group labels (id).
+        values are the results to be compared
 
-    :return:
-    a Series with boolean values indicating significance
-     between the groups.
+    returns
+    ------
+    booleans: Series
+         boolean values indicating significance between the groups.
     '''
 
     id = data.index.values
@@ -184,29 +182,29 @@ def visualize_daily_significance(raw_data: DataFrame,
     the rows are the groups between which significance
      is computed.
 
-    :param raw_data:
-    the input data to compute significance for.
+    parameters
+    ----------
+    raw_data: DataFrame
+        the input data to compute significance for.
 
-    :param data_set_name:
-    name of the parameter for which daily significance
-    is computed.
+    data_set_name: str
+        name of the parameter for which daily significance
+        is computed.
 
 
-    :param format_by:
-    css file by which the output table is formatted.
+    format_by: css file
+        css file by which the output table is formatted.
 
-    :param output_dir:
-    where to place the output image.
+    output_dir: path
+        where to place the output image.
 
-    :param label:
-    meta data about the kind of data manipulation
-    preformed on the
-    :return:
+    label: str
+        meta data about the kind of data manipulation
+        preformed on the raw data.
     '''
 
     significance = daily_significance_between_soils(raw_data)
     output_file = f'{output_dir}{data_set_name}_{label}'
-    pdb.set_trace()
     DataFrame_to_image(significance, format_by, output_file)
 
 
@@ -218,7 +216,7 @@ if __name__ == '__main__':
 
         raw_treated = raw_data['t']
         raw_control = raw_data['c']
-        raw_normalized = baseline_normalize(raw_data)
+        raw_normalized = normalize_to_initial(raw_data)
 
         data_types = [
             raw_treated,
@@ -229,7 +227,7 @@ if __name__ == '__main__':
         data_type_labels = [
             'MRE_treated',
             'control',
-            'baseline_normalized'
+            'initial_normalized'
         ]
 
         zipped = zip(
