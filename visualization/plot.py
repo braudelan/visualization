@@ -1,16 +1,12 @@
-import pdb
 import math
 
 import numpy
-from numpy import exp
-from pandas import DataFrame
 from matplotlib import pyplot
-from matplotlib.lines import Line2D
-from matplotlib.ticker import MultipleLocator, NullLocator
+from matplotlib.ticker import MultipleLocator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-from stats import get_stats, get_baseline_stats
+from data_handling.stats import get_stats, get_baseline_stats
 from helpers import Constants
 
 
