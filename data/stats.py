@@ -3,7 +3,7 @@
 from collections import namedtuple
 from pandas import DataFrame
 
-from helpers import Constants, Stats, get_week_ends
+from data.helpers import Constants, Stats, get_week_ends
 
 SOILS = Constants.groups
 

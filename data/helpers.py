@@ -3,16 +3,15 @@ from collections import namedtuple
 import random
 import imgkit
 import numpy
-
+from seaborn import color_palette
 
 class Stats:
     def __init__(self, means, stde):
         self.means = means
         self.stde = stde
 
-
 class Constants:
-    input_file_name = "all_tests.xlsx"
+    input_file_path = 'input_data.xlsx'
     figures_directory = '/home/elan/Dropbox/research/figures'
     parameters = [
         'MBC',
@@ -48,15 +47,12 @@ class Constants:
         '-.',
         ':',
     )
-    color_options = (
-        'darkred',
-        'royalblue',
-        'dimgrey',
-    )
+    color_options = color_palette('Set1', n_colors=3).as_hex()
+
     marker_options = (
-        '*',
+        's',
         'o',
-        'd',
+        'v',
     )
     colors =  dict(zip(groups, color_options))
     markers =  dict(zip(groups, marker_options))
@@ -126,7 +122,7 @@ def replace_nan_with_mean(raw_data):
     return raw_data
 
 
-def propagate_stde(result, error_1, error_2):
+def propagate_error(result, error_1, error_2):
     '''compute the stnd error of a multiplication of two variables.
     error_1 and error_2 are relative errors
      (i.e divided by the mean).
@@ -215,3 +211,9 @@ def get_cumulative_error(array: numpy.ndarray):
 
     return cum_sum
 
+
+MATPLOTLIB_STYLES = [u'seaborn-darkgrid', u'seaborn-notebook', u'classic', u'seaborn-ticks', u'grayscale', u'bmh',
+                     u'seaborn-talk', u'dark_background', u'ggplot', u'fivethirtyeight', u'_classic_test',
+                     u'seaborn-colorblind', u'seaborn-deep', u'seaborn-whitegrid', u'seaborn-bright', u'seaborn-poster',
+                     u'seaborn-muted', u'seaborn-paper', u'seaborn-white', u'seaborn-pastel', u'seaborn-dark',
+                     u'seaborn', u'seaborn-dark-palette']

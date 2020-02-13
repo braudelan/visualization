@@ -6,10 +6,10 @@ from matplotlib.axes import Axes
 from lmfit import Model, Parameters
 from lmfit.model import ModelResult
 
-from data_handling.raw_data import get_setup_arguments
-from data_handling.raw_data import get_raw_data
-from data_handling.stats import get_stats, normalize_to_control
-from helpers import  Constants
+from data.raw_data import get_setup_arguments
+from data.raw_data import get_raw_data
+from data.stats import get_stats, normalize_to_control
+from data.helpers import  Constants
 from modeling.model_functions import respiration_rate, biomass_carbon
 
 

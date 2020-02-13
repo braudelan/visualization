@@ -1,8 +1,8 @@
 from collections import namedtuple
 
-from data_handling.raw_data import get_raw_data, baseline_normalize
-from data_handling.significance import get_significance_booleans
-from helpers import get_week_ends, Constants
+from data.raw_data import get_raw_data, baseline_normalize
+from data.significance import get_significance_booleans
+from data.helpers import get_week_ends, Constants
 
 Stats = namedtuple('Stats', ['means', 'stde'])
 SOILS = Constants.groups
@@ -51,7 +51,8 @@ def get_raw_weekly_growth(raw_data):
 
     return weekly_growth
 
-def get_mean_weekly_growth(raw_data):
+
+def get_weekly_growth(raw_data):
     '''retrun means of weekly growth for every soil.'''
 
     weekly_growth = get_raw_weekly_growth(raw_data)
@@ -69,6 +70,7 @@ def get_mean_weekly_growth(raw_data):
         stde=stde
     )
 
+
 def significance_between_weeks(soil_weekly_growth):
     '''compute significance between weekly growth for specific soil.'''
 
@@ -79,6 +81,7 @@ def significance_between_weeks(soil_weekly_growth):
 
     return booleans
 
+
 if __name__ == '__main__':
 
     raw_data = get_raw_data('MBC')
@@ -88,3 +91,5 @@ if __name__ == '__main__':
         soil_weekly_growth = weekly_growth.loc[soil]
         booleans = significance_between_weeks(soil_weekly_growth)
         print(f'{soil}:\n{booleans}')
+
+

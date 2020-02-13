@@ -3,8 +3,8 @@ from matplotlib import pyplot
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-from data_handling.raw_data import *
-from data_handling.stats import *
+from data.raw_data import *
+from data.stats import *
 
 # ------------------------------------- data --------------------------------------------------------------
 # which data sets to use

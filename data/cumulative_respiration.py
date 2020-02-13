@@ -2,9 +2,9 @@
 
 from pandas import DataFrame, MultiIndex
 
-from data_handling.raw_data import get_raw_data
-from data_handling.stats import get_stats
-from helpers import *
+from data.raw_data import get_raw_data
+from data.stats import get_stats
+from data.helpers import *
 
 SOILS = Constants.groups
 

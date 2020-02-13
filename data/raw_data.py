@@ -7,9 +7,13 @@ import argparse
 import pandas
 from pandas import DataFrame
 
-from helpers import Constants, get_week_ends
-from data_handling.stats import get_baseline_stats, get_stats
+from data.stats import get_baseline_stats, get_stats
+from data.helpers import Constants, get_week_ends
 
+# where data is uploaded from
+INPUT_FILE = Constants.input_file_path
+
+# some constant parameters
 DATA_SETS_NAMES = Constants.parameters
 SOILS = Constants.groups
 LEVELS = Constants.level_names
@@ -44,11 +48,9 @@ def get_raw_data(data_set_name):
     imports a single data set into a DataFrame
     """
 
-    # data file to read data set from
-    input_file = "../all_tests.xlsx"
 
     # data set into DataFrame
-    raw_data = pandas.read_excel(input_file,
+    raw_data = pandas.read_excel(INPUT_FILE,
                                  index_col=0,header=[0, 1, 2],
                                  sheet_name=data_set_name,
                                  na_values=["-", " "])
@@ -153,7 +155,7 @@ def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict
     """
 
     # data file to read data sets from
-    input_file = "../all_tests.xlsx"
+    input_file = "../input_data.xlsx"
 
     # which data sets to iterate through
     data_set_names = keys

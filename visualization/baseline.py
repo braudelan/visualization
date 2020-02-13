@@ -6,9 +6,9 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 
-from data_handling.raw_data import get_multi_sets
-from data_handling.stats import get_baseline_stats
-from helpers import Constants
+from data.raw_data import get_multi_sets
+from data.stats import get_baseline_stats
+from data.helpers import Constants
 
 SOILS = Constants.groups
 COLORS = Constants.colors

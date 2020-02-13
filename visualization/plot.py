@@ -6,8 +6,8 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-from data_handling.stats import get_stats, get_baseline_stats
-from helpers import Constants
+from data.stats import get_stats, get_baseline_stats
+from data.helpers import Constants
 
 
 SOILS = Constants.groups

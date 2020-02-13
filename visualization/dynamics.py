@@ -6,10 +6,10 @@ from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
 
-from data_handling.raw_data import *
-from cumulative_respiration import *
+from data.raw_data import *
+from data.cumulative_respiration import *
 
-from helpers import *
+from data.helpers import *
 
 
 SOILS = Constants.groups

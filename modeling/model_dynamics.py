@@ -2,7 +2,7 @@ import pandas
 
 from lmfit import Model, Parameters
 
-from data_handling.raw_data import get_raw_data, baseline_normalize
+from data.raw_data import get_raw_data, baseline_normalize
 from modeling.model_functions import biomass_carbon
 
 

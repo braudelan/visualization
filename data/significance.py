@@ -2,8 +2,8 @@ from pandas import DataFrame, Series
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import ttest_ind
 
-from data_handling.raw_data import *
-from helpers import *
+from data.raw_data import *
+from data.helpers import *
 
 
 setup_args = get_setup_arguments()

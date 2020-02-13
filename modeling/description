@@ -1,0 +1,3 @@
+a module for modeling microbial activity, growth and respiration.
+
+the microbial growth is modeled based on the 1st order kinetics
