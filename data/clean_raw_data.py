@@ -1,9 +1,12 @@
+import pdb
+
 import numpy
 from pandas import Series
 from scipy.stats import zscore
 
 from data.raw_data import *
 
+SIGMA = 1.7
 
 def exclude_outliers(raw_data: DataFrame):
     ''' replace outlying raw data entries with None.'''
@@ -26,7 +29,7 @@ def exclude_outliers(raw_data: DataFrame):
 
         def zscore_as_booleans(series):
 
-            def get_outliers_mask(array, sigma=1.5):
+            def get_outliers_mask(array, sigma=SIGMA):
                 absolute_values = numpy.absolute(array)
                 max = absolute_values.max()
                 outliers_mask = numpy.empty_like(array, dtype=bool)
@@ -52,11 +55,12 @@ def exclude_outliers(raw_data: DataFrame):
 
         return outliers
 
-    outliers = raw_doc.apply(get_outliers, axis=1)
+    outliers = raw_data.apply(get_outliers, axis=1)
     outliers = outliers.rename(columns={0: 1, 1: 2, 2: 3, 3: 4}, level=2) #todo columns argument should be replaced with namespace
     outliers = outliers.reindex(labels=['MIN', 'ORG', 'UNC'], axis=1, level=1) #todo same as above for labels argument
-
-    outliers_excluded = raw_doc.where(outliers == True, None)
+    # pdb.set_trace()
+    outliers_excluded = raw_data.where(outliers == True, None)
+    outliers_excluded = outliers_excluded.astype('float64')
 
     return outliers_excluded
 

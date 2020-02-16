@@ -240,18 +240,11 @@ def plot_two_vertical_subplots(figure, data_sets: dict) -> dict:
     '''
     plot two data sets onto a figure.
 
-    subplots will be either on top of each other or side by side,
-    depending on n_rows.
-
     figure: Figure
     the Figure to be plotted onto.
 
     data_sets: dict
     data set name as key and a Stats instance as value.
-
-    n_rows: int
-    1 if subplots should be arranged side by side or 2 if
-     on top of each other.
 
     return: dict
     value is data set name and key is the axes onto which
