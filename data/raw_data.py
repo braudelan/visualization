@@ -20,27 +20,23 @@ LEVELS = Constants.level_names
 TREATMENTS = Constants.treatment_labels
 
 
-ParsedArgs = namedtuple('ParsedArgs', ['sets', 'numbers'])
-def get_setup_arguments() -> ParsedArgs:
+# ParsedArgs = namedtuple('ParsedArgs', ['sets'])
+def get_setup_arguments():
 
     """Return arguments specifying which data sets will be imported from input file."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--sets',
                         help='names of specific data sets to read from excel input file', nargs='+')
-    parser.add_argument('--numbers',
-                        help='numbers to be assignd to data sets', nargs='+', type=int)
 
     parsed_args = parser.parse_args()
     sets = parsed_args.sets
     all_data_sets = DATA_SETS_NAMES
-    all_numbers = range(1, len(all_data_sets)+1)
 
     if sets:
         return parsed_args
     else:
-        return ParsedArgs(sets=all_data_sets, numbers=all_numbers)
-
+        return all_data_sets
 
 def get_raw_data(data_set_name):
 
@@ -74,9 +70,12 @@ def get_raw_data(data_set_name):
         data_set_name == 'TOC' else False
     is_RESP = True if\
         data_set_name == 'RESP' else False
+    is_ERG = True if\
+        data_set_name == 'ERG' else False
     raw_data = (
         raw_data * 24 if is_RESP else
         raw_data.drop(14) if is_TOC else
+        get_ergosterol_to_biomass() if is_ERG else
         raw_data
     )
 
@@ -96,18 +95,6 @@ def get_HWS_to_MBC(inverted=False):
     raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
 
     return raw_HWS_to_MBC
-
-
-def get_raw_MBC_to_TOC():
-    '''normalize raw MBC to baseline TOC values'''
-
-    raw_MBC = get_raw_data('MBC')
-    grouped_by_soil = raw_MBC.groupby(level='soil', axis=1)
-
-    raw_TOC = get_raw_data('TOC')
-    baseline_TOC = get_baseline_stats(raw_TOC)
-
-    # raw_MBC_TOC =
 
 
 def get_ergosterol_to_biomass():
@@ -141,11 +128,6 @@ def get_raw_TOC_TON():
     return raw_TOC_TON
 
 
-def get_raw_basal_qCO2():
-    raw_control_MBC = get_raw_data('MBC')['c']
-    raw_control_RESP = get_raw_data('RESP', ['c'])
-
-
 def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict:
 
     """
@@ -177,7 +159,7 @@ def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict
             raw_data = normalize_by(raw_data)
 
         elif treatment:
-            raw_data = raw_data['t']
+            raw_data = raw_data[treatment]
         dataframes[data_set_name] = raw_data
 
     return dataframes
