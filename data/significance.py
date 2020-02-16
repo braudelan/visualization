@@ -6,8 +6,7 @@ from data.raw_data import *
 from data.helpers import *
 
 
-setup_args = get_setup_arguments()
-DATA_SETS_NAMES = setup_args.sets
+DATA_SETS_NAMES = get_setup_arguments()
 OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
 TABLE_FORMATING_SCRIPT = Constants.table_css
 
