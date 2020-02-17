@@ -8,14 +8,12 @@ from statsmodels.regression import linear_model
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.tools.tools import add_constant
 
-from data.raw_data import get_raw_data, get_setup_arguments
+from data.raw_data import get_raw_data, get_setup_arguments, get_multi_sets
 from data.helpers import Constants
 
 FIGURES_DIRECTORY = Constants.figures_directory
 OUTPUT_DIRECTORY = f'{FIGURES_DIRECTORY}/correlations/'
 
-setup_arguments = get_setup_arguments()
-DATA_SETS_NAMES = setup_arguments.sets
 LEVEL_NAMES = Constants.level_names
 UNITS = Constants.parameters_units
 
@@ -366,6 +364,17 @@ def scatter_and_regression_line(data, title,
 #         handle.set_color(colors[soil_label])
 
     visualize_regression(data, 0.6)
+
+
+if __name__ == '__main__':
+
+    data_set_names = get_setup_arguments()
+    data_sets = get_multi_sets(data_set_names)
+    combined_data = combine_data_sets(data_sets)
+
+
+
+
 
 # # ------------------------------------- correlations matrix ------------------------------------------------------------
 # # # DataFrame.corr() uses pearson pairwise correlation by default

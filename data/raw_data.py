@@ -20,7 +20,6 @@ LEVELS = Constants.level_names
 TREATMENTS = Constants.treatment_labels
 
 
-# ParsedArgs = namedtuple('ParsedArgs', ['sets'])
 def get_setup_arguments():
 
     """Return arguments specifying which data sets will be imported from input file."""
@@ -34,7 +33,7 @@ def get_setup_arguments():
     all_data_sets = DATA_SETS_NAMES
 
     if sets:
-        return parsed_args
+        return parsed_args.sets
     else:
         return all_data_sets
 
@@ -75,7 +74,6 @@ def get_raw_data(data_set_name):
     raw_data = (
         raw_data * 24 if is_RESP else
         raw_data.drop(14) if is_TOC else
-        get_ergosterol_to_biomass() if is_ERG else
         raw_data
     )
 
