@@ -13,9 +13,9 @@ RAW_DATA = get_raw_data('RESP')
 
 # limits of time intervals between samplings
 timepoints = RAW_DATA.index.values
-timepoints_index = [i for i in range(8)]
-interval_list = [[timepoints[i], timepoints[i + 1]] for i in timepoints_index]
-intervals_arrayed = numpy.asarray(interval_list)
+n_intervals = len(timepoints) - 1
+INTERVALS_LIST = [[timepoints[i], timepoints[i + 1]] for i in range(n_intervals)] # a list of intervals start and end (i.e [0, 2] for the interval between incubation start and 2 h)
+intervals_arrayed = numpy.asarray(INTERVALS_LIST)
 intervals = intervals_arrayed.T  # array.shape-->(2, len(SAMPLING_TIMEPOINTS))
 BEGININGS = intervals[0]
 ENDINGS = intervals[1]
@@ -36,7 +36,10 @@ def get_mean_rates(treatment):
     '''
 
     # empty dataframes to store results
-    weeks = [1, 1, 1, 2, 2, 2, 3, 3]
+    n_intervals_first = 5 # number of intervals in the 1st week
+    n_intervals_second = 6 # same as above for 2nd week
+    n_intervals_third = 5 # dito
+    weeks = [1]*n_intervals_first + [2]*n_intervals_second + [3]*n_intervals_third
     levels = [
         weeks,
         BEGININGS,
@@ -64,7 +67,7 @@ def get_mean_rates(treatment):
 
         mean_rates = []
         stnd_errors = []
-        for interval in interval_list:
+        for interval in INTERVALS_LIST:
 
             t_initial = interval[0]
             t_end = interval[1]

@@ -6,11 +6,11 @@ from data.raw_data import *
 from data.helpers import *
 
 
-DATA_SETS_NAMES = get_setup_arguments()
+# DATA_SETS_NAMES = get_setup_arguments()
 OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
 TABLE_FORMATING_SCRIPT = Constants.table_css
 
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 TREATMENTS = Constants.treatment_labels
 COLUMNS_LEVELS = Constants.level_names
 
@@ -44,7 +44,7 @@ def get_significance_booleans(data):
     return significance_booleans
 
 
-def annotate(booleans, day=None):
+def annotate(booleans, day=None): #todo assign significance letters to match the order of mean values
     '''
      return a Series with letters indicating significance.
 
@@ -113,29 +113,45 @@ def annotate(booleans, day=None):
 def daily_significance_between_soils(
         raw_data, treatment=None)-> DataFrame:
     '''
-    compute significance on every day for a given parameter.
+    compute significance between LTTs for each sampling event (=day)..
 
     :param raw_data: DataFrame
     raw data with 'treatment' level dropped.
 
     :param treatment:
-    if raw_data is not normalized, the label by which
-    'treatment' level is sliced out.
+    if raw_data is not normalized, decides whether control
+     or treated samples data will be used.
 
     :return:
 
     '''
     def find_missing_days(dataframe) -> list:
-        mask = []
+        '''
+        return a list of days where there was missing data.
+
+        any day where there was any Long Term Treatment
+         for which there was no data at all on that specific day.
+        '''
+    
+        days_missing_data = []
         days = dataframe.index
         for soil in SOILS:
             soil_mask = [day for day in days if
                                 dataframe.loc[day, soil].isnull().all()]
-            mask.extend(soil_mask)
+            days_missing_data.extend(soil_mask)
 
-        return mask
+        return days_missing_data
 
     def get_daily_data(data, day):
+        """
+        get the raw data of a given sampling day.
+
+        :parameter data: DataFrame
+        raw_data
+
+        :returns daily_data: Series
+        index values are Long Term Treatments (soils)
+        """
         stacked_data = data.stack()
         sliced_by_day = stacked_data.loc[day]
         daily_data = sliced_by_day.stack()
@@ -240,6 +256,7 @@ if __name__ == '__main__':
                         data, data_set_name,
                         TABLE_FORMATING_SCRIPT,
                         OUTPUT_PATH, data_type_label)
+
 
 
 # def baseline_significance(data_sets_names) -> DataFrame:

@@ -1,5 +1,6 @@
 import math
 import matplotlib
+
 from matplotlib import pyplot
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
@@ -9,10 +10,10 @@ from matplotlib.ticker import MultipleLocator
 from data.raw_data import *
 from data.cumulative_respiration import *
 
-from data.helpers import *
+from data.helpers import Constants, Stats
 
 
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 UNITS = Constants.parameters_units
 GENERIC_UNITS = Constants.generic_units
 
@@ -46,8 +47,8 @@ MARKER_SIZE = LINE_WIDTH * 3
 LEGEND_FONTSIZE = AXIS_LABEL_FONTSIZE
 
 
-def insert_zoom_object(axes, factor, location, data, data_error, xy_lim):
-    return
+# def insert_zoom_object(axes, factor, location, data, data_error, xy_lim):
+
 
 def set_line_parameters(axes, markers=MARKERS,
                         styles=LINE_STYLES, colors=LINE_COLORS):
@@ -179,8 +180,11 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
     '''
     plot short term dynamics onto axes.
 
-    data_input: Stats
-    a Stats instance with means and stnd error (both DataFrame).
+    :param data_input: Stats
+    :param axes: Axes
+    :param with_legend: bool
+    whether to plot a legend or not
+
     '''
 
     # data
@@ -235,202 +239,6 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
         )
 
 
-def plot_two_vertical_subplots(figure, data_sets: dict) -> dict:
-
-    '''
-    plot two data sets onto a figure.
-
-    figure: Figure
-    the Figure to be plotted onto.
-
-    data_sets: dict
-    data set name as key and a Stats instance as value.
-
-    return: dict
-    value is data set name and key is the axes onto which
-     the corresponding data set plotted.
-    '''
-
-    def final_adjustments(subplots):
-        '''
-        fix the subplots to look nicer.
-
-         remove redundant objects and move others to better location.
-
-         subplots: list
-         two axes objects. top axes for i=0. bottom axes for i=1.
-         '''
-
-        top_axes = subplots[0]
-        bottom_axes = subplots[1]
-
-        # remove unnecessary axis
-        top_axes.xaxis.set_visible(False) # first axes is the top one
-
-        # remove MRE notation from top axes
-        axes_children = top_axes.get_children()
-        is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
-        annotations = [child for child in axes_children if is_annotation(child)]
-        pyplot.setp(annotations, visible=False)
-
-        # remove bottom spine of top axes
-        spine = top_axes.spines['bottom']
-        spine.set_visible(False)
-
-        # remove unruly tick
-        y_ticks = bottom_axes.yaxis.get_major_ticks()
-        # y_ticks[-2].set_visible(False)
-
-        # use a single y label
-        bottom_ylabel = bottom_axes.yaxis.label
-        top_ylabel = top_axes.yaxis.label
-        bottom_ylabel.set_visible(False)
-        pyplot.setp(top_ylabel, y=0, verticalalignment='center')
-
-        # titles
-        bottom_title = r'$Biomass\ Carbon$'
-        top_title = r'$Cumulative\ CO_2$'
-        title_x, title_y = 0.05, 0.88
-        top_axes.text(title_x, title_y, top_title, transform=top_axes.transAxes)
-        bottom_axes.text(title_x,  title_y, bottom_title, transform=bottom_axes.transAxes)
-
-    subplots = {}
-    for i, item in enumerate(data_sets.items()):
-
-        is_bottom_axes = True if i == 1 else False  # test whether this is the second axes to be set up
-
-        name = item[0] # name of data set
-        data = item[1] # a Stats instance
-
-        # y_label
-        ylabel = r'${}$'.format(GENERIC_UNITS)
-
-
-        # share x axis
-        share = ('x', subplots[0]) if is_bottom_axes else None
-
-        # subplot position
-        position = 2 if is_bottom_axes else 1
-        axes_position = int(str(21) + str(position))
-
-        # initialize axes
-        axes = setup_dynamics_axes(figure, ylabel,
-                           axes_position=axes_position, share=share)
-
-        # plot
-        with_legend = False if is_bottom_axes else True # add legend only for the bottom axes
-        plot_dynamics(data, axes, with_legend)
-
-        # append the axes to subplots
-        subplots[i] = axes
-
-
-    final_adjustments(subplots)
-
-    return subplots
-
-
-def plot_two_horizontal_subplots(figure, data_sets: dict) -> dict:
-
-    '''
-    plot two data sets onto a figure.
-
-    subplots will be either on top of each other or side by side,
-    depending on n_rows.
-
-    figure: Figure
-    the Figure to be plotted onto.
-
-    data_sets: dict
-    data set name as key and a Stats instance as value.
-
-    n_rows: int
-    1 if subplots should be arranged side by side or 2 if
-     on top of each other.
-
-    return: dict
-    value is data set name and key is the axes onto which
-     the corresponding data set plotted.
-    '''
-
-    def final_adjustments(subplots):
-        '''
-        fix the subplots to look nicer.
-
-         remove redundant objects and move others to better location.
-
-         subplots: list
-         two axes objects. top axes for i=0. bottom axes for i=1.
-         '''
-
-        right_axes = subplots[0]
-        left_axes = subplots[1]
-
-        # remove unnecessary axis
-        right_axes.xaxis.set_visible(False) # first axes is the top one
-
-        # remove MRE notation from top axes
-        axes_children = right_axes.get_children()
-        is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
-        annotations = [child for child in axes_children if is_annotation(child)]
-        pyplot.setp(annotations, visible=False)
-
-        # remove bottom spine of top axes
-        spine = right_axes.spines['bottom']
-        spine.set_visible(False)
-
-        # remove unruly tick
-        y_ticks = left_axes.yaxis.get_major_ticks()
-        # y_ticks[-2].set_visible(False)
-
-        # use a single y label
-        bottom_ylabel = left_axes.yaxis.label
-        top_ylabel = right_axes.yaxis.label
-        bottom_ylabel.set_visible(False)
-        pyplot.setp(top_ylabel, y=0, verticalalignment='center')
-
-        # titles
-        bottom_title = r'$Biomass\ Carbon$'
-        top_title = r'$Cumulative\ CO_2$'
-        title_x, title_y = 0.05, 0.88
-        right_axes.text(title_x, title_y, top_title, transform=right_axes.transAxes)
-        left_axes.text(title_x,  title_y, bottom_title, transform=left_axes.transAxes)
-
-    subplots = {}
-    for i, item in enumerate(data_sets.items()):
-
-        is_left_axes = True if i == 1 else False  # test whether this is the second axes to be set up
-
-        name = item[0] # name of data set
-        data = item[1] # a Stats instance
-
-        # y_label
-        ylabel = r'${}$'.format(GENERIC_UNITS)
-
-
-        # share x axis
-        share = ('x', subplots[0]) if is_left_axes else None
-
-        # subplot position
-        position = 2 if is_left_axes else 1
-        axes_position = int(str(12) + str(position))
-
-        # initialize axes
-        axes = setup_dynamics_axes(figure, ylabel,
-                           axes_position=axes_position, share=share)
-
-        # plot
-        with_legend = True if is_left_axes else False # add legend only for the bottom axes
-        plot_dynamics(data, axes, with_legend)
-
-        # append the axes to subplots
-        subplots[i] = axes
-
-
-    final_adjustments(subplots)
-
-    return subplots
-
 
 if __name__ == '__main__':
 
@@ -479,10 +287,207 @@ if __name__ == '__main__':
 
 # todo
 #   for dynamics plot:
-#       remove first and last minor xticks
-#       sort zorder as follows lines < errors < markers (lines will be drawn first and so on)
 #       maybe put a box around legend to make clearer
-#       maybe define insert_zoom_object()
+#       maybe define make_inset_axes()
 #   rewrite MRE_notation_marks() so that it returns the object that was drawn (i.e arrow).
 #       in this way, the object can be reproduced and used in the legend or any other explanatory
 #       note around the plot.
+
+
+#
+# def plot_two_vertical_subplots(figure, data_sets: dict) -> dict:
+#
+#     '''
+#     plot two data sets onto a figure.
+#
+#     figure: Figure
+#     the Figure to be plotted onto.
+#
+#     data_sets: dict
+#     data set name as key and a Stats instance as value.
+#
+#     return: dict
+#     value is data set name and key is the axes onto which
+#      the corresponding data set plotted.
+#     '''
+#
+#     def final_adjustments(subplots):
+#         '''
+#         fix the subplots to look nicer.
+#
+#          remove redundant objects and move others to better location.
+#
+#          subplots: list
+#          two axes objects. top axes for i=0. bottom axes for i=1.
+#          '''
+#
+#         top_axes = subplots[0]
+#         bottom_axes = subplots[1]
+#
+#         # remove unnecessary axis
+#         top_axes.xaxis.set_visible(False) # first axes is the top one
+#
+#         # remove MRE notation from top axes
+#         axes_children = top_axes.get_children()
+#         is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
+#         annotations = [child for child in axes_children if is_annotation(child)]
+#         pyplot.setp(annotations, visible=False)
+#
+#         # remove bottom spine of top axes
+#         spine = top_axes.spines['bottom']
+#         spine.set_visible(False)
+#
+#         # remove unruly tick
+#         y_ticks = bottom_axes.yaxis.get_major_ticks()
+#         # y_ticks[-2].set_visible(False)
+#
+#         # use a single y label
+#         bottom_ylabel = bottom_axes.yaxis.label
+#         top_ylabel = top_axes.yaxis.label
+#         bottom_ylabel.set_visible(False)
+#         pyplot.setp(top_ylabel, y=0, verticalalignment='center')
+#
+#         # titles
+#         bottom_title = r'$Biomass\ Carbon$'
+#         top_title = r'$Cumulative\ CO_2$'
+#         title_x, title_y = 0.05, 0.88
+#         top_axes.text(title_x, title_y, top_title, transform=top_axes.transAxes)
+#         bottom_axes.text(title_x,  title_y, bottom_title, transform=bottom_axes.transAxes)
+#
+#     subplots = {}
+#     for i, item in enumerate(data_sets.items()):
+#
+#         is_bottom_axes = True if i == 1 else False  # test whether this is the second axes to be set up
+#
+#         name = item[0] # name of data set
+#         data = item[1] # a Stats instance
+#
+#         # y_label
+#         ylabel = r'${}$'.format(GENERIC_UNITS)
+#
+#
+#         # share x axis
+#         share = ('x', subplots[0]) if is_bottom_axes else None
+#
+#         # subplot position
+#         position = 2 if is_bottom_axes else 1
+#         axes_position = int(str(21) + str(position))
+#
+#         # initialize axes
+#         axes = setup_dynamics_axes(figure, ylabel,
+#                            axes_position=axes_position, share=share)
+#
+#         # plot
+#         with_legend = False if is_bottom_axes else True # add legend only for the bottom axes
+#         plot_dynamics(data, axes, with_legend)
+#
+#         # append the axes to subplots
+#         subplots[i] = axes
+#
+#
+#     final_adjustments(subplots)
+#
+#     return subplots
+#
+#
+# def plot_two_horizontal_subplots(figure, data_sets: dict) -> dict:
+#
+#     '''
+#     plot two data sets onto a figure.
+#
+#     subplots will be either on top of each other or side by side,
+#     depending on n_rows.
+#
+#     figure: Figure
+#     the Figure to be plotted onto.
+#
+#     data_sets: dict
+#     data set name as key and a Stats instance as value.
+#
+#     n_rows: int
+#     1 if subplots should be arranged side by side or 2 if
+#      on top of each other.
+#
+#     return: dict
+#     value is data set name and key is the axes onto which
+#      the corresponding data set plotted.
+#     '''
+#
+#     def final_adjustments(subplots):
+#         '''
+#         fix the subplots to look nicer.
+#
+#          remove redundant objects and move others to better location.
+#
+#          subplots: list
+#          two axes objects. top axes for i=0. bottom axes for i=1.
+#          '''
+#
+#         right_axes = subplots[0]
+#         left_axes = subplots[1]
+#
+#         # remove unnecessary axis
+#         right_axes.xaxis.set_visible(False) # first axes is the top one
+#
+#         # remove MRE notation from top axes
+#         axes_children = right_axes.get_children()
+#         is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
+#         annotations = [child for child in axes_children if is_annotation(child)]
+#         pyplot.setp(annotations, visible=False)
+#
+#         # remove bottom spine of top axes
+#         spine = right_axes.spines['bottom']
+#         spine.set_visible(False)
+#
+#         # remove unruly tick
+#         y_ticks = left_axes.yaxis.get_major_ticks()
+#         # y_ticks[-2].set_visible(False)
+#
+#         # use a single y label
+#         bottom_ylabel = left_axes.yaxis.label
+#         top_ylabel = right_axes.yaxis.label
+#         bottom_ylabel.set_visible(False)
+#         pyplot.setp(top_ylabel, y=0, verticalalignment='center')
+#
+#         # titles
+#         bottom_title = r'$Biomass\ Carbon$'
+#         top_title = r'$Cumulative\ CO_2$'
+#         title_x, title_y = 0.05, 0.88
+#         right_axes.text(title_x, title_y, top_title, transform=right_axes.transAxes)
+#         left_axes.text(title_x,  title_y, bottom_title, transform=left_axes.transAxes)
+#
+#     subplots = {}
+#     for i, item in enumerate(data_sets.items()):
+#
+#         is_left_axes = True if i == 1 else False  # test whether this is the second axes to be set up
+#
+#         name = item[0] # name of data set
+#         data = item[1] # a Stats instance
+#
+#         # y_label
+#         ylabel = r'${}$'.format(GENERIC_UNITS)
+#
+#
+#         # share x axis
+#         share = ('x', subplots[0]) if is_left_axes else None
+#
+#         # subplot position
+#         position = 2 if is_left_axes else 1
+#         axes_position = int(str(12) + str(position))
+#
+#         # initialize axes
+#         axes = setup_dynamics_axes(figure, ylabel,
+#                            axes_position=axes_position, share=share)
+#
+#         # plot
+#         with_legend = True if is_left_axes else False # add legend only for the bottom axes
+#         plot_dynamics(data, axes, with_legend)
+#
+#         # append the axes to subplots
+#         subplots[i] = axes
+#
+#
+#     final_adjustments(subplots)
+#
+#     return subplots
+#

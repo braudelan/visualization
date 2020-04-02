@@ -1,8 +1,10 @@
 import os
 from collections import namedtuple
 import random
+
 import imgkit
 import numpy
+from pandas.io.formats.style import Styler
 from seaborn import color_palette
 
 class Stats:
@@ -37,7 +39,7 @@ class Constants:
         r'\%soil weight'
     ]
     parameters_units = dict(zip(parameters, units))
-    groups = [
+    LTTs = [
         'ORG',
         'MIN',
         'UNC'
@@ -54,9 +56,9 @@ class Constants:
         'o',
         'v',
     )
-    colors =  dict(zip(groups, color_options))
-    markers =  dict(zip(groups, marker_options))
-    line_styles = dict(zip(groups, line_style_options))
+    colors =  dict(zip(LTTs, color_options))
+    markers =  dict(zip(LTTs, marker_options))
+    line_styles = dict(zip(LTTs, line_style_options))
     treatment_labels = ['c', 't']
     level_names = [
         "treatment",
@@ -110,7 +112,7 @@ def replace_nan_with_mean(raw_data):
      '''
 
     TREATMENTS = Constants.treatment_labels
-    SOILS = Constants.groups
+    SOILS = Constants.LTTs
     DAYS = raw_data.index
 
     for soil in SOILS:
@@ -134,7 +136,12 @@ def propagate_error(result, error_1, error_2):
     return propagated_error
 
 
-def DataFrame_to_image(data, css, outputfile="out.png", format="png"):
+def style_to_image(styler: Styler, output_file='output/weekly_mbc_growth.png'):
+    renderd = styler.render()
+    imgkit.from_string(renderd, output_file)
+
+
+def DataFrame_to_image(data, css, outputfile="weekly_mbc_growth.png", format="png"):
     '''
     For rendering a Pandas DataFrame as an image.
     data: a pandas DataFrame

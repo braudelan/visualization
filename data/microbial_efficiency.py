@@ -8,7 +8,7 @@ def get_carbon_efficiency(treatment):
 
     # raw data
     raw_mbc = get_raw_data('MBC')[treatment]
-    weekly_growth_stats = get_weekly_growth(raw_mbc)
+    weekly_growth_stats = get_weekly_growth(raw_mbc, treatment)
     weekly_respiration_stats = get_weekly_respiration(treatment)
 
     # means and stnd errors

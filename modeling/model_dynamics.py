@@ -3,7 +3,7 @@ import pandas
 from lmfit import Model, Parameters
 
 from data.raw_data import get_raw_data, baseline_normalize
-from modeling.model_functions import biomass_carbon
+from modeling.model_functions import weekly_growth_decay
 
 
 def fit_model(model_function, t, y, drop_days=None):
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     data = pandas.concat([mean, sem], axis=1)
 
     data.dropna(how='any', inplace=True)
-    fit = fit(data, biomass_carbon)
+    fit = fit(data, weekly_growth_decay)

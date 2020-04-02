@@ -1,11 +1,11 @@
 from collections import namedtuple
 
-from data.raw_data import get_raw_data, baseline_normalize
+from data.raw_data import *
 from data.significance import get_significance_booleans
 from data.helpers import get_week_ends, Constants
 
 Stats = namedtuple('Stats', ['means', 'stde'])
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 
 
 def get_raw_interval_growth(raw_data):
@@ -100,11 +100,6 @@ def significance_between_weeks(soil_weekly_growth):
 if __name__ == '__main__':
 
     raw_data = get_raw_data('MBC')
-    raw_data = baseline_normalize(raw_data)
+    raw_data = control_normalize(raw_data)
     weekly_growth = get_raw_interval_growth(raw_data)
-    for soil in SOILS:
-        soil_weekly_growth = weekly_growth.loc[soil]
-        booleans = significance_between_weeks(soil_weekly_growth)
-        print(f'{soil}:\n{booleans}')
-
-
+#    1

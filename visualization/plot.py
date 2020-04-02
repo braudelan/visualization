@@ -10,62 +10,26 @@ from data.stats import get_stats, get_baseline_stats
 from data.helpers import Constants
 
 
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 MARKERS = Constants.markers
 COLORS = Constants.colors
 LINE_STYLES = Constants.line_styles
 
 MAJOR_LOCATOR = MultipleLocator(7)  # major ticks locations
 MINOR_LOCATOR = MultipleLocator(1)  # minor ticks locations
-
-pyplot.rc(
-          'legend',
-          facecolor='inherit',
-          framealpha=0,
-          markerscale=2
-  )
-
-pyplot.rc('font', size=15) # control text size when not defined locally
-pyplot.rc('lines', linewidth=3)
-
-# palette = pyplot.get_cmap('tab10')
-pyplot.style.use('seaborn-talk')
-
-
-
-def MRE_notation_marks(axes: Axes):
-
-    MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
-
-    arrow_angle = 0.7 # radians from a downwards line perpendicular to x axis
-    offset_head = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
-    offset_base = offset_head + math.sin(arrow_angle) # offset of arrow base
-    head_y = -0.03 # given as fraction of axes size
-    base_y = head_y -0.07 # given as fraction of axes size
-
-    arrow_properties = dict(
-                            arrowstyle="wedge,tail_width=0.7",
-                            fc="0.6",
-                            ec="0.1",
-                           )
-
-    for time_point in MRE_TIME_POINTS:
-
-      # axes.annotate(
-      #               s='',
-      #               xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
-      #               xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
-      #               xycoords=('data', 'axes fraction'),
-      #               arrowprops=arrow_properties,
-      #               )
-      axes.annotate(
-                    s='',
-                    xy=(time_point - offset_head, head_y ), # arrow head coordinates
-                    xytext=(time_point - offset_base, base_y), # arrow base coordinates
-                    xycoords=('data','axes fraction'),
-                    textcoords=('data', 'axes fraction'),
-                    arrowprops=(arrow_properties)
-                   )
+#
+# pyplot.rc(
+#           'legend',
+#           facecolor='inherit',
+#           framealpha=0,
+#           markerscale=2
+#   )
+#
+# pyplot.rc('font', size=15) # control text size when not defined locally
+# pyplot.rc('lines', linewidth=3)
+#
+# # palette = pyplot.get_cmap('tab10')
+# pyplot.style.use('seaborn-talk')
 
 
 def make_figure_axes(fig_size=(20,15),dpi=72,
@@ -120,6 +84,49 @@ def make_axes(figure: Figure,
     axes.margins(x=0.03, y=0.1)
 
     return axes
+
+
+def adjust_axes(axes):
+
+    axes.xaxis.set_minor_locator(MINOR_LOCATOR)
+    axes.xaxis.set_major_locator(MAJOR_LOCATOR)
+    axes.tick_params(axis='x', which='minor', width=1, length=3)
+    axes.margins(x=0.03, y=0.1)
+
+
+def MRE_notation_marks(axes: Axes):
+
+    MRE_TIME_POINTS = [0, 7, 14 ] # days when MRE was applied
+
+    arrow_angle = 0.7 # radians from a downwards line perpendicular to x axis
+    offset_head = 0.3 # offset of arrow head from annotation point, given in data coordinates(=days)
+    offset_base = offset_head + math.sin(arrow_angle) # offset of arrow base
+    head_y = -0.03 # given as fraction of axes size
+    base_y = head_y -0.07 # given as fraction of axes size
+
+    arrow_properties = dict(
+                            arrowstyle="wedge,tail_width=0.7",
+                            fc="0.6",
+                            ec="0.1",
+                           )
+
+    for time_point in MRE_TIME_POINTS:
+
+      # axes.annotate(
+      #               s='',
+      #               xy=(time_point - offset_head_x, head_y ), # arrow head coordinates
+      #               xytext=(time_point - offset_base_x, base_y), # arrow base coordinates
+      #               xycoords=('data', 'axes fraction'),
+      #               arrowprops=arrow_properties,
+      #               )
+      axes.annotate(
+                    s='',
+                    xy=(time_point - offset_head, head_y ), # arrow head coordinates
+                    xytext=(time_point - offset_base, base_y), # arrow base coordinates
+                    xycoords=('data','axes fraction'),
+                    textcoords=('data', 'axes fraction'),
+                    arrowprops=(arrow_properties)
+                   )
 
 
 def plot_lines(axes: Axes, data, linestyle='solid', stde=None):
@@ -341,7 +348,7 @@ def make_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
     return bars
 
 
-def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Figure: #todo: horizontal line instead of 'UNC' bars, x_label
+def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Figure:
     """plot baseline values of multiple data sets.
 
     this function takes only the control replicates from every data set(=category or analysis)

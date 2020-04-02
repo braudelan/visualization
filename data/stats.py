@@ -1,24 +1,13 @@
-''' calculate and return different statistics from raw data.'''
+''' calculate and return basic statistics from raw data.'''
 
 from collections import namedtuple
+
+import pandas
 from pandas import DataFrame
 
-from data.helpers import Constants, Stats, get_week_ends
-
-SOILS = Constants.groups
-
-#
-# def stats_from_scratch(data_set_name, treatment):
-#
-#     raw_data = get_raw_data(data_set_name)[treatment]
-#     stats = get_stats(raw_data)
-#     means = stats.means
-#     stde = stats.stde
-#
-#     return Stats(
-#         means=means,
-#         stde=stde,
-#     )
+from data.raw_data import *
+from data.helpers import *
+from data.significance import *
 
 
 def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
@@ -62,11 +51,17 @@ def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
 
 def get_multiple_stats(raw_data_sets):
     '''
-     get multiple Stats objects for a given set of raw data sets.
 
-     raw_data_sets:
-     a dict with data set names as keys and the raw data as values.
-     '''
+    :param raw_data_sets: dict
+    keys are data sets names.
+    values are DataFrame s with raw data
+
+    :return: multiple_stats: dict
+    keys are data sets names.
+    values are a Stats instance with means and stnd erros
+    '''
+
+
     multiple_stats = {}
     for name, raw_data in raw_data_sets.items():
         stats = get_stats(raw_data)
@@ -75,27 +70,71 @@ def get_multiple_stats(raw_data_sets):
     return multiple_stats
 
 
-def get_baseline_stats(raw_data):
-    """
-    for each soil, get the mean value of control samples across the entire time line.
+def get_baseline_stats(keys):
+    '''
+    get raw baseline values of multiple parameters.
 
-    week day samplings between MRE applications are excluded from calculations
-     to avoid local fluctuations as a result of water additions.
-    """
+    :param keys: list
+    parameters to be included.
 
+    :return:
+    '''
 
-    week_ends_control = raw_data.loc[get_week_ends(raw_data), ('c', SOILS)]  # week ends control samples from raw data
-    week_ends_control.columns = week_ends_control.columns.droplevel('treatment')
-    control_stacked = week_ends_control.stack(level='replicate')
+    # list of raw data sets (for inspection)
+    raw_sets = []
 
-    means = control_stacked.mean().reindex(SOILS)
-    stde = control_stacked.sem()
+    # lists to store statistics from every data_set
+    data_sets_means = []
+    data_sets_err = []
+    significance = []
+    for key in keys:
 
-    return Stats(
-        means=means,
-        stde=stde,
-    )
+        # get the data
+        raw_data = get_raw_data(key)['c']
 
+        # exclude week days
+        week_ends = [day for day in raw_data.index if day in [0, 7, 14, 21, 28]]
+        raw_data = raw_data.loc[week_ends]
+
+        # transpose, stack, drop irrelevant levels
+        transposed = raw_data.T
+        stacked = transposed.stack()
+        raw_data = stacked.droplevel(['replicate', 'days'])
+
+        # rename resulting Series
+        raw_data.name = key
+
+        # append to raw_sets list
+        raw_sets.append(raw_data)
+
+        # compute statistics
+        group_by_soil = raw_data.groupby(raw_data.index)
+        means = group_by_soil.mean()
+        std_err = group_by_soil.sem()
+
+        # compute significance and rename
+        booleans = get_significance_booleans(raw_data)
+        annotations = annotate(booleans)
+        annotations.name = key
+
+        # append statistics to lists
+        data_sets_means.append(means)
+        data_sets_err.append(std_err)
+        significance.append(annotations)
+
+    # combine stats from all data sets into Dataframe
+    baseline_means = pandas.concat(data_sets_means, axis=1)
+    baseline_std_errors = pandas.concat(data_sets_err, axis=1)
+    baseline_significance = pandas.concat(significance, axis=1)
+
+    return baseline_means,\
+           baseline_std_errors,\
+           baseline_significance,\
+           raw_sets
+
+if __name__ == '__main__':
+    keys = ['TOC', 'DOC', 'HWS', 'AS', 'MBC', 'RESP', 'ERG']
+    means, errors, significance, raw_sets = get_baseline_stats(keys)
 
 # def normalize_to_TOC(raw)-> dict:
 #     '''normalize a given carbon fraction to TOC '''
@@ -269,20 +308,4 @@ def get_baseline_stats(raw_data):
 #         stdv=None
 #     )
 #
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

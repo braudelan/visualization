@@ -1,25 +1,35 @@
+import pdb
+
 import pandas
 from pandas import DataFrame, Series
 import seaborn
 
 from matplotlib import pyplot
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from statsmodels.regression import linear_model
 from statsmodels.regression.linear_model import RegressionResults
 from statsmodels.tools.tools import add_constant
 
-from data.raw_data import get_raw_data, get_setup_arguments, get_multi_sets
-from data.helpers import Constants
+from data.raw_data import get_raw_data, get_multi_sets
+from data.stats import get_multiple_stats
+from data.helpers import Constants, Stats
 
+
+# output directories
 FIGURES_DIRECTORY = Constants.figures_directory
-OUTPUT_DIRECTORY = f'{FIGURES_DIRECTORY}/correlations/'
+OUTPUT_DIRECTORY = f'{FIGURES_DIRECTORY}/correlations'
 
+# Constants
 LEVEL_NAMES = Constants.level_names
 UNITS = Constants.parameters_units
 
 # plotting parameters
 MARKERS = Constants.markers
 MARKER_COLORS = Constants.colors
+
+# regression parameters
+TRESHOLD_R = 0
 
 
 def write_regression_params(file, ind_var, dep_var, fit_result):
@@ -54,7 +64,7 @@ def write_regression_params(file, ind_var, dep_var, fit_result):
 def stack_data(raw_data,
                normalize_by=None, treatment: str=None):
     '''
-    stack the raw data .
+    stack raw data .
 
     parameters
     ----------
@@ -84,53 +94,44 @@ def stack_data(raw_data,
         data
     )
 
-    # stack and rename the resulting Series
+    # stack
     columns_level_names = data.columns.names
     stacked_data_set = data.stack(columns_level_names)
-    # stacked_data_set = stacked.rename(data_set_name)
 
     return stacked_data_set
-#
-# def get_stacked_data(data_set_names):
-#
-#     stacked_data_sets_list = []
-#     for data_set_name in data_sets_names:
-#         stacked_data = stack_data(data_set_name)
-#         stacked_data_sets_list.append(stacked_data)
-#
-#     return stacked_data_sets_list
 
-def combine_data_sets(raw_data_sets: dict):
-    '''
-    combine data sets into one DataFrame.
 
-    parameter
-    ---------
-    raw_data_sets: dict
-        keys are the data sets names,
-        values are DataFrames with raw data.
-        
-    returns
-    -------
-    concatenated: DataFrame
-        columns are the names of the data sets.
+def combine_data_sets(data_sets: dict):
     '''
 
+    :param data_sets: dict
+    either a raw_data_sets or stats_data_sets object.
+    keys are data sets names.
+    values are either raw or mean DataFrams.
+
+    :return: combined
+    columns are names of data sets
+    '''
+
+    first_dict_value = list(data_sets.values())[0]
+    mean_data = True if type(first_dict_value) == Stats else False
 
     # stacked and name the data sets
-    for key, value in raw_data_sets.items():
+    for key, value in data_sets.items():
+        value = value.means if mean_data else value
         new_value = stack_data(value)
         new_value.name = key
-        raw_data_sets[key] = new_value
+        data_sets[key] = new_value
 
     # concat the stacked data sets
-    concatenated = pandas.concat(raw_data_sets.values(), axis=1)
+    combined = pandas.concat(data_sets.values(), axis=1)
 
     # drop unnecessary index levels
-    levels_to_drop = ['days', 'replicate']
-    concatenated = concatenated.droplevel(levels_to_drop).reset_index()
+    if not mean_data:
+        levels_to_drop = ['replicate']
+        combined = combined.droplevel(levels_to_drop).reset_index()
 
-    return concatenated
+    return combined
 
 
 def get_regression(x, y)-> RegressionResults:
@@ -148,12 +149,12 @@ def get_regression(x, y)-> RegressionResults:
     return fit_result
 
 
-def scatter_and_regression_line(data, title,
-                                x_name, y_name, fit_result=None):
+def plot_regression(data, title,
+                    x_name, y_name, fit_result=None):
 
     with pyplot.style.context(u'incubation-dynamics'):
         # initialize figure and axes
-        figure = pyplot.figure()
+        figure: Figure = pyplot.figure()
 
         # plot
         axes: Axes = seaborn.scatterplot(
@@ -202,175 +203,88 @@ def scatter_and_regression_line(data, title,
                 transform=axes.transAxes
             )
 
-    return axes
-#
-#
-#
-# def visualize_regression(all_parameters, min_r_square, ):
-#
-#     def save_regression_plot(figure):
-#         save_to = f'{OUTPUT_DIRECTORY}' \
-#                   f'{ind_var}_{dep_var}_test.png'
-#         figure.savefig(save_to, dpi=300,
-#                        format='png',bbox_inches='tight')
-#         pyplot.close()
-#
-#
-#     def add_regression_line(axes):
-#
-#         lower_xlim, upper_xlim = axes.get_xlim()
-#         X_plot = numpy.linspace(lower_xlim, upper_xlim, 100)
-#         y = slope * X_plot + intercept
-#
-#         axes.plot(X_plot, y, '-')
-#
-#
-#     def plot_regression(pairwise_data,
-#                         x_name, y_name, fit_result):
-#
-#         # initialize figure and axes
-#         figure = pyplot.figure()
-#
-#         # plot
-#         axes = seaborn.scatterplot(x=x_name,
-#                                    y=y_name,
-#                                    hue='treatment',
-#                                    style='soil',
-#                                    data=pairwise_data)
-#
-#         # labels and decorations
-#         x_label = f'{x_name} ({UNITS[x_name]})'
-#         y_label = f'{y_name} ({UNITS[y_name]})'
-#         axes.set_ylabel(y_label, labelpad=0.1)
-#         axes.set_xlabel(x_label, labelpad=0.1)
-#
-#         # r_sqaure
-#         axes.text(0.95, 0.1, f'r_square:{str(r_square)}',
-#                   fontweight='bold',
-#                   horizontalalignment='right',
-#                   transform=axes.transAxes)
-#
-#         return figure
-#
-#
-#     def write_regression_params(file):
-#
-#         data_pair = f'{ind_var} X {dep_var}'
-#         equation = f'y = {slope}x + {intercept}'
-#         interval = f'confidence interval for the slope:' \
-#                    f'{slope_confidence[0]}, {slope_confidence[1]}'
-#         rsquared = f'r_squared: {r_square}'
-#
-#         output = f'\n\n{data_pair}:\n' \
-#                  f'\t{equation}\n' \
-#                  f'\t{interval}\n' \
-#                  f'\t{rsquared}\r'
-#
-#         file.write(output)
-#
-#     file = open(f'{OUTPUT_DIRECTORY}coefficients.txt', 'w+')
-#
-#     parameters = all_parameters.columns
-#     for ind_var in parameters:
-#         for dep_var in parameters.drop(ind_var):
-#
-#             # data
-#             paird_data_sets = [ind_var, dep_var]
-#             pairwise_data = all_parameters[paird_data_sets]
-#             pairwise_data = pairwise_data.dropna(how='any')
-#             pairwise_data = pairwise_data.reset_index()
-#             x = pairwise_data[ind_var]
-#             y = pairwise_data[dep_var]
-#
-#             # compute regression
-#             fit_result = get_regression(x, y)
-#
-#             # regression results
-#             round_to = 3
-#             alpha = 0.05
-#             r_square = round(fit_result.rsquared, round_to)
-#             intercept, slope = fit_result.params.round(round_to)
-#             conf_interval = fit_result.conf_int(alpha).round(round_to)
-#             slope_confidence =  conf_interval[1]
-#
-#
-#             if r_square > min_r_square:
-#
-#                 # plot
-#                 figure = plot_regression(
-#                     pairwise_data, ind_var, dep_var, r_square)
-#
-#                 # add regression line
-#                 axes = figure.axes[0]
-#                 add_regression_line(axes)
-#
-#                 # save plot
-#                 save_regression_plot(figure)
-#
-#                 # write regression parameters
-#                 write_regression_params(file)
-#
-#
-#             else:
-#                 continue
-#
-#     return
-#
-# def correlations_matrix():
-#     data = get_all_parameters(DATA_SETS_NAMES)
-#     correlations = data.corr()
-#
-#     css = """
-#         <style type=\"text/css\">
-#         table {
-#         color: #333;
-#         font-family: Helvetica, Arial, sans-serif;
-#         width: 640px;
-#         border-collapse:
-#         collapse;
-#         border-spacing: 0;
-#         }
-#         td, th {
-#         border: 1px solid transparent; /* No more visible border */
-#         height: 30px;
-#         }
-#         th {
-#         background: #DFDFDF; /* Darken header a bit */
-#         font-weight: bold;
-#         }
-#         td {
-#         background: #FAFAFA;
-#         text-align: center;
-#         }
-#         table tr:nth-child(odd) td{
-#         background-color: white;
-#         }
-#         </style>
-#         """  # html code specifying the appearence of significance table
-#     output_directory = '/home/elan/Dropbox/research/figures/correlations/'
-#     output_file = f'{output_directory}pairwise_pearson'
-#     DataFrame_to_image(correlations, css, output_file)
-#
-#
-# if __name__ == '__main__':
-#     data = get_all_parameters(DATA_SETS_NAMES)
-#     # correlations_matrix()
+    return figure
 
-# def set_marker_parameters(axes, handles, labels, colors=MARKER_COLORS):
-#
-#     handles_and_labels = dict(zip(handles, labels))
-#
-#     for handle, soil_label in handles_and_labels.items():
-#         handle.set_color(colors[soil_label])
 
-    visualize_regression(data, 0.6)
+def visualize_regression(combined_data, note: str=None):
+    #todo probably remove the note param,
+    #   add a dir param to direct specific correlations into seperate dir
+    #   change param name combined_data
+    '''
 
+    :param combined_data:
+    :param note: str
+    will be added into the file name before
+     regressor and regressand names.
+    :return:
+    '''
+
+    def print_info():
+        """print regression parameters"""
+        n_data_points = len(combined_data)
+
+    note = note if note + '_' else None
+
+    id_columns = ['days', 'treatment', 'soil']
+    parameters = combined_data.drop(id_columns, axis=1).columns
+    for ind_var in parameters:
+        for dep_var in parameters.drop(ind_var):
+
+            pairwise_data = combined_data[[dep_var, ind_var]]
+            pairwise_data = pairwise_data.dropna(how='all')
+            x = pairwise_data[dep_var]
+            y = pairwise_data[ind_var]
+            # pdb.set_trace()
+            regression_params = get_regression(x, y)
+
+            title = f'{ind_var} X {dep_var}'
+
+            if regression_params.rsquared > TRESHOLD_R:
+
+                figure = plot_regression(combined_data, title,
+                                 ind_var, dep_var, regression_params)
+
+                save_to = f'{OUTPUT_DIRECTORY}/' \
+                          f'{note}_' \
+                          f'{title}.png'
+                figure.savefig(fname=save_to, bbox_inches='tight')
+
+    print(len(combined_data))
 
 if __name__ == '__main__':
 
     data_set_names = get_setup_arguments()
-    data_sets = get_multi_sets(data_set_names)
+    raw_data_sets = get_multi_sets(data_set_names, treatment='c')
+    data_sets = get_multiple_stats(raw_data_sets)
     combined_data = combine_data_sets(data_sets)
+
+    # visualize_regression(combined_data)
+
+# todo write a func that computes the correlation
+#   between the 'first differences' of time series
+#   of two parameters (e.g DOC and RESP) doing this
+#   comparison for every LTT (i.e soil)
+#   the code below is a general direction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

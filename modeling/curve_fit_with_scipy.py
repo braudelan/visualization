@@ -35,24 +35,26 @@ def get_the_data(data_name, treatment,
     )
 
 
-def get_best_fit_params(data, model_function):
-    '''fit a curve for weekly data.
+def get_best_fit_params(means, stdv, model_function):
+    '''
+    find best fit parameters for dynamics data.
 
-    parameter
-    ---------
-    raw_data: pandas.Series
-        index is the sampling dates.
-        values are observed data.
+    :param means: Series
+    index is sampling events.
 
-    returns
-    -------
-    fit_params: list
-        the best fit parameters
+    :param stdv: Series
+
+    :param model_function:
+    the function by which curve fit is preformed.
+
+    :return: fit_params
+    list of best fit parameters
     '''
 
-    X = data.means.index.values
-    y_observed = data.means.values
-    stnd_dev = data.stde.values
+
+    X = means.index.values
+    y_observed = means.values
+    stnd_dev = stdv.values
 
     fit_params, covarriance = curve_fit(model_function, X, y_observed,
                                         sigma=stnd_dev,
@@ -62,10 +64,10 @@ def get_best_fit_params(data, model_function):
     return  fit_params
 
 
-def plot_fit(data, fit_params, soil, model_function):
+def plot_fit(means, fit_params, title, model_function):
 
-    x_measured = data.means.index.values
-    y_measured = data.means.values
+    x_measured = means.index.values
+    y_measured = means.values
 
     first_measured_x = x_measured[0]
     last_measured_x = x_measured[-1]
@@ -82,7 +84,7 @@ def plot_fit(data, fit_params, soil, model_function):
     pyplot.plot(x_fit, y_fit, 'r-', label='fitted curve')
     pyplot.xlabel(r'$days$')
     pyplot.ylabel(r'$mg\ \ast\ kg^{-1}$')
-    pyplot.title(soil)
+    pyplot.title(title)
 
 #todo return an axes so that more data can be plotted on the same plot
 

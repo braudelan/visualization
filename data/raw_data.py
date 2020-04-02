@@ -1,41 +1,42 @@
 """
 load data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 import argparse
 
 import pandas
 from pandas import DataFrame
 
 from data.stats import get_baseline_stats, get_stats
-from data.helpers import Constants, get_week_ends
+from data.helpers import *
 
 # where data is uploaded from
 INPUT_FILE = Constants.input_file_path
 
 # some constant parameters
 DATA_SETS_NAMES = Constants.parameters
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 LEVELS = Constants.level_names
 TREATMENTS = Constants.treatment_labels
 
 
-def get_setup_arguments():
+# def get_setup_arguments():
+#
+#     """Return arguments specifying which data sets will be imported from input file."""
+#
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--sets',
+#                         help='names of specific data sets to read from excel input file', nargs='+')
+#
+#     parsed_args = parser.parse_args()
+#     sets = parsed_args.sets
+#     all_data_sets = DATA_SETS_NAMES
+#
+#     if sets:
+#         return parsed_args.sets
+#     else:
+#         return all_data_sets
 
-    """Return arguments specifying which data sets will be imported from input file."""
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--sets',
-                        help='names of specific data sets to read from excel input file', nargs='+')
-
-    parsed_args = parser.parse_args()
-    sets = parsed_args.sets
-    all_data_sets = DATA_SETS_NAMES
-
-    if sets:
-        return parsed_args.sets
-    else:
-        return all_data_sets
 
 def get_raw_data(data_set_name):
 
@@ -67,12 +68,10 @@ def get_raw_data(data_set_name):
     # specific processing for TOC and RESP data sets
     is_TOC = True if \
         data_set_name == 'TOC' else False
-    is_RESP = True if\
-        data_set_name == 'RESP' else False
     is_ERG = True if\
         data_set_name == 'ERG' else False
     raw_data = (
-        raw_data * 24 if is_RESP else
+        # raw_data * 24 if is_RESP else
         raw_data.drop(14) if is_TOC else
         raw_data
     )
@@ -80,58 +79,12 @@ def get_raw_data(data_set_name):
     return raw_data
 
 
-def get_HWS_to_MBC(inverted=False):
-
-    raw_MBC = get_raw_data('MBC')
-    week_ends = get_week_ends(raw_MBC)
-    raw_MBC_week_ends = raw_MBC.loc[week_ends]
-    raw_HWS = get_raw_data('HWS')
-
-    HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
-    MBC_to_HWS = raw_MBC_week_ends / raw_HWS * 100
-
-    raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
-
-    return raw_HWS_to_MBC
-
-
-def get_ergosterol_to_biomass():
-
-    MBC_raw = get_raw_data('MBC')
-    week_ends = get_week_ends(MBC_raw)
-    MBC_raw_week_ends = MBC_raw.loc[week_ends]
-    ERG_raw = get_raw_data('ERG')
-    ERG_to_MBC = ERG_raw / MBC_raw_week_ends # compute ERG_to_MBC ratio
-    ERG_to_MBC.loc[0, ('t', 'UNC', 1)] = None #irregular data (replicate#1 in MRE_treated UNC at day 0)
-
-    return ERG_to_MBC
-
-
-def get_raw_MBC_to_MBN():
-
-    raw_MBC = get_raw_data('MBC')
-    week_ends = get_week_ends(raw_MBC)
-    raw_MBC_week_ends = raw_MBC.loc[week_ends]
-    raw_MBN = get_raw_data('MBN')
-    raw_MBC_to_MBN = raw_MBC_week_ends / raw_MBN
-
-    return raw_MBC_to_MBN
-
-
-def get_raw_TOC_TON():
-    raw_TOC = get_raw_data('TOC')
-    raw_TON = get_raw_data('TON')
-    raw_TOC_TON = raw_TOC / raw_TON
-
-    return raw_TOC_TON
-
-
 def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict:
 
     """
     Import multipule data sets as DataFrames
 
-    returns a dictionary of dataframes for every data-set(=test)
+    returns a dictionary of data frames for every data-set(=test or analysis)
     """
 
     # data file to read data sets from
@@ -163,20 +116,7 @@ def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict
     return dataframes
 
 
-def get_microbial_C_N():
-    '''calculate microbial carbon-to-nitrogen ratio.'''
-
-    MBC_raw = get_raw_data('MBC')
-    MBN_raw = get_raw_data('MBN')
-    week_ends = get_week_ends(MBC_raw)
-    MBC_raw = MBC_raw.loc[week_ends]
-
-
-    microbial_c_to_n = MBC_raw / MBN_raw
-
-    return microbial_c_to_n
-
-
+# normalizations and quotients
 def baseline_normalize(raw_data, treatment='t', baseline=None):
 
     # get baseline stats
@@ -243,6 +183,7 @@ def control_normalize(raw_data, control=None):
                                 control_means.loc[row, soil]
 
     normalized = treatment_raw - control_reindexed
+    normalized
 
     return  normalized
 
@@ -250,7 +191,7 @@ def control_normalize(raw_data, control=None):
 def normalize_to_initial(raw_data, treatment='t', initial=None):
 
     # raw data from treated samples
-    treatment_raw = raw_data[treatment]
+    treatment_raw = raw_data[treatment] if treatment else raw_data
 
     # get the mean of the first sampling of the control treatment
     if initial:
@@ -284,5 +225,51 @@ def toc_normalize(raw_data):
     toc_stde = toc_baseline_stats.stde * 10000
 
 
+def get_HWS_to_MBC(inverted=False):
+
+    raw_MBC = get_raw_data('MBC')
+    week_ends = get_week_ends(raw_MBC)
+    raw_MBC_week_ends = raw_MBC.loc[week_ends]
+    raw_HWS = get_raw_data('HWS')
+
+    HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
+    MBC_to_HWS = raw_MBC_week_ends / raw_HWS * 100
+
+    raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
+
+    return raw_HWS_to_MBC
+
+
+def get_ergosterol_to_biomass():
+
+    MBC_raw = get_raw_data('MBC')
+    week_ends = get_week_ends(MBC_raw)
+    MBC_raw_week_ends = MBC_raw.loc[week_ends]
+    ERG_raw = get_raw_data('ERG')
+
+    ERG_to_MBC = ERG_raw / MBC_raw_week_ends # compute ERG_to_MBC ratio
+    ERG_to_MBC.loc[0, ('c', 'UNC', 1)] = None # irregular data (replicate#1 in MRE_treated UNC at day 0)
+    ERG_to_MBC.loc[0, ('t', 'UNC', 1)] = None  # irregular data (replicate#1 in MRE_treated UNC at day 0)
+
+    return ERG_to_MBC
+
+
+def get_raw_MBC_to_MBN():
+
+    raw_MBC = get_raw_data('MBC')
+    week_ends = get_week_ends(raw_MBC)
+    raw_MBC_week_ends = raw_MBC.loc[week_ends]
+    raw_MBN = get_raw_data('MBN')
+    raw_MBC_to_MBN = raw_MBC_week_ends / raw_MBN
+
+    return raw_MBC_to_MBN
+
+
+def get_raw_TOC_TON():
+    raw_TOC = get_raw_data('TOC')
+    raw_TON = get_raw_data('TON')
+    raw_TOC_TON = raw_TOC / raw_TON
+
+    return raw_TOC_TON
 
 

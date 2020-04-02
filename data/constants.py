@@ -17,18 +17,32 @@ parameters = [
 ]
 generic_units = r'mg\ast kg\ soil^{-1}'
 units = [
-    r'mg\ast kg\ soil^{-1}',
-    r'mg\ast kg\ soil^{-1}',
-    r'mg\ast kg\ soil^{-1}',
+    r'mg\ C\ast kg\ soil^{-1}',
+    r'mg\ C\ast kg\ soil^{-1}',
+    r'mg\ C\ast kg\ soil^{-1}',
     r'\%WSA',
     r'mg CO_2-C \ast kg^{-1}\ast day^{-1}',
-    r'mg\ast kg\ soil^{-1}',
+    r'mg\ C\ast kg\ soil^{-1}',
     r'\%MBC',
     r'\%soil weight',
     r'\%soil weight'
 ]
+TITLES = [
+    r'Microbial\ Biomass\ Carbon',
+    r'Hot\ Water\ Extractable\ Sugars',
+    r'Water\ Extractable\ Organic\ Carbon',
+    r'Aggregate\ Stability',
+    r'Microbial\ Respiration',
+    r'Microbial\ Biomass\ Nitrogen',
+    r'Soil\ Ergosterol',
+    r'Total Organic Carbon',
+    r'Total Organic Nitrogen'
+]
+
 parameters_units = dict(zip(parameters, units))
-groups = [
+PARAMETERS_TITLES = dict(zip(parameters, TITLES))
+
+LONG_TERM_TREATMENTS = [
     'ORG',
     'MIN',
     'UNC'
@@ -45,9 +59,9 @@ marker_options = (
     'o',
     'v',
 )
-colors =  dict(zip(groups, color_options))
-markers =  dict(zip(groups, marker_options))
-line_styles = dict(zip(groups, line_style_options))
+colors =  dict(zip(LONG_TERM_TREATMENTS, color_options))
+markers =  dict(zip(LONG_TERM_TREATMENTS, marker_options))
+line_styles = dict(zip(LONG_TERM_TREATMENTS, line_style_options))
 treatment_labels = ['c', 't']
 level_names = [
     "treatment",

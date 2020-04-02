@@ -10,7 +10,7 @@ from data.raw_data import get_multi_sets
 from data.stats import get_baseline_stats
 from data.helpers import Constants
 
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 COLORS = Constants.colors
 
 PLOT_STYLE = 'seaborn-ticks'
@@ -126,19 +126,15 @@ def plot_bars(axes: Axes, x_location, heights, width, labels, bar_error=None):
     return bars
 
 
-def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Tuple[Figure, Dict[str, dict]]:
+def plot_baseline(raw_data_sets: dict,
+                  spacing, relative_width,
+                  labels: list=None) -> Tuple[Figure, Dict[str, dict]]:
     """plot baseline values of multiple data sets."""
 
     # data and plotting parameters
     CATEGORIES_DATA = raw_data_sets.values()
     CATEGORIES = raw_data_sets.keys()
-    LABELS = [
-        r'$TOC$',
-        r'$MBC$',
-        r'$HWE_{carbohydrates}$',
-        r'$\% WSA$',
-        r'$\frac{ergosterol}{MBC}$',
-    ]
+    LABELS = labels
     NUMBER_OF_CATEGORIES = len(raw_data_sets)
     LENGTH_OF_X = NUMBER_OF_CATEGORIES * spacing
     X_LOCATIONS = numpy.arange(0, LENGTH_OF_X, spacing)
@@ -161,7 +157,7 @@ def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Tuple[Figure,
           soil_width=SOIL_WIDTH,
           title=title,
           y_label=y_label,
-          categories=LABELS
+          categories=labels
     )
 
     # plot bars for each category(=data_set)
@@ -253,13 +249,20 @@ def plot_baseline(raw_data_sets: dict, spacing, relative_width) -> Tuple[Figure,
 
     return figure, bars
 
+def baseline_table(baseline_means,
+                   baseline_significance, output_dir):
+
+    
+
+
 if __name__ == '__main__':
 
+
     keys = Constants.parameters
-    keys = ['TOC', 'MBC', 'HWS', 'AS', 'ERG']
+    keys = ['TOC', 'MBC', 'RESP', 'DOC', 'HWS', 'AS', 'ERG']
+    labels = []
     raw_data_sets = get_multi_sets(keys)
-    figure, bars = plot_baseline(raw_data_sets, 2, 0.2)
+    figure, bars = plot_baseline(raw_data_sets, 2, 0.2, labels = keys)
 
 # todo
 #   change 'ERG-to-MBC' label into something shorter
-#   align x ticks labels to the left

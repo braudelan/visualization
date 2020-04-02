@@ -37,7 +37,7 @@ def growth_decay(t, a, k_a, k_b):
 
 
 # microbial carbon
-def biomass_carbon(t, a, k_g, k_d):
+def weekly_growth_decay(t, a, k_g, k_d):
 
     c1 = delay_coefficient(t, 7)
     c2 = delay_coefficient(t, 14)

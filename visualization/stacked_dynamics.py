@@ -41,7 +41,7 @@ PARAMETER_NAMES = ['MBC', 'HWS', 'DOC']
 LABELS = [r'$MBC$', r'$HWE_{carbohydrates}$', r'$DOC$']
 
 # data to plot
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 DAYS = mbc_means.loc[1:].index # exclude day 0
 DATA = [mbc_percent, hwec_percent, doc_percent]
 ERRORS = [mbc_error_percent, hwec_error_percent, doc_error_percent]
