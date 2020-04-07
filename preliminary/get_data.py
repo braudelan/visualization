@@ -56,8 +56,9 @@ def get_stats(raw_data, STT: tuple=None):
             if STT else raw_data
 
     # get_statistics
+    levels = ('LTT') if STT else ('LTT', 'STT')
+    group_by_treatment = raw_data.groupby(level=levels, axis=1)
 
-    group_by_treatment = raw_data.groupby(level=('LTT'), axis=1)
     means = group_by_treatment.mean()
     stde = group_by_treatment.sem()
 
