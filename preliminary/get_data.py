@@ -1,18 +1,20 @@
 import pdb
-
+import numpy
 import pandas
 from pandas import DataFrame
 from pandas import MultiIndex
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot
+
+import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from matplotlib.ticker import MultipleLocator
 
-from visualization.visualize import visualize_single_plot
-from preliminary.constants import *
-from data.helpers import *
+import constants
+import data.helpers as helpers
+from data.helpers import Stats
+# from data.helpers import *
 
 
 LTTs = ['ORG', 'MIN']
@@ -22,16 +24,18 @@ STTs = ['CON', 'STR', 'KWC']
 def get_raw_data(data_name):
 
     # data set into DataFrame
-    raw_data = pandas.read_excel(INPUT_FILE_PATH,
+    raw_data = pandas.read_excel(constants.preliminary_input_file,
                                  index_col=[0, 1, 2],header=1,
                                  sheet_name=data_name,
                                  na_values=["-", " "])
 
-    index_names =  ['LTT', 'STT', 'replicate']
+    columns_levels_names =  ['LTT', 'STT', 'replicate']
+    levels_new_order = ['STT', 'LTT', 'replicate']
 
-    # name the index
-    raw_data.rename_axis(index_names, inplace=True)
-    raw_data.rename_axis('hours of incubation', axis='columns', inplace=True)
+    # name the indices
+    raw_data.rename_axis(columns_levels_names, inplace=True)
+    raw_data.rename_axis('hours', axis='columns', inplace=True)
+    # raw_data = raw_data.reorder_levels(levels_new_order)
 
     # transpose
     raw_data = raw_data.T
@@ -39,7 +43,7 @@ def get_raw_data(data_name):
     return raw_data
 
 
-def get_stats(raw_data, STT: tuple=None):
+def get_stats(raw_data, STT=None):
     '''
     get statistics for each LTT.
 
@@ -68,7 +72,39 @@ def get_stats(raw_data, STT: tuple=None):
     )
 
 
-def get_multiple_stats(data_sets_names, normalize: bool=None):
+def get_stt_stats(
+        raw_data,
+):
+    '''
+    return a dictionary with Stats instances for each STT.
+
+    :param raw: DataFrame
+    :return: stt_stats: dict
+    '''
+
+    stt_stats = {}
+    for stt in STTs:
+
+        raw = raw_data.loc[:, (slice(None), stt)].droplevel('STT', axis='columns')
+
+        # get_statistics
+        group_by_treatment = raw.groupby(level='LTT', axis=1)
+
+        means = group_by_treatment.mean()
+        stde = group_by_treatment.sem()
+
+        stats = Stats(means=means, stde=stde)
+
+        stt_stats[stt] = stats
+
+    return stt_stats
+
+
+def get_multiple_stats(
+        data_sets_names,
+        normalize: bool=None,
+        is_percent=None,
+    ):
 
     data_stats = {}
     for data_name in data_sets_names:
@@ -77,8 +113,11 @@ def get_multiple_stats(data_sets_names, normalize: bool=None):
 
         STT_stats = {}
         for STT in STTs:
-            # pdb.set_trace()
-            raw_STT = control_normalize(raw, STT) if normalize and STT != 'CON' else raw
+            not_control = STT != 'CON'
+            if normalize and not_control:
+                raw_STT = control_normalize(raw, STT, is_percent)
+            else:
+                raw_STT = raw
             stats = get_stats(raw_STT, STT)
             STT_stats[STT] = stats
 
@@ -87,7 +126,7 @@ def get_multiple_stats(data_sets_names, normalize: bool=None):
     return data_stats
 
 
-def control_normalize(raw_data, STT):
+def control_normalize(raw_data, STT, is_percent=None):
     '''
     subtract the mean value of control replicates from STT.
 
@@ -111,25 +150,30 @@ def control_normalize(raw_data, STT):
 
     # empty dataframe with the same shape and indexes as raw_STT
     control_reindexed = DataFrame().reindex_like(raw_STT)  # shape ->(10,12)
+    # control_reindexed = control_reindexed.droplevel('replicate', axis=1)
 
     # fill empty dataframe with the mean value for every set of replicates
     for row in raw_STT.index:
         for column in raw_STT.columns:
+            # pdb.set_trace()
             LTT = column[0]
-            control_reindexed.loc[row, column] =\
-                                control_means.loc[row, LTT]
+            control_reindexed.loc[row, column] = control_means.loc[row, LTT].values
 
     # normalize
-    normalized = raw_STT - control_reindexed
+    diff = raw_STT - control_reindexed
+    percent = (raw_STT - control_reindexed) / control_reindexed * 100
+    normalized = percent if is_percent else diff
 
-    # remove negative values
-    negative_to_nan = lambda element: None if element < 0 else element
-    normalized = normalized.applymap(negative_to_nan)
+
+    # # remove negative values
+    # negative_to_nan = lambda element: None if element < 0 else element
+    # normalized = normalized.applymap(negative_to_nan)
 
     return  normalized
 
 
 #------------------------------------------- cumulative respiration -----------------------------------
+# todo 'KWC' missing data on 7h and 24h so that INTERVALS need to be reavluated to exclude these sampling events
 
 # get respiration raw data
 RAW_DATA = get_raw_data('Resp')
@@ -160,7 +204,7 @@ def get_mean_rates(STT):
     sampling points.
     '''
 
-    # frame for mean rates
+    # empty DataFrame for mean rates
     levels = [
         # weeks,
         BEGININGS,
@@ -239,12 +283,12 @@ def get_cumulative_respiration(treatment):
 
     # compute cumulative CO2 for every sampling day
     cumulative_respiration = daily_mean.apply(
-        get_cumulative_sum,
+        helpers.get_cumulative_sum,
         axis='index',
         raw=True,
     )
     cumulative_error = daily_error.apply(
-        get_cumulative_error,
+        helpers.get_cumulative_error,
         axis='index',
         raw=True,
     )
@@ -259,9 +303,9 @@ def get_cumulative_respiration(treatment):
 
 # ---------------------------------------------- visualize----------------------------------
 
-MARKERS = Constants.markers
-LINE_STYLES = Constants.line_styles
-LINE_COLORS = Constants.colors
+MARKERS = constants.markers
+LINE_STYLES = constants.line_styles
+LINE_COLORS = constants.colors
 
 DPI = 144
 FIGURE_SIZE = (8, 4)
@@ -272,7 +316,7 @@ AXES_ASPECT = 0.5
 # general axes parameters
 TITLE_FONT_SIZE = 16
 TITLE_PAD = 15
-X_LABEL = r'$day\ of\ incubation$'
+X_LABEL = r'$hours$'
 X_LABEL_PAD = 20
 Y_LABEL_PAD = X_LABEL_PAD
 AXIS_LABEL_FONTSIZE = 14
@@ -309,7 +353,7 @@ def set_line_parameters(axes, markers=MARKERS, colors=LINE_COLORS):
 def setup_figure():
 
     # create and adjut figure
-    figure = pyplot.figure(figsize=FIGURE_SIZE)
+    figure = plt.figure(figsize=FIGURE_SIZE)
     figure.tight_layout()
     figure.subplots_adjust(hspace=0, wspace=0)
 
@@ -320,9 +364,6 @@ def setup_dynamics_axes(
         figure: Figure,
         y_label: str,
         data: Stats,
-        title: str=None,
-        axes_position=111,
-        share: tuple=None,
     ):
     '''
     setup an axes with time series features.
@@ -336,77 +377,63 @@ def setup_dynamics_axes(
     :return:
     '''
 
-    # whether and which axis to share
-    if share:
-        which_axis = share[0]
-        other_axes = share[1]
-        share_x = other_axes if (which_axis == 'x' or which_axis == 'both') else None
-        share_y = other_axes if (which_axis == 'y' or which_axis == 'both') else None
-    else:
-        share_x = None
-        share_y = None
 
     # intialize axes
-    axes: Axes = figure.add_subplot(axes_position, sharex=share_x, sharey=share_y )
+    axes: Axes = figure.add_subplot(111)
 
     # ticks
     timepoints = data.means.index
     n_hours = timepoints[-1]
     major_time_unit = 24
     n_major_periods = n_hours / major_time_unit
-    # axes.xaxis.set_minor_locator(MINOR_LOCATOR)
     # axes.tick_params(
-    #     axis='x', which='minor', width=1, length=3)
-    axes.tick_params(
-        axis='both', labelsize=AXIS_LABEL_FONTSIZE)
+    #     axis='both', labelsize=AXIS_LABEL_FONTSIZE)
     xticks = numpy.linspace(
         0,n_hours,n_major_periods + 1)
     axes.set_xticks(xticks)
 
-    # title
-    if title:
-        axes.set_title(title, pad=TITLE_PAD, fontsize=TITLE_FONT_SIZE)
-
-    # labels
-    axes.set_xlabel(
-        X_LABEL,
-        fontsize=AXIS_LABEL_FONTSIZE,
-        labelpad=X_LABEL_PAD,
-    )
+    # # labels
+    # axes.set_xlabel(
+    #     X_LABEL,
+    #     fontsize=AXIS_LABEL_FONTSIZE,
+    #     labelpad=X_LABEL_PAD,
+    # )
 
     axes.set_ylabel(
         y_label,
-        fontsize=AXIS_LABEL_FONTSIZE,
+        # fontsize=AXIS_LABEL_FONTSIZE,
         labelpad=Y_LABEL_PAD
     )
-
 
     return axes
 
 
 
-def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
+def single_line_plot(
+        stats,
+        axes: Axes,
+        legend=False,
+):
     '''
     plot short term dynamics onto axes.
 
-    :param data_input: Stats
+    :param stats: Stats
     :param axes: Axes
-    :param with_legend: bool
+    :param legend: bool
     whether to plot a legend or not
 
     '''
 
-    # data
-    data = data_input.means
-    std_error = data_input.stde
+    data = stats.means
+    std_error = stats.stde
 
     # plot
     plot = data.plot(
         ax=axes,
         yerr=std_error,
-        linewidth=LINE_WIDTH,
+        # linewidth=LINE_WIDTH,
         legend=False,
-        markersize=MARKER_SIZE,
+        # markersize=MARKER_SIZE,
         ecolor='k',
         capsize=2,
         capthick=0.7,
@@ -414,7 +441,7 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
     )
 
     # set x limits
-    timepoints = data_input.means.index
+    timepoints = stats.means.index
     n_hours = timepoints[-1]
     axes.set_xlim(-1, n_hours +1)
 
@@ -425,61 +452,222 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
     top_margin = y_range * Y_TOP_MARGIN
     axes.set_ylim(y_bottom - bottom_margin, y_top + top_margin)
 
-    # set line parameters
-    set_line_parameters(axes)
-
     # set the aspect ratio ( y axis length / x axis length)
     aspect_ratio = get_aspect(axes, AXES_ASPECT)
     axes.set_aspect(aspect_ratio)
 
-    # x label
-    axes.set_xlabel(X_LABEL, labelpad=X_LABEL_PAD)
+    # # x label
+    # axes.set_xlabel(X_LABEL, labelpad=X_LABEL_PAD)
+
+    set_line_parameters(axes)
 
     # legend
-    if with_legend:
-        handles, labels = axes.get_legend_handles_labels()
-        # new_handles = []
-        # for h in handles:
-        #     new_handles.append(h[0])
-        axes.legend(
-            handles,
-            # new_handles,
-            labels,
-            fontsize=LEGEND_FONTSIZE,
-            loc='upper right',
-            # bbox_to_anchor=(0.98, 0.07)
-        )
+    handles, labels = axes.get_legend_handles_labels()
+    axes.legend(handles,
+                labels,
+                loc='upper right',)
+                # fontsize=LEGEND_FONTSIZE,
+                # bbox_to_anchor=(0.98, 0.07))
+
+    return axes
 
 
 def visualize_single_plot(
         data,
-        data_name,
+        output_file_name,
         y_label,
         output_dir,
+        set_lines=None
     ):
 
-    with pyplot.style.context(u'incubation-dynamics'):
+    with plt.style.context(u'incubation-dynamics'):
+
         # setup figure, axes
         figure: Figure = setup_figure()
         axes = setup_dynamics_axes(figure, y_label, data)
 
         # plot
-        plot_dynamics(data, axes, with_legend=True)
+        single_line_plot(data, axes)
 
         # save
-        file_path = f'{TOP_OUTPUT_DIRECTORY}/{output_dir}/{data_name}'
-        figure.savefig(file_path, format='png', bbox_inches='tight', dpi=DPI)
+        top_dir = constants.figures_directory
+        file_path = f'{top_dir}/{output_dir}/{output_file_name}'
+        figure.savefig(file_path, format='pdf', bbox_inches='tight', dpi=DPI)
 
     return figure
 
 
-def visualize_all_data(data_sets_names, output_dir, normalize: bool=None):
+def jointly_plot_stts(stats: Stats, data_set_name):
+    '''
+    plot all STTs on one axes.
 
-    multiple_stats = get_multiple_stats(data_sets_names, normalize=normalize)
+    :param stats: Stats
+     data from all STTs
+    :return:
+    '''
 
+    # STTs
+    treatments = ['STR', 'KWC']
+
+    # data
+    means: DataFrame = stats.means
+    stnd_err: DataFrame = stats.stde
+
+    # reorder columns levels and remove 'CON' STT
+    means = means.reorder_levels(['STT', 'LTT'], axis=1)
+    means = means.loc[:, treatments]
+    stnd_err = stnd_err.reorder_levels(['STT', 'LTT'], axis=1)
+    stnd_err = stnd_err.loc[:, treatments]
+
+    # figure and axs
+    plt.style.use('incubation-dynamics')
+    figure, axs = plt.subplots(nrows=2,
+                               ncols=1,
+                               tight_layout=True)
+    upper_ax = axs[0]
+    lower_ax = axs[1]
+
+    # plot
+    for stt, ax in zip(treatments, axs):
+
+        err = stnd_err[stt]
+        means[stt].plot(
+            ax=ax,
+            yerr=err,
+            legend=False,
+            ecolor='k',
+            capsize=2,
+            capthick=0.7,
+        )
+
+    for ax in axs:
+        # set the axis limits
+        # y limits
+        relative_margin = 0.2
+        limits = ax.get_ylim()
+        upper_lim = limits[1]
+        new_upper_lim = upper_lim + upper_lim * relative_margin
+        ax.set_ylim(0, new_upper_lim)
+
+        # set x limits
+        timepoints = stats.means.index
+        n_hours = timepoints[-1]
+        ax.set_xlim(-1, n_hours + 1)
+
+        # set line parameters
+        set_line_parameters(ax)
+
+        # set the aspect ratio ( y axis length / x axis length)
+        aspect_ratio = get_aspect(ax, AXES_ASPECT)
+        ax.set_aspect(aspect_ratio)
+
+    # remove x label and  xtick lables for upper ax
+    upper_ax.set_xlabel('')
+    x_tick_labels = upper_ax.xaxis.get_majorticklabels()
+    for label in x_tick_labels:
+        label.set_visible(False)
+
+    # ylabel as a figure text
+    trans = transforms.blended_transform_factory(
+        lower_ax.transAxes, figure.transFigure)
+    ylabel = f'${constants.parameters_units[data_set_name]}$'
+    figure.text(-0.3, 0.55, ylabel, rotation=90,
+                va='center', transform=trans)
+
+    # identifiers for axs
+    text_x = 0.85
+    text_y = 0.75
+    upper_ax_letter = 'A'
+    lower_ax_letter = 'B'
+    text_params = {
+        'size': 15,
+        'fontweight': 'bold'
+    }
+    upper_ax.text(
+        text_x,
+        text_y,
+        upper_ax_letter,
+        transform=upper_ax.transAxes,
+        fontdict=text_params
+    )
+    lower_ax.text(
+        text_x,
+        text_y,
+        lower_ax_letter,
+        transform=lower_ax.transAxes,
+        fontdict=text_params,
+    )
+
+    # legend
+    anchor = (0.7, 0.9)
+    h, l = upper_ax.get_legend_handles_labels()
+
+    # figure.figlegend(h, l, loc='center left', bbox_to_anchor=anchor)
+    figure.legend(h, l, bbox_to_anchor=(0., 1.02, 0.6, .102), loc='center',
+           ncol=2, mode="expand", borderaxespad=0., bbox_transform=upper_ax.transAxes)
+
+    return figure
+
+
+def visualize_jointed_stts(
+        data_sets_names,
+        output_dir,
+        
+    ):
+
+    for data_set in data_sets_names:
+
+        raw = get_raw_data(data_set)
+        stats = get_stats(raw)
+
+        figure = jointly_plot_stts(stats, data_set)
+
+#         figure.suptitle(f'{data_set}')
+        output_file_name = f'{data_set}.pdf'
+        top_dir = constants.figures_directory
+        file_path = f'{top_dir}/{output_dir}/{output_file_name}'
+        figure.savefig(file_path, format='pdf', bbox_inches='tight', dpi=DPI)
+
+def visualize_multiple_plots(
+        data_sets_names,
+        output_dir,
+        normalize=None,
+        is_percent=None,
+        with_title=None,
+    ):
+
+    multiple_stats = get_multiple_stats(data_sets_names,
+                                        normalize=normalize, is_percent=is_percent)
+    # pdb.set_trace()
     for data_name, value in multiple_stats.items():
-        for STT, stats in value.items():
 
-            visualize_single_plot(stats, f'{data_name}_{STT}', 'ylabel', output_dir)
+        units = constants.parameters_units
+        ylabel = f'${units[data_name]}$'
+
+
+        for STT, stats in value.items():
+            file_name = f'{data_name}_{STT}.pdf'
+            visualize_single_plot(data=stats, output_file_name=file_name,
+                                  y_label=ylabel, output_dir=output_dir)
+            plt.close()
+
+def visualize_control_plots(
+        data_sets_names,
+        output_dir,
+    ):
+
+    multiple_stats = get_multiple_stats(data_sets_names)
+    # pdb.set_trace()
+    for data_name, value in multiple_stats.items():
+
+        units = constants.parameters_units
+        ylabel = f'${units[data_name]}$'
+
+        stats = value['CON']
+
+        file_name = f'{data_name}.pdf'
+        visualize_single_plot(data=stats, output_file_name=file_name,
+                              y_label=ylabel, output_dir=output_dir)
+        plt.close()
 
 

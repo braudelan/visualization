@@ -1,25 +1,22 @@
 import math
-import matplotlib
 
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
 
 from data.raw_data import *
 from data.cumulative_respiration import *
 
-from data.helpers import Constants, Stats
+import constants
 
+SOILS = constants.LONG_TERM_TREATMENTS
+UNITS = constants.parameters_units
+GENERIC_UNITS = constants.generic_units
 
-SOILS = Constants.LTTs
-UNITS = Constants.parameters_units
-GENERIC_UNITS = Constants.generic_units
-
-MARKERS = Constants.markers
-LINE_STYLES = Constants.line_styles
-LINE_COLORS = Constants.colors
+MARKERS = constants.markers
+LINE_STYLES = constants.line_styles
+LINE_COLORS = constants.colors
 
 DPI = 144
 FIGURE_SIZE = (8, 4)
@@ -30,13 +27,13 @@ AXES_ASPECT = 0.5
 # general axes parameters
 TITLE_FONT_SIZE = 16
 TITLE_PAD = 15
-X_LABEL = r'$day\ of\ incubation$'
+X_LABEL = r'$days$'
 X_LABEL_PAD = 20
 Y_LABEL_PAD = X_LABEL_PAD
 AXIS_LABEL_FONTSIZE = 14
 TICK_LABEL_FONTSIZE = 14
 
-Y_BOTTOM_MARGIN = 0.04
+Y_BOTTOM_MARGIN = 0
 Y_TOP_MARGIN = 0.06
 
 # line parameters
@@ -45,9 +42,6 @@ MARKER_SIZE = LINE_WIDTH * 3
 
 # legend parameters
 LEGEND_FONTSIZE = AXIS_LABEL_FONTSIZE
-
-
-# def insert_zoom_object(axes, factor, location, data, data_error, xy_lim):
 
 
 def set_line_parameters(axes, markers=MARKERS,
@@ -101,98 +95,45 @@ def MRE_notation_marks(axes: Axes):
                    )
 
 
-def setup_figure():
-
-    # create and adjut figure
-    figure = pyplot.figure(figsize=FIGURE_SIZE)
-    figure.tight_layout()
-    figure.subplots_adjust(hspace=0, wspace=0)
-
-    return figure
-
-
-def setup_figure_grid():
-
-    figure = pyplot.figure(figsize=(15, 7.5),dpi=144)
-    grid = GridSpec(3,1, figure=figure, hspace=0, wspace=0)
-
-    return figure, grid
-
-
-def setup_dynamics_axes(figure: Figure, y_label, title=None, axes_position=111, share=None):
-    '''
-    setup an axes with time series features.
-
-    parameters
-    ----------
-
-    share: tuple, or None
-        whether to share one of the axis with other axes.
-        tuple[0] can be either 'x' or 'y' or 'both' to designate which axis to share.
-        tuple[1] is the instance of the other axes.
-
-    '''
-
-    # whether and which axis to share
-    if share:
-        which_axis = share[0]
-        other_axes = share[1]
-        share_x = other_axes if (which_axis == 'x' or which_axis == 'both') else None
-        share_y = other_axes if (which_axis == 'y' or which_axis == 'both') else None
-    else:
-        share_x = None
-        share_y = None
-
-    # intialize axes
-    axes: Axes = figure.add_subplot(axes_position, sharex=share_x, sharey=share_y )
-
-    # ticks
-    axes.xaxis.set_minor_locator(MINOR_LOCATOR)
-    axes.tick_params(axis='x', which='minor', width=1, length=3)
-    axes.tick_params(axis='both', labelsize=AXIS_LABEL_FONTSIZE)
-    xticks = numpy.linspace(0,28,5)
-    axes.set_xticks(xticks)
-
-    # title
-    if title:
-        axes.set_title(title, pad=TITLE_PAD, fontsize=TITLE_FONT_SIZE)
-
-    # labels
-    axes.set_xlabel(
-        X_LABEL,
-        fontsize=AXIS_LABEL_FONTSIZE,
-        labelpad=X_LABEL_PAD,
-    )
-
-    axes.set_ylabel(
-        y_label,
-        fontsize=AXIS_LABEL_FONTSIZE,
-        labelpad=Y_LABEL_PAD
-    )
-
-    # add arrows where MRE was applied
-    MRE_notation_marks(axes)
-
-    return axes
-
-
-def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
+def make_line_plot(stats, data_set_name, output_dir):
     '''
     plot short term dynamics onto axes.
 
-    :param data_input: Stats
+    :param stats: Stats
     :param axes: Axes
     :param with_legend: bool
     whether to plot a legend or not
 
     '''
+    # todo include all function inside function (setup figure, axes and save figure)
+    #   update doc string
+    #   drop with_legend argument, always plot legend
+
+    plt.style.use('incubation-dynamics')
 
     # data
-    data = data_input.means
-    std_error = data_input.stde
+    means = stats.means
+    std_error = stats.stde
+
+    # intialize figure
+    figure = plt.figure(figsize=FIGURE_SIZE)
+    figure.tight_layout()
+
+    # intialize axes
+    axes: Axes = figure.add_subplot(111)
+
+    # ticks
+    axes.xaxis.set_minor_locator(MINOR_LOCATOR)
+    axes.tick_params(axis='x', which='minor', width=1, length=3)
+    # axes.tick_params(axis='both', labelsize=AXIS_LABEL_FONTSIZE)
+    xticks = numpy.linspace(0, 28, 5)
+    axes.set_xticks(xticks)
+
+    # add arrows where MRE was applied
+    MRE_notation_marks(axes)
 
     # plot
-    data.plot(
+    means.plot(
         ax=axes,
         yerr=std_error,
         linewidth=LINE_WIDTH,
@@ -204,16 +145,32 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
         elinewidth=LINE_WIDTH * 0.5,
     )
 
-    # set x limits
-    axes.set_xlim(-1, 29)
-
     # set y limits
+    # todo wrap as function
     y_bottom, y_top = axes.get_ylim()
     y_range = y_top - y_bottom
     bottom_margin = y_range * Y_BOTTOM_MARGIN
     top_margin = y_range * Y_TOP_MARGIN
     axes.set_ylim(y_bottom - bottom_margin, y_top + top_margin)
 
+    # set x limits
+    index = means.index
+    last_sampling = index[-1]
+    axes.set_xlim(-1, last_sampling + 1)
+
+    # labels
+    axes.set_xlabel(
+        X_LABEL,
+        # fontsize=AXIS_LABEL_FONTSIZE,
+        labelpad=X_LABEL_PAD,
+    )
+
+    y_label = f'${constants.parameters_units[data_set_name]}$'
+    axes.set_ylabel(
+        y_label,
+        # fontsize=AXIS_LABEL_FONTSIZE,
+        labelpad=Y_LABEL_PAD
+    )
     # set line parameters
     set_line_parameters(axes)
 
@@ -221,273 +178,218 @@ def plot_dynamics(data_input, axes: Axes, with_legend: bool=False):
     aspect_ratio = get_aspect(axes, AXES_ASPECT)
     axes.set_aspect(aspect_ratio)
 
-    # x label
-    axes.set_xlabel(X_LABEL, labelpad=X_LABEL_PAD)
+    # legend
+    handles, labels = axes.get_legend_handles_labels()
+    new_handles = []
+    for h in handles:
+        new_handles.append(h[0])
+    axes.legend(
+        new_handles,
+        labels,
+        # fontsize=LEGEND_FONTSIZE,
+        loc='upper right')
+        # bbox_to_anchor=(0.98, 0.07)
+
+    # save
+    top_directory = constants.figures_directory
+    file_path = f'{top_directory}/{output_dir}/{data_set_name}.pdf'
+    figure.savefig(file_path, format='pdf', bbox_inches='tight', dpi=DPI)
+
+
+def make_bar_plot(stats, data_set_name, output_dir):
+    # todo remove vlines from grid
+    #   adjust ylim
+    plt.style.use('incubation-dynamics')
+
+    COLORS = constants.colors
+    color = [COLORS.get(x, '#333333') for x in SOILS]
+
+    # get the data
+    means = stats.means
+    stnd_err = stats.stde
+
+    #intialize figure and axes
+    figure: Figure = plt.figure(figsize=FIGURE_SIZE)
+    ax: Axes = figure.add_subplot(111)
+
+    # plot
+    error_kw_dict = {
+        'capsize': 2.5,
+        'lw': 1,
+        'capthick': 0.7,
+    }
+    means.plot.bar(ax=ax,
+                   yerr=stnd_err,
+                   color=color,
+                   error_kw=error_kw_dict,
+                   rot=0,
+                   legend=False)
+
+    # remove xtick lines
+    for l in ax.xaxis.get_majorticklines():
+        l.set_visible(False)
+
+    # axis labels
+    ax.set_xlabel(
+        X_LABEL,
+        labelpad=X_LABEL_PAD
+    )
+    ylabel = f'${constants.parameters_units[data_set_name]}$'
+    ax.set_ylabel(
+        ylabel,
+        labelpad=Y_LABEL_PAD
+    )
+
+    # set y limits
+    # todo wrap as function
+    y_bottom, y_top = ax.get_ylim()
+    y_range = y_top - y_bottom
+    bottom_margin = y_range * Y_BOTTOM_MARGIN
+    top_margin = y_range * Y_TOP_MARGIN
+    ax.set_ylim(y_bottom - bottom_margin, y_top + top_margin)
 
     # legend
-    if with_legend:
-        handles, labels = axes.get_legend_handles_labels()
-        new_handles = []
-        for h in handles:
-            new_handles.append(h[0])
-        axes.legend(
-            new_handles,
-            labels,
-            fontsize=LEGEND_FONTSIZE,
-            loc='upper right',
-            # bbox_to_anchor=(0.98, 0.07)
-        )
+    h, l = ax.get_legend_handles_labels()
+    ax.legend(h, l)
+
+    # set the aspect ratio ( y axis length / x axis length)
+    aspect_ratio = get_aspect(ax, AXES_ASPECT)
+    ax.set_aspect(aspect_ratio)
+
+    # save
+    top_directory = constants.figures_directory
+    file_path = f'{top_directory}/{output_dir}/{data_set_name}.pdf'
+    figure.savefig(file_path, format='pdf', bbox_inches='tight', dpi=DPI)
+
+    return figure
 
 
+def make_table(
+    stats,
+    data_set_name,
+    output_dir,
+    treatment,
+):
 
-if __name__ == '__main__':
-
-    # microbial activity
-    wknds = [0, 7, 14, 21, 28]
-    raw_mbc = get_raw_data('MBC')['t'].loc[wknds]
-
-    generic_ylabel = r'$mg\ast kg\ soil^{-1}$'
-
-
-    # hws to mbc
-    raw_hws_mbc = get_HWS_to_MBC()['t'].loc[[7, 14, 21, 28]]
-    hws_mbc_stats = get_stats(raw_hws_mbc)
-
-    ylabel = r'$\%\ of\ MBC$'
-    title = r'$HWE_{carbohydrates}$'
-
-    # HWE carbs
-    raw_hwec = get_raw_data('HWS')
-    hwec_stats = get_stats(raw_hwec, 't')
-
-    hws_title = r'$HWE_{carbohydrates}$'
-    # MBC
-    mbc_stats = get_stats(raw_mbc)
-    mbc_title = r'$Microbial\ Biomass\ Carbon$'
-
-    # cumulative respiration
-    cumulative_stats = get_cumulative_respiration('t')
-    respiration_title = r'$cumulative\ CO_2$'
-
-    # visualize single plot
-    fig = setup_figure()
-    ax = setup_dynamics_axes(fig, ylabel, title)
-    plot_dynamics(hws_mbc_stats, ax, with_legend=True)
-
-    # visualize two subplots
-    # fig = setup_figure()
     #
-    # subplots = plot_two_vertical_subplots(fig, data_sets) # microbial activity
+    def insert_error(means, err):
 
-    # save figure
-    dir = '/home/elan/Dropbox/research/student_conference/figures/'
-    file = f'HWS_to_MBC_dynamics.png'
-    file_path = f'{dir}{file}'
-    fig.savefig(file_path, format='png', bbox_inches='tight', dpi=DPI)
+        means_error = means.copy()
+        for row in means.index:
+            for column in means.columns:
+                mean = means.loc[row, column]
+                err = error.loc[row, column]
 
-# todo
-#   for dynamics plot:
-#       maybe put a box around legend to make clearer
-#       maybe define make_inset_axes()
-#   rewrite MRE_notation_marks() so that it returns the object that was drawn (i.e arrow).
-#       in this way, the object can be reproduced and used in the legend or any other explanatory
-#       note around the plot.
+                means_error.loc[row, column] = \
+                '{:.2f} +-'.format(mean) + ' {:.2f}'.format(err)
+                
+        return means_error
+
+    # get the data
+    means = stats.means
+    error = stats.stde
+
+    # append a ±error to each mean value
+    means_error = insert_error(means, error)
+
+    # output path
+    top_dir = constants.figures_directory
+    output_file = f'{top_dir}/'\
+                  f'{output_dir}/'\
+                  f'{data_set_name}.tex'
+
+    # table caption and lable
+    treatment_title = 'MRE treated' if treatment == 't' else 'Control'
+    parameter_title = constants.PARAMETERS_TITLES[data_set_name]
+    caption = f'{parameter_title} in {treatment_title} samples'
+    label_treatment_title = 'treated_main'
+    label = f'{data_set_name.lower}_{label_treatment_title}'
+    means_error.to_latex(buf=output_file,
+                         bold_rows=True,
+                         caption=caption,
+                         label=label)
+
+
 
 
 #
-# def plot_two_vertical_subplots(figure, data_sets: dict) -> dict:
+# def axes_final_adujst(axes, with_legend: bool=None):
 #
-#     '''
-#     plot two data sets onto a figure.
+#     # set y limits
+#     y_bottom, y_top = axes.get_ylim()
+#     y_range = y_top - y_bottom
+#     bottom_margin = y_range * Y_BOTTOM_MARGIN
+#     top_margin = y_range * Y_TOP_MARGIN
+#     axes.set_ylim(y_bottom - bottom_margin, y_top + top_margin)
 #
-#     figure: Figure
-#     the Figure to be plotted onto.
+#     # set line parameters
+#     set_line_parameters(axes)
 #
-#     data_sets: dict
-#     data set name as key and a Stats instance as value.
+# #     # set the aspect ratio ( y axis length / x axis length)
+# #     aspect_ratio = get_aspect(axes, AXES_ASPECT)
+# #     axes.set_aspect(aspect_ratio)
 #
-#     return: dict
-#     value is data set name and key is the axes onto which
-#      the corresponding data set plotted.
-#     '''
+#     # x label
+#     axes.set_xlabel(X_LABEL, labelpad=X_LABEL_PAD)
 #
-#     def final_adjustments(subplots):
-#         '''
-#         fix the subplots to look nicer.
+#     # legend
+#     if with_legend:
+#         handles, labels = axes.get_legend_handles_labels()
+#         new_handles = []
+#         for h in handles:
+#             new_handles.append(h[0])
+#         axes.legend(
+#             new_handles,
+#             labels,
+#             fontsize=LEGEND_FONTSIZE,
+#             loc='upper right',
+#             # bbox_to_anchor=(0.98, 0.07)
+#         )
 #
-#          remove redundant objects and move others to better location.
+# def setup_figure():
 #
-#          subplots: list
-#          two axes objects. top axes for i=0. bottom axes for i=1.
-#          '''
+#     # create and adjut figure
+#     figure = plt.figure(figsize=FIGURE_SIZE)
+#     figure.tight_layout()
 #
-#         top_axes = subplots[0]
-#         bottom_axes = subplots[1]
-#
-#         # remove unnecessary axis
-#         top_axes.xaxis.set_visible(False) # first axes is the top one
-#
-#         # remove MRE notation from top axes
-#         axes_children = top_axes.get_children()
-#         is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
-#         annotations = [child for child in axes_children if is_annotation(child)]
-#         pyplot.setp(annotations, visible=False)
-#
-#         # remove bottom spine of top axes
-#         spine = top_axes.spines['bottom']
-#         spine.set_visible(False)
-#
-#         # remove unruly tick
-#         y_ticks = bottom_axes.yaxis.get_major_ticks()
-#         # y_ticks[-2].set_visible(False)
-#
-#         # use a single y label
-#         bottom_ylabel = bottom_axes.yaxis.label
-#         top_ylabel = top_axes.yaxis.label
-#         bottom_ylabel.set_visible(False)
-#         pyplot.setp(top_ylabel, y=0, verticalalignment='center')
-#
-#         # titles
-#         bottom_title = r'$Biomass\ Carbon$'
-#         top_title = r'$Cumulative\ CO_2$'
-#         title_x, title_y = 0.05, 0.88
-#         top_axes.text(title_x, title_y, top_title, transform=top_axes.transAxes)
-#         bottom_axes.text(title_x,  title_y, bottom_title, transform=bottom_axes.transAxes)
-#
-#     subplots = {}
-#     for i, item in enumerate(data_sets.items()):
-#
-#         is_bottom_axes = True if i == 1 else False  # test whether this is the second axes to be set up
-#
-#         name = item[0] # name of data set
-#         data = item[1] # a Stats instance
-#
-#         # y_label
-#         ylabel = r'${}$'.format(GENERIC_UNITS)
+#     return figure
 #
 #
-#         # share x axis
-#         share = ('x', subplots[0]) if is_bottom_axes else None
+# def setup_axes(
+#         figure: Figure,
+#         y_label,
+#         title=None,
+#     ):
+#     '''setup an axes with time series features.'''
 #
-#         # subplot position
-#         position = 2 if is_bottom_axes else 1
-#         axes_position = int(str(21) + str(position))
+#     # intialize axes
+#     axes: Axes = figure.add_subplot(111)
 #
-#         # initialize axes
-#         axes = setup_dynamics_axes(figure, ylabel,
-#                            axes_position=axes_position, share=share)
+#     # ticks
+#     axes.xaxis.set_minor_locator(MINOR_LOCATOR)
+#     axes.tick_params(axis='x', which='minor', width=1, length=3)
+#     # axes.tick_params(axis='both', labelsize=AXIS_LABEL_FONTSIZE)
+#     xticks = numpy.linspace(0,28,5)
+#     axes.set_xticks(xticks)
 #
-#         # plot
-#         with_legend = False if is_bottom_axes else True # add legend only for the bottom axes
-#         plot_dynamics(data, axes, with_legend)
+#     # title
+#     if title:
+#         axes.set_title(title, pad=TITLE_PAD, fontsize=TITLE_FONT_SIZE)
 #
-#         # append the axes to subplots
-#         subplots[i] = axes
+#     # labels
+#     axes.set_xlabel(
+#         X_LABEL,
+#         # fontsize=AXIS_LABEL_FONTSIZE,
+#         labelpad=X_LABEL_PAD,
+#     )
 #
+#     axes.set_ylabel(
+#         y_label,
+#         # fontsize=AXIS_LABEL_FONTSIZE,
+#         labelpad=Y_LABEL_PAD
+#     )
 #
-#     final_adjustments(subplots)
+#     # add arrows where MRE was applied
+#     MRE_notation_marks(axes)
 #
-#     return subplots
-#
-#
-# def plot_two_horizontal_subplots(figure, data_sets: dict) -> dict:
-#
-#     '''
-#     plot two data sets onto a figure.
-#
-#     subplots will be either on top of each other or side by side,
-#     depending on n_rows.
-#
-#     figure: Figure
-#     the Figure to be plotted onto.
-#
-#     data_sets: dict
-#     data set name as key and a Stats instance as value.
-#
-#     n_rows: int
-#     1 if subplots should be arranged side by side or 2 if
-#      on top of each other.
-#
-#     return: dict
-#     value is data set name and key is the axes onto which
-#      the corresponding data set plotted.
-#     '''
-#
-#     def final_adjustments(subplots):
-#         '''
-#         fix the subplots to look nicer.
-#
-#          remove redundant objects and move others to better location.
-#
-#          subplots: list
-#          two axes objects. top axes for i=0. bottom axes for i=1.
-#          '''
-#
-#         right_axes = subplots[0]
-#         left_axes = subplots[1]
-#
-#         # remove unnecessary axis
-#         right_axes.xaxis.set_visible(False) # first axes is the top one
-#
-#         # remove MRE notation from top axes
-#         axes_children = right_axes.get_children()
-#         is_annotation = lambda x: True if isinstance(x, matplotlib.text.Annotation) else False
-#         annotations = [child for child in axes_children if is_annotation(child)]
-#         pyplot.setp(annotations, visible=False)
-#
-#         # remove bottom spine of top axes
-#         spine = right_axes.spines['bottom']
-#         spine.set_visible(False)
-#
-#         # remove unruly tick
-#         y_ticks = left_axes.yaxis.get_major_ticks()
-#         # y_ticks[-2].set_visible(False)
-#
-#         # use a single y label
-#         bottom_ylabel = left_axes.yaxis.label
-#         top_ylabel = right_axes.yaxis.label
-#         bottom_ylabel.set_visible(False)
-#         pyplot.setp(top_ylabel, y=0, verticalalignment='center')
-#
-#         # titles
-#         bottom_title = r'$Biomass\ Carbon$'
-#         top_title = r'$Cumulative\ CO_2$'
-#         title_x, title_y = 0.05, 0.88
-#         right_axes.text(title_x, title_y, top_title, transform=right_axes.transAxes)
-#         left_axes.text(title_x,  title_y, bottom_title, transform=left_axes.transAxes)
-#
-#     subplots = {}
-#     for i, item in enumerate(data_sets.items()):
-#
-#         is_left_axes = True if i == 1 else False  # test whether this is the second axes to be set up
-#
-#         name = item[0] # name of data set
-#         data = item[1] # a Stats instance
-#
-#         # y_label
-#         ylabel = r'${}$'.format(GENERIC_UNITS)
-#
-#
-#         # share x axis
-#         share = ('x', subplots[0]) if is_left_axes else None
-#
-#         # subplot position
-#         position = 2 if is_left_axes else 1
-#         axes_position = int(str(12) + str(position))
-#
-#         # initialize axes
-#         axes = setup_dynamics_axes(figure, ylabel,
-#                            axes_position=axes_position, share=share)
-#
-#         # plot
-#         with_legend = True if is_left_axes else False # add legend only for the bottom axes
-#         plot_dynamics(data, axes, with_legend)
-#
-#         # append the axes to subplots
-#         subplots[i] = axes
-#
-#
-#     final_adjustments(subplots)
-#
-#     return subplots
-#
+#     return axes

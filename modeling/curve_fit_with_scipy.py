@@ -7,20 +7,25 @@ from modeling.model_functions import *
 
 
 
-INITIAIL_PARAMS = [1000, 2, 1]
+INITIAIL_PARAMS = [300, 1.5, 0.4]
 
 # microbial growth and decay
-def growth_decay(t, a, ka, kb):
+def growth_decay(t, A, ka, kb):
 
     # 1st order reaction product
-    def conc(time, max_growth, rate_constant):
-        return max_growth * (1 - exp(-rate_constant * time))
+    def conc(time, max, rate_constant):
+        return max * (1 - exp(-rate_constant * time))
 
-    return conc(t, a, ka) - conc(t, a, kb)
+    return conc(t, A, ka) - conc(t, A, kb)
 
 
-def get_the_data(data_name, treatment,
-                 soil, days_to_fit, normalize):
+def get_the_data(
+        data_name,
+        treatment,
+        days_to_fit,
+        soil,
+        normalize
+):
 
     raw_data = get_raw_data(data_name).loc[days_to_fit]
     raw_data = normalize(raw_data) if normalize else raw_data
@@ -34,6 +39,18 @@ def get_the_data(data_name, treatment,
         stde=stnd_err
     )
 
+    # group by sampling event
+    groupby_sampling = raw.groupby(raw.index)
+
+    # means
+    means = groupby_sampling.mean()
+    stdev = groupby_sampling.std()
+
+    return Stats(
+        means=means,
+        stde=stdev
+    )
+
 
 def get_best_fit_params(means, stdv, model_function):
     '''
@@ -45,10 +62,10 @@ def get_best_fit_params(means, stdv, model_function):
     :param stdv: Series
 
     :param model_function:
-    the function by which curve fit is preformed.
+    the function to preform curve fit for.
 
     :return: fit_params
-    list of best fit parameters
+    list of best fit parameters.
     '''
 
 
@@ -61,11 +78,51 @@ def get_best_fit_params(means, stdv, model_function):
                                         p0=INITIAIL_PARAMS,
                                         absolute_sigma=True)
 
-    return  fit_params
+    return  fit_params, covarriance
+
+
+def get_weekly_fit(means, stdev, model_function):
+    '''
+    fit weekly data to a given model function
+
+    :param means: Series
+    mean value for the entire time period.
+
+    :param stdev:Series
+
+    :param model_function:
+    the function to be fitted.
+
+    :return: fit_result: dict
+    '''
+    week_bounds = {
+        '1': (0, 7),
+        '2': (7, 14),
+        '3': (14, 21),
+    }
+
+    weekly_means = {}
+    for week, bounds in week_bounds.items():
+        start = week_bounds[week][0]
+        end = week_bounds[week][1]
+        week_means = means.loc[start:end]
+        weekly_means[week] = week_means
+
+    for week, means in weekly_means.items():
+
 
 
 def plot_fit(means, fit_params, title, model_function):
+    '''
+    plot fitted curve alongside the measured data points.
 
+    :param means:
+    :param fit_params: list
+    len(list) = 2
+    :param title:
+    :param model_function:
+    :return:
+    '''
     x_measured = means.index.values
     y_measured = means.values
 

@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
 # todo write a func that computes the correlation
 #   between the 'first differences' of time series
-#   of two parameters (e.g DOC and RESP) doing this
+#   of two parameters (e.g WEOC and RESP) doing this
 #   comparison for every LTT (i.e soil)
 #   the code below is a general direction
 

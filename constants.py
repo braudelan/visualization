@@ -2,45 +2,90 @@
 from seaborn import color_palette
 
 
-input_file_path = '../input_data.xlsx'
-figures_directory = '/home/elan/Dropbox/research/figures'
-parameters = [
+main_input_file = 'input_data.xlsx'
+preliminary_input_file = 'preliminary_data.xlsx'
+figures_directory = '/home/elan/Dropbox/research/thesis/latex_thesis/thesis_figures'
+PRELIMINARY_PARAMS = [
     'MBC',
-    'HWS',
-    'DOC',
-    'AS',
-    'RESP',
+    'Resp',
+    'WEOC',
+    'HWEC',
+    'HWES-C',
+    'Erg',
+]
+MAIN_PARAMS = [
+    'MBC',
     'MBN',
-    'ERG',
+    'Resp',
+    'HWES',
+    'WEOC',
+    'AS',
+    'Erg',
     'TOC',
     'TON',
+]
+parameters = [
+    'MBC',
+    'HWEC',
+    'HWES',
+    'HWES-C',
+    'WEOC',
+    'AS',
+    'Resp',
+    'MBN',
+    'Erg',
+    'TOC',
+    'TON',
+    'Erg-to-MBC',
+    'CUE',
 ]
 generic_units = r'mg\ast kg\ soil^{-1}'
 units = [
     r'mg\ C\ast kg\ soil^{-1}',
     r'mg\ C\ast kg\ soil^{-1}',
+    r'mg\ Carbohydrate\ \ast\ kg\ soil^{-1}',
+    r'mg\ Carbohydrate-C\ast kg\ soil^{-1}',
     r'mg\ C\ast kg\ soil^{-1}',
-    r'\%WSA',
-    r'mg CO_2-C \ast kg^{-1}\ast day^{-1}',
-    r'mg\ C\ast kg\ soil^{-1}',
-    r'\%MBC',
-    r'\%soil weight',
-    r'\%soil weight'
+    '%WSA',
+    r'mg\ CO_2-C * kg^{-1} * day^{-1}',
+    r'mg C * kg soil^{-1}',
+    r'mg Ergosterol * kg^{-1} * day^{-1}',
+    r'% of soil weight',
+    r'% of soil weight',
+    r'% of MBC',
+    r''
 ]
 TITLES = [
-    r'Microbial\ Biomass\ Carbon',
-    r'Hot\ Water\ Extractable\ Sugars',
-    r'Water\ Extractable\ Organic\ Carbon',
-    r'Aggregate\ Stability',
-    r'Microbial\ Respiration',
-    r'Microbial\ Biomass\ Nitrogen',
-    r'Soil\ Ergosterol',
+    r'Microbial Biomass Carbon',
+    r'Hot Water Extractable Carbon',
+    r'Hot Water Extractable Carbohydrates',
+    r'Hot Water Extractable Carbohydrates',
+    r'Water Extractable Organic Carbon',
+    r'Aggregate Stability',
+    r'Microbial Respiration',
+    r'Microbial Biomass Nitrogen',
+    r'Soil Ergosterol',
     r'Total Organic Carbon',
-    r'Total Organic Nitrogen'
+    r'Total Organic Nitrogen',
+    r'Soil Ergosterol',
+    r'Carbon Use Efficiency',
 ]
 
+PRELIMINARY_STTs = [
+    'CON',
+    'STR',
+    'KWC',
+]
+titles_for_STTs = [
+    'Control',
+    'Straw amended',
+    'Kitchen Waste Compost amended'
+]
+
+PRELIMINARY_STT_titles = dict(zip(PRELIMINARY_STTs, titles_for_STTs))
 parameters_units = dict(zip(parameters, units))
 PARAMETERS_TITLES = dict(zip(parameters, TITLES))
+
 
 LONG_TERM_TREATMENTS = [
     'ORG',

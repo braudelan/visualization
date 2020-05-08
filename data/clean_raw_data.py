@@ -67,5 +67,5 @@ def exclude_outliers(raw_data: DataFrame):
 # test
 if __name__ == '__main__':
 
-    raw_doc = get_raw_data('DOC')
+    raw_doc = get_raw_data('WEOC')
     excluded = exclude_outliers(raw_doc)

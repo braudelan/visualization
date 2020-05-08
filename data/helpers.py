@@ -7,22 +7,24 @@ import numpy
 from pandas.io.formats.style import Styler
 from seaborn import color_palette
 
+
 class Stats:
     def __init__(self, means, stde):
         self.means = means
         self.stde = stde
+
 
 class Constants:
     input_file_path = 'input_data.xlsx'
     figures_directory = '/home/elan/Dropbox/research/figures'
     parameters = [
         'MBC',
-        'HWS',
-        'DOC',
+        'HWES',
+        'WEOC',
         'AS',
-        'RESP',
+        'Resp',
         'MBN',
-        'ERG',
+        'Erg',
         'TOC',
         'TON',
     ]
@@ -136,7 +138,7 @@ def propagate_error(result, error_1, error_2):
     return propagated_error
 
 
-def style_to_image(styler: Styler, output_file='output/weekly_mbc_growth.png'):
+def style_to_image(styler: Styler, output_file='output/output.png'):
     renderd = styler.render()
     imgkit.from_string(renderd, output_file)
 

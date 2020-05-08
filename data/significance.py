@@ -2,17 +2,16 @@ from pandas import DataFrame, Series
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import ttest_ind
 
-from data.raw_data import *
-from data.helpers import *
-
+from data.helpers import replace_nan_with_mean
+import constants
 
 # DATA_SETS_NAMES = get_setup_arguments()
-OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
-TABLE_FORMATING_SCRIPT = Constants.table_css
+# OUTPUT_PATH = '/home/elan/Dropbox/research/figures/significance/'
+# TABLE_FORMATING_SCRIPT = constants.table_css
 
-SOILS = Constants.LTTs
-TREATMENTS = Constants.treatment_labels
-COLUMNS_LEVELS = Constants.level_names
+SOILS = constants.LONG_TERM_TREATMENTS
+TREATMENTS = constants.treatment_labels
+COLUMNS_LEVELS = constants.level_names
 
 
 def get_significance_booleans(data):
@@ -186,193 +185,40 @@ def daily_significance_between_soils(
 
     return letters
 
-
-def visualize_daily_significance(raw_data: DataFrame,
-        data_set_name: str, format_by, output_dir, label: str = None):
-
-    '''
-    create and save a table image with significance letters.
-
-    table columns are the sampling days.
-    the rows are the groups between which significance
-     is computed.
-
-    parameters
-    ----------
-    raw_data: DataFrame
-        the input data to compute significance for.
-
-    data_set_name: str
-        name of the parameter for which daily significance
-        is computed.
-
-
-    format_by: css file
-        css file by which the output table is formatted.
-
-    output_dir: path
-        where to place the output image.
-
-    label: str
-        meta data about the kind of data manipulation
-        preformed on the raw data.
-    '''
-
-    significance = daily_significance_between_soils(raw_data)
-    output_file = f'{output_dir}{data_set_name}_{label}'
-    DataFrame_to_image(significance, format_by, output_file)
-
-
-if __name__ == '__main__':
-
-    for data_set_name in DATA_SETS_NAMES:
-
-        raw_data = get_raw_data(data_set_name)
-
-        raw_treated = raw_data['t']
-        raw_control = raw_data['c']
-        raw_normalized = normalize_to_initial(raw_data)
-
-        data_types = [
-            raw_treated,
-            raw_control,
-            raw_normalized
-        ]
-
-        data_type_labels = [
-            'MRE_treated',
-            'control',
-            'initial_normalized'
-        ]
-
-        zipped = zip(
-            data_types,
-            data_type_labels
-        )
-
-        for data, data_type_label in zipped:
-
-            visualize_daily_significance(
-                        data, data_set_name,
-                        TABLE_FORMATING_SCRIPT,
-                        OUTPUT_PATH, data_type_label)
-
-
-
-# def baseline_significance(data_sets_names) -> DataFrame:
+#
+# def visualize_daily_significance(raw_data: DataFrame,
+#         data_set_name: str, format_by, output_dir, label: str = None):
+#
 #     '''
-#     compute significance between baseline values.
+#     create and save a table image with significance letters.
 #
-#     :parameter
-#     data_sets_names : list
-#         names of parameters for which baseline significance
-#         should be computed.
+#     table columns are the sampling days.
+#     the rows are the groups between which significance
+#      is computed.
 #
-#     :returns
-#         dataframe with letters designating significance
-#         between baseline values for each data set.
-#      '''
+#     parameters
+#     ----------
+#     raw_data: DataFrame
+#         the input data to compute significance for.
 #
-#     def get_data_set_significance(raw_data) -> Series:
-#
-#         week_ends_control = raw_data.loc[get_week_ends(raw_data),
-#                                                         ('c', SOILS)]  # week ends control samples from raw data
-#         stacked = week_ends_control.stack(level=COLUMNS_LEVELS)
-#         index_reset = stacked.reset_index(level=('days', 'treatment', 'replicate'),
-#                                                                             drop=True)
-#         data = index_reset
-#
-#         id = data.index.values
-#         values = data.values
-#
-#         multiple_comparisons = MultiComparison(values, id)
-#         pairwise_holm = multiple_comparisons.allpairtest(ttest_ind, method='holm')
-#         significance_matrix = DataFrame(pairwise_holm[2])
-#
-#         index_levels = [['MIN', 'MIN', 'ORG'], ['ORG', 'UNC', 'UNC']]
-#         index_names = numpy.array(['soil_1', 'soil_2'])
-#         index = MultiIndex.from_arrays(index_levels,
-#                                        names=index_names)
-#
-#         significance_booleans = Series(index=index)
-#
-#         # insert reject/accept booleans into dataframe
-#         reject_accept = significance_matrix['reject'].values
-#         significance_booleans.loc[:] = reject_accept
-#
-#         return significance_booleans
+#     data_set_name: str
+#         name of the parameter for which daily significance
+#         is computed.
 #
 #
-#     data_sets = get_multi_sets(data_sets_names)
+#     format_by: css file
+#         css file by which the output table is formatted.
 #
-#     index = SOILS
-#     columns = data_sets_names
-#     baseline_letters = DataFrame(index=index, columns=columns)
-#     for name, data in data_sets.items():
-#         significance = get_data_set_significance(data)
-#         data_set_significance_letters = annotate(significance)
-#         baseline_letters[name] = data_set_significance_letters
+#     output_dir: path
+#         where to place the output image.
 #
-#     return baseline_letters
+#     label: str
+#         meta data about the kind of data manipulation
+#         preformed on the raw data.
+#     '''
+#
+#     significance = daily_significance_between_soils(raw_data)
+#     output_file = f'{output_dir}{data_set_name}_{label}'
+#     DataFrame_to_image(significance, format_by, output_file)
+#
 
-
-#
-# if __name__ == '__main__':
-#
-#     raw = get_raw_data('MBC')
-#     raw_baseline = get_raw_baseline(raw)
-#     raw_baseline_stacked = raw_baseline.stack().droplevel(0)
-#
-#     letters = get_letters(raw_baseline_stacked, 'MBC')
-#     #
-#     # for data_set in DATA_SETS_NAMES:
-#
-#         if data_set == 'ERG':
-#             raw_data = get_ergosterol_to_biomass()
-#         else:
-#             raw_data = get_raw_data(data_set)
-#         treatment = raw_data['t']
-#         control = raw_data['c']
-#         control_normalized = control_normalize(raw_data)
-#         baseline_normalized = baseline_normalize(raw_data)
-#
-#         sets = {
-#             'treatment': treatment,
-#             'control': control,
-#             'control_normalized': control_normalized,
-#             'baseline_normalized': baseline_normalized,
-#         }
-#
-#         for name, set in sets.items():
-#
-#             significance_matrix = daily_significance_between_soils(set)
-#             css = """
-#                     <style type=\"text/css\">
-#                     table {
-#                     color: #333;
-#                     font-family: Helvetica, Arial, sans-serif;
-#                     width: 640px;
-#                     border-collapse:
-#                     collapse;
-#                     border-spacing: 0;
-#                     }
-#                     td, th {
-#                     border: 1px solid transparent; /* No more visible border */
-#                     height: 30px;
-#                     }
-#                     th {
-#                     background: #DFDFDF; /* Darken header a bit */
-#                     font-weight: bold;
-#                     }
-#                     td {
-#                     background: #FAFAFA;
-#                     text-align: center;
-#                     }
-#                     table tr:nth-child(odd) td{
-#                     background-color: white;
-#                     }
-#                     </style>
-#                     """  # html code specifying the appearence of significance table
-#             output_directory = '/home/elan/Dropbox/research/figures/significance/daily_between_soils/'
-#             output_file = f'{output_directory}{data_set}_{name}'
-#             DataFrame_to_image(significance_matrix, css, output_file)

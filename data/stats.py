@@ -1,14 +1,12 @@
-''' calculate and return basic statistics from raw data.'''
-
+''' compute basic statistics from raw data.'''
 from collections import namedtuple
 
 import pandas
 from pandas import DataFrame
 
-from data.raw_data import *
-from data.helpers import *
-from data.significance import *
-
+import data.significance as significance
+import data.raw_data as raw_data
+from data.helpers import Stats
 
 def get_stats(raw_data: DataFrame, treatment: str=None) -> namedtuple:
     '''
@@ -86,54 +84,53 @@ def get_baseline_stats(keys):
     # lists to store statistics from every data_set
     data_sets_means = []
     data_sets_err = []
-    significance = []
+    significance_list = []
     for key in keys:
 
         # get the data
-        raw_data = get_raw_data(key)['c']
+        raw = raw_data.get_raw_data(key)['c']
 
         # exclude week days
-        week_ends = [day for day in raw_data.index if day in [0, 7, 14, 21, 28]]
-        raw_data = raw_data.loc[week_ends]
+        week_ends = [day for day in raw.index if day in [0, 7, 14, 21, 28]]
+        raw = raw.loc[week_ends]
 
         # transpose, stack, drop irrelevant levels
-        transposed = raw_data.T
+        transposed = raw.T
         stacked = transposed.stack()
-        raw_data = stacked.droplevel(['replicate', 'days'])
+        raw = stacked.droplevel(['replicate', 'days'])
 
         # rename resulting Series
-        raw_data.name = key
+        raw.name = key
 
         # append to raw_sets list
-        raw_sets.append(raw_data)
+        raw_sets.append(raw)
 
         # compute statistics
-        group_by_soil = raw_data.groupby(raw_data.index)
+        group_by_soil = raw.groupby(raw.index)
         means = group_by_soil.mean()
         std_err = group_by_soil.sem()
 
         # compute significance and rename
-        booleans = get_significance_booleans(raw_data)
-        annotations = annotate(booleans)
+        booleans = significance.get_significance_booleans(raw)
+        annotations = significance.annotate(booleans)
         annotations.name = key
 
         # append statistics to lists
         data_sets_means.append(means)
         data_sets_err.append(std_err)
-        significance.append(annotations)
+        significance_list.append(annotations)
 
     # combine stats from all data sets into Dataframe
     baseline_means = pandas.concat(data_sets_means, axis=1)
     baseline_std_errors = pandas.concat(data_sets_err, axis=1)
-    baseline_significance = pandas.concat(significance, axis=1)
+    baseline_significance = pandas.concat(significance_list, axis=1)
 
-    return baseline_means,\
-           baseline_std_errors,\
+    return Stats(means=baseline_means,stde=baseline_std_errors,),\
            baseline_significance,\
            raw_sets
 
 if __name__ == '__main__':
-    keys = ['TOC', 'DOC', 'HWS', 'AS', 'MBC', 'RESP', 'ERG']
+    keys = ['TOC', 'WEOC', 'HWES', 'AS', 'MBC', 'Resp', 'Erg']
     means, errors, significance, raw_sets = get_baseline_stats(keys)
 
 # def normalize_to_TOC(raw)-> dict:

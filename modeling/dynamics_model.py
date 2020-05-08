@@ -10,7 +10,7 @@ from data.raw_data import get_setup_arguments
 from data.raw_data import get_raw_data
 from data.stats import get_stats, normalize_to_control
 from data.helpers import  Constants
-from modeling.model_functions import respiration_rate, weekly_growth_decay
+from modeling.model_functions import resp_rate_entire_incubation, weekly_growth_decay
 
 
 # constants
@@ -180,7 +180,7 @@ def make_figure_and_axes():
 
 
 if __name__ == '__main__':
-    function = respiration_rate if data_set_name == 'RESP' else weekly_growth_decay
+    function = resp_rate_entire_incubation if data_set_name == 'Resp' else weekly_growth_decay
     figure, axes = make_figure_and_axes()
     for soil in SOILS:
         data = data_set[soil]

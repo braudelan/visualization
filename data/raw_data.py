@@ -2,22 +2,22 @@
 load data sets from specfic tabs in an excel file and turn them into pandas DataFrames
 """
 from collections import OrderedDict
-import argparse
 
 import pandas
 from pandas import DataFrame
 
-from data.stats import get_baseline_stats, get_stats
-from data.helpers import *
+import data.stats as stats
+import constants
+from data.helpers import get_week_ends
 
 # where data is uploaded from
-INPUT_FILE = Constants.input_file_path
+INPUT_FILE = constants.main_input_file
 
 # some constant parameters
-DATA_SETS_NAMES = Constants.parameters
-SOILS = Constants.LTTs
-LEVELS = Constants.level_names
-TREATMENTS = Constants.treatment_labels
+DATA_SETS_NAMES = constants.parameters
+SOILS = constants.LONG_TERM_TREATMENTS
+LEVELS = constants.level_names
+TREATMENTS = constants.treatment_labels
 
 
 # def get_setup_arguments():
@@ -69,7 +69,7 @@ def get_raw_data(data_set_name):
     is_TOC = True if \
         data_set_name == 'TOC' else False
     is_ERG = True if\
-        data_set_name == 'ERG' else False
+        data_set_name == 'Erg' else False
     raw_data = (
         # raw_data * 24 if is_RESP else
         raw_data.drop(14) if is_TOC else
@@ -99,7 +99,7 @@ def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict
 
         raw_data = get_raw_data(data_set_name)
 
-        if data_set_name == 'ERG':
+        if data_set_name == 'Erg':
             raw_data = get_ergosterol_to_biomass()
 
         if wknds and data_set_name == 'MBC':
@@ -117,32 +117,6 @@ def get_multi_sets(keys, treatment=None, wknds=False, normalize_by=None) -> dict
 
 
 # normalizations and quotients
-def baseline_normalize(raw_data, treatment='t', baseline=None):
-
-    # get baseline stats
-    if baseline:
-        raw_baseline = get_raw_data(baseline) * 10000 if \
-                        baseline == 'TOC' else get_raw_data(baseline)
-        baseline_stats = get_baseline_stats(raw_baseline)
-    else:
-        baseline_stats = get_baseline_stats(raw_data)
-    baseline_means = baseline_stats.means
-
-    # raw treatment data
-    raw_data = raw_data.loc[:, treatment]
-
-    # reshape baseline means to the same dimensions as raw_data
-    baseline_reshaped = DataFrame().reindex_like(raw_data)
-    for soil in SOILS:
-        baseline_reshaped[soil] = baseline_means[soil]
-
-    if baseline:
-        normalized = raw_data / baseline_reshaped * 100
-    else:
-        normalized = (raw_data - baseline_reshaped) / baseline_reshaped * 100
-    return normalized
-
-
 def control_normalize(raw_data, control=None):
     '''
     divide each replicate with the average of corresponding control replicates.
@@ -170,7 +144,7 @@ def control_normalize(raw_data, control=None):
     else:
         control_raw = raw_data['c']
 
-    control_means = get_stats(control_raw).means  # shape ->(10,3)
+    control_means = stats.get_stats(control_raw).means  # shape ->(10,3)
 
     # empty dataframe with the same shape and indexes as raw_t
     control_reindexed = DataFrame().reindex_like(treatment_raw)  # shape ->(10,12)
@@ -199,7 +173,7 @@ def normalize_to_initial(raw_data, treatment='t', initial=None):
     else:
         control_raw = raw_data['c']
 
-    control_means = get_stats(control_raw).means  # shape ->(10,3)
+    control_means = stats.get_stats(control_raw).means  # shape ->(10,3)
     day_zero = control_means.loc[0]
 
     # empty dataframe with the same shape and indexes as raw_t
@@ -216,36 +190,12 @@ def normalize_to_initial(raw_data, treatment='t', initial=None):
     return normalized
 
 
-def toc_normalize(raw_data):
-
-    # get baseline TOC in mg/kg
-    toc_raw = get_raw_data('TOC')
-    toc_baseline_stats = get_baseline_stats(toc_raw)
-    toc_baseline = toc_baseline_stats.means * 10000 # 10^4 mg in 1% of kg
-    toc_stde = toc_baseline_stats.stde * 10000
-
-
-def get_HWS_to_MBC(inverted=False):
-
-    raw_MBC = get_raw_data('MBC')
-    week_ends = get_week_ends(raw_MBC)
-    raw_MBC_week_ends = raw_MBC.loc[week_ends]
-    raw_HWS = get_raw_data('HWS')
-
-    HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
-    MBC_to_HWS = raw_MBC_week_ends / raw_HWS * 100
-
-    raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
-
-    return raw_HWS_to_MBC
-
-
 def get_ergosterol_to_biomass():
 
     MBC_raw = get_raw_data('MBC')
     week_ends = get_week_ends(MBC_raw)
     MBC_raw_week_ends = MBC_raw.loc[week_ends]
-    ERG_raw = get_raw_data('ERG')
+    ERG_raw = get_raw_data('Erg')
 
     ERG_to_MBC = ERG_raw / MBC_raw_week_ends # compute ERG_to_MBC ratio
     ERG_to_MBC.loc[0, ('c', 'UNC', 1)] = None # irregular data (replicate#1 in MRE_treated UNC at day 0)
@@ -272,4 +222,53 @@ def get_raw_TOC_TON():
 
     return raw_TOC_TON
 
+
+def toc_normalize(raw_data):
+
+    # get baseline TOC in mg/kg
+    toc_raw = get_raw_data('TOC')
+    toc_baseline_stats = stats.get_baseline_stats(toc_raw)
+    toc_baseline = toc_baseline_stats.means * 10000 # 10^4 mg in 1% of kg
+    toc_stde = toc_baseline_stats.stde * 10000
+
+
+def get_HWS_to_MBC(inverted=False):
+
+    raw_MBC = get_raw_data('MBC')
+    week_ends = get_week_ends(raw_MBC)
+    raw_MBC_week_ends = raw_MBC.loc[week_ends]
+    raw_HWS = get_raw_data('HWES')
+
+    HWS_to_MBC = raw_HWS / raw_MBC_week_ends * 100
+    MBC_to_HWS = raw_MBC_week_ends / raw_HWS * 100
+
+    raw_HWS_to_MBC = HWS_to_MBC if not inverted else MBC_to_HWS
+
+    return raw_HWS_to_MBC
+
+
+def baseline_normalize(raw_data, treatment='t', baseline=None):
+
+    # get baseline stats
+    if baseline:
+        raw_baseline = get_raw_data(baseline) * 10000 if \
+                        baseline == 'TOC' else get_raw_data(baseline)
+        baseline_stats = stats.get_baseline_stats(raw_baseline)
+    else:
+        baseline_stats = stats.get_baseline_stats(raw_data)
+    baseline_means = baseline_stats.means
+
+    # raw treatment data
+    raw_data = raw_data.loc[:, treatment]
+
+    # reshape baseline means to the same dimensions as raw_data
+    baseline_reshaped = DataFrame().reindex_like(raw_data)
+    for soil in SOILS:
+        baseline_reshaped[soil] = baseline_means[soil]
+
+    if baseline:
+        normalized = raw_data / baseline_reshaped * 100
+    else:
+        normalized = (raw_data - baseline_reshaped) / baseline_reshaped * 100
+    return normalized
 

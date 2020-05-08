@@ -1,58 +1,64 @@
+import numpy
 
-from matplotlib.figure import Figure
+import data.raw_data as raw_data
+import data.stats as stats
+import visualization.dynamics as dynamics
+import constants
 
-from data.raw_data import *
-from data.stats import get_multiple_stats
-from visualization.dynamics import *
-from data.constants import *
-
-# matplotlib.use("pgf")
-
-TOP_DIRECTORY = figures_directory
+TOP_DIRECTORY = constants.figures_directory
 DPI = 144
 
-def visualize_single_plot(data, data_name, y_label, output_dir):
+def visualize_multiple_plots(
+        data_sets_names,
+        output_dir,
+        treatment,
+        normalize=None,
+        # title_prefix: str=None,
+):
 
-    with pyplot.style.context(u'incubation-dynamics'):
-        # setup figure, axes
-        figure: Figure = setup_figure()
-        axes = setup_dynamics_axes(figure, y_label)
+    raw_data_sets = raw_data.get_multi_sets(data_sets_names,
+                               treatment=treatment, normalize_by=normalize,)
 
-        # plot
-        plot_dynamics(data, axes, with_legend=True)
-
-        # save
-        file_path = f'{TOP_DIRECTORY}/{output_dir}/{data_name}'
-        figure.savefig(file_path, format='png', bbox_inches='tight', dpi=DPI)
-
-    return figure
-
-def visualize_multiple_plots(output_dir, treatment=None, normalize=None,
-                             data_sets_names=None, title_prefix: str=None):
-
-    raw_data_sets_names = data_sets_names if data_sets_names else get_setup_arguments()
-    raw_data_sets = get_multi_sets(
-        raw_data_sets_names,
-        treatment=treatment,
-        normalize_by=normalize,
-    )
-    data_sets = get_multiple_stats(raw_data_sets)
+    data_sets = stats.get_multiple_stats(raw_data_sets)
 
     for data_name, data in data_sets.items():
 
-        # title = f'${PARAMETERS_TITLES[data_name]}{title_prefix}$' if title_prefix else PARAMETERS_TITLES[data_name]
-        ylabel = f'${parameters_units[data_name]}$'
-        figure = visualize_single_plot(data, data_name, ylabel, output_dir)
+        wknds = [0, 7, 14, 21, 28]
+        index = data.means.index
+        
+        is_in_wknds = numpy.isin(index, wknds)
+        all_in = is_in_wknds.all()
+        
+        if all_in and len(is_in_wknds) == 5:
+            dynamics.make_bar_plot(stats=data,
+                                   data_set_name=data_name,
+                                   output_dir=output_dir)
+
+        elif all_in and len(is_in_wknds) < 5:
+            dynamics.make_table(stats=data,
+                                data_set_name=data_name,
+                                output_dir=output_dir,
+                                treatment=treatment)
+
+        else:
+            dynamics.make_line_plot(stats=data,
+                                    data_set_name=data_name,
+                                    output_dir=output_dir)
 
 
 
-
-if __name__ == '__main__':
-    names = ['RESP']
-    normalize = None
-    visualize_multiple_plots(
-        output_dir='absolute_values/control',
-        treatment='c',
-        normalize=normalize,
-        data_sets_names=names,
-    )
+#
+# def visualize_single_plot(data, data_name, y_label, output_dir):
+#
+#     # setup figure, axes
+#     figure: Figure = setup_figure()
+#     axes = setup_axes(figure, y_label)
+#
+#     # plot
+#     make_line_plot(data, axes, with_legend=True)
+#
+#     # save
+#     file_path = f'{TOP_DIRECTORY}/{output_dir}/{data_name}.pdf'
+#     figure.savefig(file_path, format='pdf', bbox_inches='tight', dpi=DPI)
+#
+#     return figure

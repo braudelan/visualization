@@ -6,10 +6,10 @@ from data.raw_data import get_raw_data
 from data.stats import get_stats
 from data.helpers import *
 
-SOILS = Constants.groups
+SOILS = Constants.LTTs
 
 #raw data
-RAW_DATA = get_raw_data('RESP')
+RAW_DATA = get_raw_data('Resp')
 
 # limits of time intervals between samplings
 timepoints = RAW_DATA.index.values

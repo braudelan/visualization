@@ -8,7 +8,7 @@ from data.stats import *
 
 # ------------------------------------- data --------------------------------------------------------------
 # which data sets to use
-DATA_SETS_NAMES = ['DOC', 'HWS', 'MBC']
+DATA_SETS_NAMES = ['WEOC', 'HWES', 'MBC']
 
 # get the data
 raw_data_sets = get_multi_sets(DATA_SETS_NAMES, treatment='t', wknds=True)
@@ -18,11 +18,11 @@ mbc_stats = mean_data_sets['MBC']
 mbc_means = mbc_stats.means
 mbc_error = mbc_stats.stde
 
-hwec_stats = mean_data_sets['HWS']
+hwec_stats = mean_data_sets['HWES']
 hwec_means = hwec_stats.means
 hwec_error = hwec_stats.stde
 
-doc_stats = mean_data_sets['DOC']
+doc_stats = mean_data_sets['WEOC']
 doc_means = doc_stats.means
 doc_error = doc_stats.stde
 
@@ -37,8 +37,8 @@ doc_error_percent = doc_error /total * 100
 hwec_error_percent = hwec_error /total * 100
 
 # data labels
-PARAMETER_NAMES = ['MBC', 'HWS', 'DOC']
-LABELS = [r'$MBC$', r'$HWE_{carbohydrates}$', r'$DOC$']
+PARAMETER_NAMES = ['MBC', 'HWES', 'WEOC']
+LABELS = [r'$MBC$', r'$HWE_{carbohydrates}$', r'$WEOC$']
 
 # data to plot
 SOILS = Constants.LTTs
